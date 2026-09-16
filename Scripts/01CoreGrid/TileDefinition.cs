@@ -40,6 +40,10 @@ public enum TileType
     // Environmental (resource)
     Gold    = 11,  // impassable; imp-minable for currency → Cave on depletion
     Gem     = 12,  // impassable; imp-harvestable for currency; indestructible
+
+    // Owned (structures)
+    Heart   = 13,  // 3x3 win/lose structure; impassable, not buy/sellable via UI
+    Portal  = 14,  // 1x1 minion spawn point; passable, not buy/sellable via UI
 }
 
 // ── TileDefinition ScriptableObject ───────────────────────────────────────

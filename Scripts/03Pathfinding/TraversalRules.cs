@@ -100,13 +100,14 @@ public static class TraversalRules
         return !CanPathOn(type, capability);
     }
 
-    /// <summary>Solid rock — never occupiable by anything.</summary>
+    /// <summary>Solid rock (or an equivalent structure) — never occupiable by anything.</summary>
     public static bool IsSolid(TileType type) =>
         type == TileType.Bedrock ||
         type == TileType.Stone   ||
         type == TileType.Wall    ||
         type == TileType.Gold    ||
-        type == TileType.Gem;
+        type == TileType.Gem     ||
+        type == TileType.Heart;
 
     // ── Diagonal legality ──────────────────────────────────────────────
 
