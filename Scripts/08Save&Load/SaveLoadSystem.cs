@@ -256,8 +256,7 @@ public static class SaveLoadSystem
         if (!File.Exists(path))
         {
             Debug.LogWarning($"[SaveLoadSystem] OverwriteSave: file not found at {path}. " +
-                             "Falling back to AppendSave.");
-            AppendSave(data, thumbnail);
+                             "Caller should fall back to AppendSave.");
             return false;
         }
 

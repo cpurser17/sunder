@@ -35,6 +35,10 @@ public class MinimapRenderer : MonoBehaviour
     private Texture2D _texture;
     private bool      _dirty;
 
+    // Cached so OnDestroy unsubscribes the same delegate instance Start
+    // subscribed — a fresh lambda would not compare equal and -= would no-op.
+    private System.Action<System.Collections.Generic.IReadOnlyList<DungeonRoom>> _onRebakeComplete;
+
     /// <summary>The base minimap texture. Assign to RawImage.texture in UI.</summary>
     public Texture2D Texture => _texture;
 
@@ -59,7 +63,8 @@ public class MinimapRenderer : MonoBehaviour
         // We do NOT subscribe to OnTileChanged here — that is done inside
         // InitialiseTexture once the texture exists, via OnWalletsReady which
         // fires after GridManager2D.Initialise() has finished building the grid.
-        gridManager.OnRebakeComplete += _ => FullRedraw();
+        _onRebakeComplete = _ => FullRedraw();
+        gridManager.OnRebakeComplete += _onRebakeComplete;
 
         // If the grid is already initialised (e.g. Start order puts us after
         // GameManager2D), initialise the texture now.
@@ -77,7 +82,7 @@ public class MinimapRenderer : MonoBehaviour
         if (gridManager != null)
         {
             gridManager.OnTileChanged    -= OnTileChanged;
-            gridManager.OnRebakeComplete -= _ => FullRedraw();
+            gridManager.OnRebakeComplete -= _onRebakeComplete;
         }
     }
 

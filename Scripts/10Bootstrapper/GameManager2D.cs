@@ -305,8 +305,19 @@ public class GameManager2D : MonoBehaviour
     private void PerformOverwrite(string displayName, Texture2D thumbnail)
     {
         bool ok = SaveLoadSystem.OverwriteSave(BuildSaveData(displayName), thumbnail);
-        if (ok) _loadedFromBranchTip = true;
-        Debug.Log($"[GameManager2D] Overwrote save index {_activeSaveIndex}.");
+        if (ok)
+        {
+            _loadedFromBranchTip = true;
+            Debug.Log($"[GameManager2D] Overwrote save index {_activeSaveIndex}.");
+            return;
+        }
+
+        // Target file was missing — AppendSave picks a fresh index and
+        // PerformAppend keeps our session state (index/branch-tip/autosave
+        // flags) in sync with it, instead of silently drifting from the
+        // manifest's real active save.
+        Debug.LogWarning("[GameManager2D] Overwrite target missing; appending instead.");
+        PerformAppend(displayName, thumbnail);
     }
 
     private void PerformAppend(string displayName, Texture2D thumbnail)
