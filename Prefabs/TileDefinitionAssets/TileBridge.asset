@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileBridge
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 10
+  tileName: Bridge
+  category: 2
+  traversalType: 1
+  gridColour: {r: 0.53333336, g: 0.4, b: 0.2, a: 1}
+  buyCost: 25
+  sellValue: 12
+  isIndestructible: 0
+  requiresAdjacency: 1
+  placesOnLiquid: 1
+  placesOnTunnel: 0
+  prefab3D: {fileID: 1020238450276224549, guid: 28b282c22ce81f940b6ccac4e9c4295e, type: 3}

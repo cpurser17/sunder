@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileRoomC
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 9
+  tileName: RoomC
+  category: 2
+  traversalType: 1
+  gridColour: {r: 0.53333336, g: 0, b: 0.8666667, a: 1}
+  buyCost: 40
+  sellValue: 20
+  isIndestructible: 0
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 1
+  prefab3D: {fileID: 6044288507240274825, guid: 0666a0b2cfb48c246a484f10b63f3182, type: 3}

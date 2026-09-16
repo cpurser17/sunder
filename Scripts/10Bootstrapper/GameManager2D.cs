@@ -1,0 +1,377 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// Mission-scoped bootstrapper for the Gameplay Scene.
+/// No DontDestroyOnLoad — lives and dies with the Gameplay Scene.
+///
+/// Manages one FactionWallet per active faction. Use GetWallet(FactionID)
+/// to access any faction's gold from other systems.
+///
+/// Save routing
+/// ------------
+/// Autosave()   → always overwrites autosave.json
+/// Save()       → overwrite autosave / overwrite tip / fork mid-branch
+/// SaveAs()     → append to current branch / same as Save mid-branch for now
+/// </summary>
+public class GameManager2D : MonoBehaviour
+{
+    public static GameManager2D Instance { get; private set; }
+
+    /// <summary>
+    /// Fired after all faction wallets have been created and initialised.
+    /// HUDController2D subscribes to this to safely connect the gold display.
+    /// </summary>
+    public static event System.Action OnWalletsReady;
+
+    // ── Inspector ──────────────────────────────────────────────────────
+    [Header("Core Systems")]
+    [SerializeField] private GridManager2D         gridManager;
+    [SerializeField] private SelectionController2D selectionController;
+    [SerializeField] private HUDController2D       hudController;
+    [SerializeField] private TileVisualizer3D      tileVisualizer;
+
+    [Header("Editor Fallback")]
+    [Tooltip("Level ID used when entering Play mode directly without a scene flow.")]
+    [SerializeField] private string fallbackLevelId  = "level_01";
+    [SerializeField] private int    fallbackWidth    = 20;
+    [SerializeField] private int    fallbackHeight   = 20;
+    [Tooltip("Starting gold used when no level file is found.")]
+    [SerializeField] private int    fallbackGold     = 500;
+
+    // ── Runtime session state ──────────────────────────────────────────
+    private int           _activeSlot;
+    private string        _activeBranchId;
+    private int           _activeSaveIndex;
+    private string        _activeLevelId;
+    private bool          _loadedFromAutosave;
+    private bool          _loadedFromBranchTip;
+    private List<FactionSetup> _activeFactions = new();
+
+    // ── Wallets ────────────────────────────────────────────────────────
+    private readonly Dictionary<FactionID, FactionWallet> _wallets = new();
+
+    // ── Accessors ──────────────────────────────────────────────────────
+    public GridManager2D         Grid           => gridManager;
+    public SelectionController2D Selection      => selectionController;
+    public TileVisualizer3D      TileVisualizer => tileVisualizer;
+    public int                   ActiveSlot     => _activeSlot;
+    public string                ActiveBranchId => _activeBranchId;
+    public int                   ActiveSaveIndex => _activeSaveIndex;
+    public List<FactionSetup>    ActiveFactions  => _activeFactions;
+
+    /// <summary>
+    /// Returns the wallet for the specified faction, or null if not active.
+    /// </summary>
+    public FactionWallet GetWallet(FactionID faction) =>
+        _wallets.TryGetValue(faction, out var w) ? w : null;
+
+    /// <summary>Convenience accessor for the local player's wallet.</summary>
+    public FactionWallet PlayerWallet => GetWallet(FactionID.Player);
+
+    // ── Unity lifecycle ────────────────────────────────────────────────
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(this); return; }
+        if (Instance == null) Instance = this;
+    }
+
+    private void Start()
+    {
+        gridManager.OnRebakeComplete += OnRebakeComplete;
+        LoadFromArgs();
+    }
+
+    private void OnDestroy()
+    {
+        if (gridManager != null)
+            gridManager.OnRebakeComplete -= OnRebakeComplete;
+    }
+
+    // ── Wallet management ──────────────────────────────────────────────
+
+    private void InitialiseWallets(List<FactionSetup> factions, int levelDefaultGold)
+    {
+        // Destroy any wallets from a previous load.
+        foreach (var w in _wallets.Values)
+            if (w != null) Destroy(w.gameObject);
+        _wallets.Clear();
+
+        if (factions == null || factions.Count == 0)
+        {
+            // Fallback: single player wallet.
+            CreateWallet(FactionID.Player, levelDefaultGold);
+            OnWalletsReady?.Invoke();
+            return;
+        }
+
+        foreach (var setup in factions)
+        {
+            int gold = setup.startingGold > 0 ? setup.startingGold : levelDefaultGold;
+            CreateWallet(setup.factionId, gold);
+        }
+
+        OnWalletsReady?.Invoke();
+    }
+
+    private void CreateWallet(FactionID faction, int startingGold)
+    {
+        var go     = new GameObject($"Wallet_{faction}");
+        go.transform.SetParent(transform, false);
+        var wallet = go.AddComponent<FactionWallet>();
+        wallet.Initialise(faction, startingGold);
+        _wallets[faction] = wallet;
+    }
+
+    // ── Scene entry ────────────────────────────────────────────────────
+
+    private void LoadFromArgs()
+    {
+        _activeSlot      = GameplaySceneArgs.SlotIndex;
+        _activeBranchId  = GameplaySceneArgs.BranchId;
+        _activeSaveIndex = GameplaySceneArgs.SaveIndex;
+        _activeLevelId   = GameplaySceneArgs.LevelId ?? fallbackLevelId;
+        bool isNewGame   = GameplaySceneArgs.IsNewGame;
+        bool loadAuto    = GameplaySceneArgs.LoadAutosave;
+
+        GameplaySceneArgs.Clear();
+        EnsureSlotInitialised();
+
+        if (isNewGame || _activeSaveIndex < 0)
+            StartNewGame(_activeLevelId);
+        else if (loadAuto)
+            LoadAutosave();
+        else
+            ResumeFromSave(_activeSlot, _activeBranchId, _activeSaveIndex);
+    }
+
+    private void EnsureSlotInitialised()
+    {
+        var manifest = SaveLoadSystem.LoadManifest(_activeSlot);
+        if (manifest == null)
+        {
+            SaveLoadSystem.InitialiseSlot(_activeSlot);
+            Debug.Log($"[GameManager2D] Initialised slot {_activeSlot}.");
+            return;
+        }
+        if (manifest.GetBranch(_activeBranchId) == null)
+        {
+            Debug.LogWarning($"[GameManager2D] Branch '{_activeBranchId}' missing. " +
+                             "Falling back to branch_0.");
+            _activeBranchId = "branch_0";
+        }
+    }
+
+    // ── Load paths ─────────────────────────────────────────────────────
+
+    private void StartNewGame(string levelId)
+    {
+        _loadedFromAutosave  = false;
+        _loadedFromBranchTip = false;
+        _activeSaveIndex     = -1;
+
+        var level = SaveLoadSystem.LoadLevel(levelId);
+        if (level == null)
+        {
+            Debug.LogWarning($"[GameManager2D] Level '{levelId}' not found. " +
+                             $"Using empty {fallbackWidth}x{fallbackHeight} grid.");
+            _activeLevelId  = string.IsNullOrEmpty(levelId) ? "unknown" : levelId;
+            _activeFactions = new List<FactionSetup>();
+            gridManager.Initialise(fallbackWidth, fallbackHeight);
+            InitialiseWallets(null, fallbackGold);
+            return;
+        }
+
+        _activeLevelId  = level.levelId;
+        _activeFactions = level.factions ?? new List<FactionSetup>();
+        SaveLoadSystem.ApplyGrid(gridManager, level.grid);
+        InitialiseWallets(_activeFactions, level.startingGold);
+
+        Debug.Log($"[GameManager2D] Started '{level.displayName}' " +
+                  $"with {_activeFactions.Count} faction(s).");
+    }
+
+    private void LoadAutosave()
+    {
+        var save = SaveLoadSystem.LoadAutosave(_activeSlot);
+        if (save == null) { StartNewGame(_activeLevelId); return; }
+
+        _loadedFromAutosave  = true;
+        _loadedFromBranchTip = false;
+        _activeLevelId       = save.levelId;
+        _activeSaveIndex     = -1;
+
+        SaveLoadSystem.ApplyGrid(gridManager, save.grid);
+        RestoreWalletsFromSave(save);
+        Debug.Log($"[GameManager2D] Loaded autosave for slot {_activeSlot}.");
+    }
+
+    private void ResumeFromSave(int slot, string branchId, int saveIndex)
+    {
+        var save = SaveLoadSystem.LoadSave(slot, branchId, saveIndex);
+        if (save == null) { StartNewGame(_activeLevelId); return; }
+
+        _loadedFromAutosave = false;
+        _activeLevelId      = save.levelId;
+        _activeSaveIndex    = saveIndex;
+
+        var manifest = SaveLoadSystem.LoadManifest(slot);
+        _loadedFromBranchTip = manifest != null &&
+                               manifest.IsBranchTip(branchId, saveIndex);
+
+        SaveLoadSystem.ApplyGrid(gridManager, save.grid);
+        RestoreWalletsFromSave(save);
+
+        Debug.Log($"[GameManager2D] Resumed slot={slot} branch={branchId} " +
+                  $"index={saveIndex} (tip={_loadedFromBranchTip}).");
+    }
+
+    /// <summary>
+    /// Restores wallet balances from a save file.
+    /// Falls back to the level default if a faction has no saved gold.
+    /// </summary>
+    private void RestoreWalletsFromSave(SaveData save)
+    {
+        // Re-initialise wallets from faction setup (gold set below).
+        InitialiseWallets(_activeFactions, 0);
+
+        if (save.gameState == null) return;
+
+        // Restore per-faction gold. If save predates per-faction wallets,
+        // currentGold goes to the Player wallet as a safe fallback.
+        if (save.gameState.factionGold != null)
+        {
+            foreach (var pair in save.gameState.factionGold)
+            {
+                if (_wallets.TryGetValue(pair.Key, out var wallet))
+                    wallet.SetGold(pair.Value);
+            }
+        }
+        else
+        {
+            // Legacy single-wallet save — give gold to Player.
+            GetWallet(FactionID.Player)?.SetGold(save.gameState.currentGold);
+        }
+    }
+
+    // ── Save routing ───────────────────────────────────────────────────
+
+    public void Save(string displayName = "", Texture2D thumbnail = null)
+    {
+        if (_loadedFromAutosave)
+        {
+            PerformAutosave(thumbnail);
+            return;
+        }
+        if (_activeSaveIndex < 0 || _loadedFromBranchTip)
+        {
+            if (_activeSaveIndex >= 0 && _loadedFromBranchTip)
+                PerformOverwrite(displayName, thumbnail);
+            else
+                PerformAppend(displayName, thumbnail);
+            return;
+        }
+        PerformFork(displayName, thumbnail);
+    }
+
+    public void SaveAs(string displayName = "", Texture2D thumbnail = null)
+    {
+        if (_loadedFromAutosave)
+        {
+            PerformAppend(displayName, thumbnail);
+            return;
+        }
+        if (_activeSaveIndex >= 0 && !_loadedFromBranchTip)
+        {
+            Debug.Log("[GameManager2D] SaveAs mid-branch: behaving as Save " +
+                      "until UI chooser is implemented.");
+            Save(displayName, thumbnail);
+            return;
+        }
+        PerformAppend(displayName, thumbnail);
+    }
+
+    public void Autosave(Texture2D thumbnail = null) => PerformAutosave(thumbnail);
+
+    // ── Private save implementations ───────────────────────────────────
+
+    private void PerformAutosave(Texture2D thumbnail)
+    {
+        SaveLoadSystem.WriteAutosave(BuildSaveData("Autosave"), thumbnail);
+    }
+
+    private void PerformOverwrite(string displayName, Texture2D thumbnail)
+    {
+        bool ok = SaveLoadSystem.OverwriteSave(BuildSaveData(displayName), thumbnail);
+        if (ok) _loadedFromBranchTip = true;
+        Debug.Log($"[GameManager2D] Overwrote save index {_activeSaveIndex}.");
+    }
+
+    private void PerformAppend(string displayName, Texture2D thumbnail)
+    {
+        int index = SaveLoadSystem.AppendSave(BuildSaveData(displayName), thumbnail);
+        if (index >= 0)
+        {
+            _activeSaveIndex    = index;
+            _loadedFromBranchTip = true;
+            _loadedFromAutosave  = false;
+        }
+        Debug.Log($"[GameManager2D] Appended save index {index}.");
+    }
+
+    private void PerformFork(string displayName, Texture2D thumbnail)
+    {
+        string newBranch = SaveLoadSystem.ForkBranch(
+            _activeSlot, _activeBranchId, _activeSaveIndex,
+            $"Fork at {_activeBranchId}[{_activeSaveIndex}]");
+
+        if (newBranch == null) return;
+
+        _activeBranchId      = newBranch;
+        _activeSaveIndex     = 0;
+        _loadedFromBranchTip = true;
+
+        PerformAppend(displayName, thumbnail);
+        Debug.Log($"[GameManager2D] Forked to branch '{newBranch}'.");
+    }
+
+    private SaveData BuildSaveData(string displayName) => new SaveData
+    {
+        levelId     = _activeLevelId,
+        displayName = string.IsNullOrEmpty(displayName)
+                        ? $"{_activeLevelId} — {DateTime.Now:HH:mm dd/MM/yy}"
+                        : displayName,
+        slotIndex   = _activeSlot,
+        branchId    = _activeBranchId,
+        saveIndex   = _activeSaveIndex,
+        grid        = SaveLoadSystem.CaptureGrid(gridManager),
+        gameState   = BuildGameStateSaveData(),
+    };
+
+    private GameStateSaveData BuildGameStateSaveData()
+    {
+        var data = new GameStateSaveData();
+
+        // Populate per-faction gold dictionary.
+        data.factionGold = new Dictionary<FactionID, int>();
+        foreach (var pair in _wallets)
+            data.factionGold[pair.Key] = pair.Value.Gold;
+
+        // Keep currentGold as the player's gold for backwards compatibility.
+        data.currentGold = GetWallet(FactionID.Player)?.Gold ?? 0;
+
+        return data;
+    }
+
+    // ── Rebake callback ────────────────────────────────────────────────
+
+    private void OnRebakeComplete(IReadOnlyList<DungeonRoom> rooms)
+    {
+        Debug.Log($"[GameManager2D] Rebake — {rooms.Count} room(s).");
+        // TODO: 3DAssetLayer.Refresh(rooms)
+        // TODO: MinimapRenderer.Refresh(rooms)
+        // TODO: NavMesh rebake
+    }
+}

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 469c362972b550a478a450f5fffebe3b, type: 3}
+  m_Name: TileRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::TileRegistry
+  definitions:
+  - {fileID: 11400000, guid: 5b77eaa3ecce80648ae07164bd929ef5, type: 2}
+  - {fileID: 11400000, guid: 42c4493b727f7fc48a55d7d597c93cb2, type: 2}
+  - {fileID: 11400000, guid: 6e26c73763b893a4a8102a7d601caba7, type: 2}
+  - {fileID: 11400000, guid: 880c54c3c621e8145a31adc8f04bbb9b, type: 2}
+  - {fileID: 11400000, guid: f91da1cad3643684683fae2ec46fc1aa, type: 2}
+  - {fileID: 11400000, guid: 5991beb759989d449857f84fb054afee, type: 2}
+  - {fileID: 11400000, guid: d7f9ff6f21993e2428c985b21cc45dde, type: 2}
+  - {fileID: 11400000, guid: 2d548d0d619c285418e584d0e2d9b5f6, type: 2}
+  - {fileID: 11400000, guid: 7e7f97b82fe9c3849a7885fe0467705b, type: 2}
+  - {fileID: 11400000, guid: 06bc9368edb2cef49a4fcea06d73368b, type: 2}
+  - {fileID: 11400000, guid: 094da12ec7901ec4fab7716796c8312d, type: 2}
+  - {fileID: 11400000, guid: c43766d55f817cd40b89ed5aad5a83f7, type: 2}
+  - {fileID: 11400000, guid: d5bc8bdc348eb52498b9546d7fb8d6cc, type: 2}
+  factionColours:
+  - faction: 0
+    colour: {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 0}
+  - faction: 1
+    colour: {r: 0.26666668, g: 0.53333336, b: 1, a: 0}
+  - faction: 2
+    colour: {r: 1, g: 0.26666668, b: 0.26666668, a: 0}
+  - faction: 3
+    colour: {r: 0.26666668, g: 1, b: 0.26666668, a: 0}
+  - faction: 4
+    colour: {r: 1, g: 0.6666667, b: 0, a: 0}

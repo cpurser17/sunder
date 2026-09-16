@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileLava
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 4
+  tileName: Lava
+  category: 1
+  traversalType: 2
+  gridColour: {r: 1, g: 0.26666668, b: 0, a: 1}
+  buyCost: 0
+  sellValue: 0
+  isIndestructible: 0
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 0
+  prefab3D: {fileID: 6291839917741548998, guid: eaf87d0a178d7a645b6976fea5636483, type: 3}

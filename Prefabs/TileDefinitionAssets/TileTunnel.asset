@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileTunnel
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 5
+  tileName: Tunnel
+  category: 2
+  traversalType: 0
+  gridColour: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
+  buyCost: 50
+  sellValue: 25
+  isIndestructible: 0
+  requiresAdjacency: 1
+  placesOnLiquid: 0
+  placesOnTunnel: 0
+  prefab3D: {fileID: 4307324028023537488, guid: a1f69fa45f2230a4eb322715c876fc6b, type: 3}
+  positionOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 0, y: 0, z: 0}
+  scaleMultiplier: 1

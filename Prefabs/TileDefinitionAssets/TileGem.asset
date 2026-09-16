@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileGem
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 12
+  tileName: Gem
+  category: 0
+  traversalType: 0
+  gridColour: {r: 0, g: 1, b: 0.8, a: 1}
+  buyCost: 0
+  sellValue: 0
+  isIndestructible: 1
+  maxHitPoints: 0
+  wealthCapacity: 300
+  impDamagePerSecond: 20
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 0
+  prefab3D: {fileID: 8441444816428059876, guid: 092be59543541f442984f084c51ea9e2, type: 3}
+  positionOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 0, y: 0, z: 0}
+  scaleMultiplier: 1

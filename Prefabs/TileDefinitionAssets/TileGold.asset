@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
+  m_Name: TileGold
+  m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
+  tileType: 11
+  tileName: Gold
+  category: 0
+  traversalType: 0
+  gridColour: {r: 1, g: 0.8666667, b: 0, a: 1}
+  buyCost: 0
+  sellValue: 0
+  isIndestructible: 0
+  maxHitPoints: 300
+  wealthCapacity: 300
+  impDamagePerSecond: 20
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 0
+  prefab3D: {fileID: 1559812326016675262, guid: 152ba3ac4ee1dbc42be1680de741cebe, type: 3}
+  positionOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 0, y: 0, z: 0}
+  scaleMultiplier: 1
