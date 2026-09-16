@@ -15,7 +15,7 @@ MonoBehaviour:
   tileType: 5
   tileName: Tunnel
   category: 2
-  traversalType: 0
+  traversalType: 1
   gridColour: {r: 0.6666667, g: 0.6666667, b: 0.6666667, a: 1}
   buyCost: 50
   sellValue: 25
