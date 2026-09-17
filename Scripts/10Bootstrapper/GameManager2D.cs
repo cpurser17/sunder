@@ -52,6 +52,13 @@ public class GameManager2D : MonoBehaviour
     // ── Wallets ────────────────────────────────────────────────────────
     private readonly Dictionary<FactionID, FactionWallet> _wallets = new();
 
+    // ── Research ───────────────────────────────────────────────────────
+    private readonly Dictionary<FactionID, FactionResearchState> _research = new();
+
+    // ── Minions ────────────────────────────────────────────────────────
+    /// <summary>Mission-wide summon restriction from the active level. Empty = no restriction.</summary>
+    public List<string> AllowedMinionIds { get; private set; } = new();
+
     // ── Accessors ──────────────────────────────────────────────────────
     public GridManager2D         Grid           => gridManager;
     public SelectionController2D Selection      => selectionController;
@@ -70,6 +77,10 @@ public class GameManager2D : MonoBehaviour
     /// <summary>Convenience accessor for the local player's wallet.</summary>
     public FactionWallet PlayerWallet => GetWallet(FactionID.Player);
 
+    /// <summary>Returns the research state for the specified faction, or null if not active.</summary>
+    public FactionResearchState GetResearch(FactionID faction) =>
+        _research.TryGetValue(faction, out var r) ? r : null;
+
     // ── Unity lifecycle ────────────────────────────────────────────────
 
     private void Awake()
@@ -81,6 +92,7 @@ public class GameManager2D : MonoBehaviour
     private void Start()
     {
         gridManager.OnRebakeComplete += OnRebakeComplete;
+        DungeonHeart.OnFactionEliminated += OnFactionEliminated;
         LoadFromArgs();
     }
 
@@ -88,21 +100,27 @@ public class GameManager2D : MonoBehaviour
     {
         if (gridManager != null)
             gridManager.OnRebakeComplete -= OnRebakeComplete;
+        DungeonHeart.OnFactionEliminated -= OnFactionEliminated;
     }
 
     // ── Wallet management ──────────────────────────────────────────────
 
     private void InitialiseWallets(List<FactionSetup> factions, int levelDefaultGold)
     {
-        // Destroy any wallets from a previous load.
+        // Destroy any wallets/research from a previous load.
         foreach (var w in _wallets.Values)
             if (w != null) Destroy(w.gameObject);
         _wallets.Clear();
+
+        foreach (var r in _research.Values)
+            if (r != null) Destroy(r.gameObject);
+        _research.Clear();
 
         if (factions == null || factions.Count == 0)
         {
             // Fallback: single player wallet.
             CreateWallet(FactionID.Player, levelDefaultGold);
+            CreateResearch(FactionID.Player);
             OnWalletsReady?.Invoke();
             return;
         }
@@ -111,6 +129,7 @@ public class GameManager2D : MonoBehaviour
         {
             int gold = setup.startingGold > 0 ? setup.startingGold : levelDefaultGold;
             CreateWallet(setup.factionId, gold);
+            CreateResearch(setup.factionId);
         }
 
         OnWalletsReady?.Invoke();
@@ -123,6 +142,15 @@ public class GameManager2D : MonoBehaviour
         var wallet = go.AddComponent<FactionWallet>();
         wallet.Initialise(faction, startingGold);
         _wallets[faction] = wallet;
+    }
+
+    private void CreateResearch(FactionID faction)
+    {
+        var go       = new GameObject($"Research_{faction}");
+        go.transform.SetParent(transform, false);
+        var research = go.AddComponent<FactionResearchState>();
+        research.Initialise(faction);
+        _research[faction] = research;
     }
 
     // ── Scene entry ────────────────────────────────────────────────────
@@ -177,15 +205,17 @@ public class GameManager2D : MonoBehaviour
         {
             Debug.LogWarning($"[GameManager2D] Level '{levelId}' not found. " +
                              $"Using empty {fallbackWidth}x{fallbackHeight} grid.");
-            _activeLevelId  = string.IsNullOrEmpty(levelId) ? "unknown" : levelId;
-            _activeFactions = new List<FactionSetup>();
+            _activeLevelId    = string.IsNullOrEmpty(levelId) ? "unknown" : levelId;
+            _activeFactions   = new List<FactionSetup>();
+            AllowedMinionIds  = new List<string>();
             gridManager.Initialise(fallbackWidth, fallbackHeight);
             InitialiseWallets(null, fallbackGold);
             return;
         }
 
-        _activeLevelId  = level.levelId;
-        _activeFactions = level.factions ?? new List<FactionSetup>();
+        _activeLevelId   = level.levelId;
+        _activeFactions  = level.factions        ?? new List<FactionSetup>();
+        AllowedMinionIds = level.allowedMinionIds ?? new List<string>();
         SaveLoadSystem.ApplyGrid(gridManager, level.grid);
         InitialiseWallets(_activeFactions, level.startingGold);
 
@@ -203,6 +233,7 @@ public class GameManager2D : MonoBehaviour
         _activeLevelId       = save.levelId;
         _activeSaveIndex     = -1;
 
+        LoadLevelMeta(_activeLevelId);
         SaveLoadSystem.ApplyGrid(gridManager, save.grid);
         RestoreWalletsFromSave(save);
         Debug.Log($"[GameManager2D] Loaded autosave for slot {_activeSlot}.");
@@ -221,11 +252,27 @@ public class GameManager2D : MonoBehaviour
         _loadedFromBranchTip = manifest != null &&
                                manifest.IsBranchTip(branchId, saveIndex);
 
+        LoadLevelMeta(_activeLevelId);
         SaveLoadSystem.ApplyGrid(gridManager, save.grid);
         RestoreWalletsFromSave(save);
 
         Debug.Log($"[GameManager2D] Resumed slot={slot} branch={branchId} " +
                   $"index={saveIndex} (tip={_loadedFromBranchTip}).");
+    }
+
+    /// <summary>
+    /// Re-reads mission config (active factions, allowed minions) from the
+    /// originating level file. A save only stores game STATE, not mission
+    /// design, so resuming one has to go back to the level for this — without
+    /// it, _activeFactions previously stayed at whatever StartNewGame last
+    /// left it (empty on a cold resume), silently dropping every AI faction's
+    /// wallet on load.
+    /// </summary>
+    private void LoadLevelMeta(string levelId)
+    {
+        var level = SaveLoadSystem.LoadLevel(levelId);
+        _activeFactions  = level?.factions        ?? new List<FactionSetup>();
+        AllowedMinionIds = level?.allowedMinionIds ?? new List<string>();
     }
 
     /// <summary>
@@ -254,6 +301,8 @@ public class GameManager2D : MonoBehaviour
             // Legacy single-wallet save — give gold to Player.
             GetWallet(FactionID.Player)?.SetGold(save.gameState.currentGold);
         }
+
+        DungeonHeart.RestoreAllFromSave(save.gameState.factionHeartHP);
     }
 
     // ── Save routing ───────────────────────────────────────────────────
@@ -305,8 +354,19 @@ public class GameManager2D : MonoBehaviour
     private void PerformOverwrite(string displayName, Texture2D thumbnail)
     {
         bool ok = SaveLoadSystem.OverwriteSave(BuildSaveData(displayName), thumbnail);
-        if (ok) _loadedFromBranchTip = true;
-        Debug.Log($"[GameManager2D] Overwrote save index {_activeSaveIndex}.");
+        if (ok)
+        {
+            _loadedFromBranchTip = true;
+            Debug.Log($"[GameManager2D] Overwrote save index {_activeSaveIndex}.");
+            return;
+        }
+
+        // Target file was missing — AppendSave picks a fresh index and
+        // PerformAppend keeps our session state (index/branch-tip/autosave
+        // flags) in sync with it, instead of silently drifting from the
+        // manifest's real active save.
+        Debug.LogWarning("[GameManager2D] Overwrite target missing; appending instead.");
+        PerformAppend(displayName, thumbnail);
     }
 
     private void PerformAppend(string displayName, Texture2D thumbnail)
@@ -359,6 +419,11 @@ public class GameManager2D : MonoBehaviour
         foreach (var pair in _wallets)
             data.factionGold[pair.Key] = pair.Value.Gold;
 
+        // Populate per-faction Dungeon Heart HP.
+        data.factionHeartHP = new Dictionary<FactionID, int>();
+        foreach (var pair in DungeonHeart.All)
+            data.factionHeartHP[pair.Key] = pair.Value.CurrentHP;
+
         // Keep currentGold as the player's gold for backwards compatibility.
         data.currentGold = GetWallet(FactionID.Player)?.Gold ?? 0;
 
@@ -373,5 +438,11 @@ public class GameManager2D : MonoBehaviour
         // TODO: 3DAssetLayer.Refresh(rooms)
         // TODO: MinimapRenderer.Refresh(rooms)
         // TODO: NavMesh rebake
+    }
+
+    private void OnFactionEliminated(FactionID faction)
+    {
+        Debug.Log($"[GameManager2D] Faction {faction} eliminated — Dungeon Heart destroyed.");
+        // TODO: win/loss screen, AI shutdown, session end.
     }
 }

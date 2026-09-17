@@ -41,6 +41,11 @@ public class LevelData
     // ── Starting conditions ────────────────────────────────────────────
     public int startingGold = 500;   // default gold for factions that do not override
 
+    // ── Minions ────────────────────────────────────────────────────────
+    // Mission-wide restriction on which MinionDefinition.minionId values may
+    // be summoned in this level, regardless of faction. Empty = no restriction.
+    public List<string> allowedMinionIds = new();
+
     // ── Grid ──────────────────────────────────────────────────────────
     public GridSaveData grid;
 
@@ -90,6 +95,11 @@ public class GameStateSaveData
     // Null in saves predating the wallet refactor — handled gracefully on load.
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public System.Collections.Generic.Dictionary<FactionID, int> factionGold;
+
+    // Per-faction Dungeon Heart HP, keyed by FactionID.
+    // Null in saves predating DungeonHeart — hearts simply start at full HP.
+    [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public System.Collections.Generic.Dictionary<FactionID, int> factionHeartHP;
 
     // ── Future extension slots ─────────────────────────────────────────
     // public int   score;

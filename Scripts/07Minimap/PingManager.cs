@@ -75,10 +75,6 @@ public class PingManager : MonoBehaviour
         // Lazy fallback — catches any remaining timing edge cases.
         if (_overlayTexture == null)
         {
-            Debug.Log($"[PingManager] LateUpdate: overlay null. " +
-                      $"Instance={(MinimapRenderer != null)}, " +
-                      $"Texture={(MinimapRenderer?.Texture != null ? $"{MinimapRenderer.Texture.width}x{MinimapRenderer.Texture.height}" : "null")}");
-
             if (MinimapRenderer?.Texture != null)
                 InitialiseOverlay();
 

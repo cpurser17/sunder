@@ -354,8 +354,14 @@ public class ImpTaskManager : MonoBehaviour
         bool unclaimedCave = cell.TileType == TileType.Cave &&
                              cell.Owner    == FactionID.Unaligned;
 
+        // Portal and Heart are both Owned and walkable like a normal room
+        // tile, but neither is capturable through ordinary territory-claim
+        // overflow — they only change hands through dedicated mechanics
+        // (Heart specifically only falls when its HP reaches 0).
         bool enemyHeld = cell.Owner != faction &&
                          cell.Owner != FactionID.Unaligned &&
+                         cell.TileType != TileType.Portal &&
+                         cell.TileType != TileType.Heart &&
                          gridManager.GetCategory(cell.TileType) == TileCategory.Owned &&
                          TraversalRules.CanPathOn(cell.TileType,
                                                   TraversalCapability.LandOnly, faction);
