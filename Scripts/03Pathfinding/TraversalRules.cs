@@ -100,14 +100,22 @@ public static class TraversalRules
         return !CanPathOn(type, capability);
     }
 
-    /// <summary>Solid rock (or an equivalent structure) — never occupiable by anything.</summary>
+    /// <summary>
+    /// Solid rock — never occupiable by anything.
+    ///
+    /// Heart is NOT here: its 3x3 footprint is walkable floor. The crystal at
+    /// its centre is a physical obstacle handled by GridAgent's soft
+    /// separation (see GridAgent.isStatic), not by grid-level passability —
+    /// minions are gently pushed clear of it the same way they are pushed
+    /// clear of each other, rather than the pathfinder refusing to route
+    /// through the tile at all.
+    /// </summary>
     public static bool IsSolid(TileType type) =>
         type == TileType.Bedrock ||
         type == TileType.Stone   ||
         type == TileType.Wall    ||
         type == TileType.Gold    ||
-        type == TileType.Gem     ||
-        type == TileType.Heart;
+        type == TileType.Gem;
 
     // ── Diagonal legality ──────────────────────────────────────────────
 

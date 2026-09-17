@@ -83,6 +83,15 @@ public class GridAgent : MonoBehaviour
              "depositing imp gives way more readily than one in transit.")]
     [SerializeField] private float stationaryYieldMultiplier = 1.5f;
 
+    [Header("Static obstacle")]
+    [Tooltip("A static agent never paths, moves, or takes hazard damage — " +
+             "SetDestination/FleeToSafety are no-ops — but is still sized and " +
+             "registered exactly like a moving token, so other agents' own " +
+             "separation gently pushes them clear of it. Used for physical " +
+             "obstacles with no logic of their own, such as the Dungeon " +
+             "Heart's crystal.")]
+    [SerializeField] private bool isStatic = false;
+
     // ── Runtime ────────────────────────────────────────────────────────
     private GridPathfinder _pathfinder;
     private PathSmoother   _smoother;
@@ -108,6 +117,7 @@ public class GridAgent : MonoBehaviour
     public bool                HasArrived => !HasPath;
     public TraversalCapability Capability => capability;
     public FactionID           Faction    => faction;
+    public bool                IsStatic   => isStatic;
 
     /// <summary>Token radius in world units, including padding.</summary>
     public float Radius => _radius;
@@ -183,6 +193,12 @@ public class GridAgent : MonoBehaviour
 
     private void Update()
     {
+        // A static obstacle never moves and has no path/hazard state of its
+        // own to update — it only needs to sit in _allAgents so OTHER agents'
+        // ApplySeparation sees it and pushes clear. Nothing below this point
+        // applies to it.
+        if (isStatic) return;
+
         RefreshCurrentCell();
 
         if (CurrentCell != null &&
@@ -213,7 +229,7 @@ public class GridAgent : MonoBehaviour
     /// </summary>
     public bool SetDestination(GridCell destination, bool allowUnsafe = false)
     {
-        if (destination == null) return false;
+        if (isStatic || destination == null) return false;
         return SetDestination(
             gridManager.CellToWorld(destination.X, destination.Y), allowUnsafe);
     }
@@ -225,6 +241,8 @@ public class GridAgent : MonoBehaviour
     /// </summary>
     public bool SetDestination(Vector3 worldTarget, bool allowUnsafe = false)
     {
+        if (isStatic) return false;
+
         RefreshCurrentCell();
         if (CurrentCell == null) return false;
 
@@ -264,6 +282,8 @@ public class GridAgent : MonoBehaviour
     /// </summary>
     public bool FleeToSafety()
     {
+        if (isStatic) return false;
+
         RefreshCurrentCell();
         var safe = _pathfinder.FindNearestSafeCell(
             CurrentCell, capability, faction, _radius);
