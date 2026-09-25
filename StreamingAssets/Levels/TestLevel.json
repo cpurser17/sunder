@@ -1,0 +1,2022 @@
+{
+  "levelId": "TestLevel",
+  "displayName": "Test Map \u2014 Player Start",
+  "description": "Minimal starting layout: a claimed chamber with the Player's Dungeon Heart and Portal, Stone to mine, and an open Cave pocket to claim.",
+  "factions": [
+    {
+      "factionId": "Player",
+      "displayName": "Player",
+      "colourHex": "#4488FF",
+      "isHuman": true,
+      "startingGold": 0
+    }
+  ],
+  "startingGold": 500,
+  "allowedMinionIds": [],
+  "grid": {
+    "width": 20,
+    "height": 20,
+    "cells": [
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Heart",
+        "underlyingType": "Heart",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Portal",
+        "underlyingType": "Portal",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Cave",
+        "underlyingType": "Cave",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Tunnel",
+        "underlyingType": "Tunnel",
+        "owner": "Player"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Stone",
+        "underlyingType": "Stone",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      },
+      {
+        "tileType": "Bedrock",
+        "underlyingType": "Bedrock",
+        "owner": "Unaligned"
+      }
+    ]
+  }
+}
