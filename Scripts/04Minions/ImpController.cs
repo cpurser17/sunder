@@ -103,7 +103,7 @@ public class ImpController : MonoBehaviour
         {
             gridManager = GameManager2D.Instance != null
                 ? GameManager2D.Instance.Grid
-                : FindFirstObjectByType<GridManager2D>();
+                : FindAnyObjectByType<GridManager2D>();
 
             if (gridManager == null)
                 Debug.LogError($"[ImpController] {name} could not resolve a " +
