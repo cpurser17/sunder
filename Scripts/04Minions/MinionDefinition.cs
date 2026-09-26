@@ -11,7 +11,7 @@ using UnityEngine;
 public class MinionDefinition : ScriptableObject
 {
     /// <summary>Broad combat role. For AI decision-making and UI grouping — not read by summoning logic itself.</summary>
-    public enum MinionRole { Fighter, Caster, Siege, Support, Utility }
+    public enum MinionRole { Fighter, Mage, Ranger, Scout, Utility, Unique }
 
     [Header("Identity")]
     [Tooltip("Stable id referenced by LevelData.allowedMinionIds. Not the " +
