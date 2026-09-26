@@ -2,69 +2,65 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// One faction's summoning portal — a single tile every minion except imps
-/// (see MinionSummoner) spawns on. Purely a spawn point: it has no HP and
-/// isn't part of the win/lose condition, unlike DungeonHeart.
+/// Every faction's summoning portal — the single tile every minion except
+/// imps (see MinionSummoner) spawns on. Purely a spawn point: it has no HP
+/// and isn't part of the win/lose condition, unlike DungeonHeart.
 ///
-/// Like DungeonHeart, its cell is authored directly in the level's grid data
-/// (TileType.Portal, owned by this faction) and discovered here once the
-/// grid exists, rather than being placed procedurally at runtime.
+/// One instance of this component exists in the scene, ever. Once the grid
+/// exists it scans for every TileType.Portal cell and indexes it by owning
+/// faction — there is no per-faction prefab or scene object to hand-place,
+/// a faction gets a portal as long as the level's grid data paints one for it.
 /// </summary>
 public class Portal : MonoBehaviour
 {
-    // ── Per-faction registry ───────────────────────────────────────────
-    private static readonly Dictionary<FactionID, Portal> _registry = new();
-
-    public static Portal GetForFaction(FactionID faction) =>
-        _registry.TryGetValue(faction, out var p) ? p : null;
-
-    // ── Inspector ──────────────────────────────────────────────────────
-    [Header("Identity")]
-    [SerializeField] private FactionID faction = FactionID.Player;
+    public static Portal Instance { get; private set; }
 
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
     // ── Runtime ────────────────────────────────────────────────────────
-    private GridCell _cell;
-
-    public FactionID Faction => faction;
-    public GridCell  Cell    => _cell;
-    public bool      IsReady => _cell != null;
-    public Vector3   SpawnPoint => gridManager.CellToWorld(_cell.X, _cell.Y);
+    private readonly Dictionary<FactionID, GridCell> _cells = new();
+    private bool _ready;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
-    private void Awake() => _registry[faction] = this;
+    private void Awake() => Instance = this;
 
     private void OnDestroy()
     {
-        if (_registry.TryGetValue(faction, out var p) && p == this)
-            _registry.Remove(faction);
-        GameManager2D.OnWalletsReady -= DiscoverCell;
+        if (Instance == this) Instance = null;
+        GameManager2D.OnWalletsReady -= DiscoverAll;
     }
 
     private void Start()
     {
-        if (gridManager.Width > 0) DiscoverCell();
-        else GameManager2D.OnWalletsReady += DiscoverCell;
+        if (gridManager.Width > 0) DiscoverAll();
+        else GameManager2D.OnWalletsReady += DiscoverAll;
     }
 
-    private void DiscoverCell()
+    private void DiscoverAll()
     {
-        GameManager2D.OnWalletsReady -= DiscoverCell;
+        GameManager2D.OnWalletsReady -= DiscoverAll;
 
+        _cells.Clear();
         for (int x = 0; x < gridManager.Width;  x++)
         for (int y = 0; y < gridManager.Height; y++)
         {
             var cell = gridManager.GetCell(x, y);
-            if (cell.TileType == TileType.Portal && cell.Owner == faction)
-            {
-                _cell = cell;
-                return;
-            }
+            if (cell.TileType == TileType.Portal) _cells[cell.Owner] = cell;
         }
 
-        Debug.LogWarning($"[Portal] No Portal tile found for faction {faction}.");
+        foreach (var setup in GameManager2D.Instance.ActiveFactions)
+            if (!_cells.ContainsKey(setup.factionId))
+                Debug.LogWarning($"[Portal] No Portal tile found for faction {setup.factionId}.");
+
+        _ready = true;
     }
+
+    // ── Queries ────────────────────────────────────────────────────────
+
+    public bool IsReady(FactionID faction) => _ready && _cells.ContainsKey(faction);
+
+    public Vector3 SpawnPoint(FactionID faction) =>
+        gridManager.CellToWorld(_cells[faction].X, _cells[faction].Y);
 }

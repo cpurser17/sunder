@@ -70,9 +70,9 @@ public class CreatureController : MonoBehaviour
 
     private void TryHeadToHeart()
     {
-        var heart = DungeonHeart.GetForFaction(faction);
-        GridCell approach = heart != null && heart.IsReady
-            ? heart.FindApproachCell(_agent.CurrentCell, _agent.Capability, _agent.Radius)
+        var heart = DungeonHeart.Instance;
+        GridCell approach = heart != null && heart.IsReady(faction)
+            ? heart.FindApproachCell(faction, _agent.CurrentCell, _agent.Capability, _agent.Radius)
             : null;
 
         if (approach == null || !_agent.SetDestination(approach))
@@ -88,7 +88,7 @@ public class CreatureController : MonoBehaviour
     {
         _headingToHeart = false;
         _state          = CreatureState.Active;
-        DungeonHeart.GetForFaction(faction)?.NotifyReported(this);
+        DungeonHeart.Instance?.NotifyReported(faction, this);
     }
 
     // ── Death ──────────────────────────────────────────────────────────
@@ -98,7 +98,7 @@ public class CreatureController : MonoBehaviour
         if (_state == CreatureState.Dead) return;
 
         _state = CreatureState.Dead;
-        MinionSummoner.GetForFaction(faction)?.NotifyCreatureDied(_definition);
+        MinionSummoner.Instance?.NotifyCreatureDied(faction, _definition);
         Destroy(gameObject, 0.1f);
     }
 }

@@ -2,123 +2,159 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// One faction's Dungeon Heart — the win/lose condition. Destroying it
+/// Every faction's Dungeon Heart — the win/lose condition. Destroying one
 /// eliminates the faction that owns it.
 ///
-/// The footprint (TileType.Heart, owned by this faction) is authored
-/// directly in the level's grid data and discovered here once the grid
-/// exists, same as Portal. Unlike Portal, it has no special per-cell mining
-/// behaviour, and HP is tracked once for the whole structure rather than per
-/// cell, since "a 3x3 block with 9 separate HP pools" isn't a meaningful
-/// distinction for a single object.
+/// One instance of this component exists in the scene, ever. Once the grid
+/// exists it reads GameManager2D.ActiveFactions (itself sourced from the
+/// level file) and creates one logical heart per active faction, discovering
+/// each one's footprint (TileType.Heart, owned by that faction) from the
+/// grid in a single scan. There is no per-faction prefab or scene object to
+/// hand-place — a faction gets a heart as long as the level's grid data
+/// paints one for it, and adding a faction to a level is enough on its own.
 ///
 /// The footprint itself is ordinary walkable floor — see TraversalRules.
 /// The crystal at its centre is a purely physical obstacle: a GridAgent in
-/// static mode (see GridAgent.isStatic), spawned here once the footprint's
+/// static mode (see GridAgent.isStatic), spawned once each footprint's
 /// geometric centre is known, so minions are softly pushed clear of it by
 /// the same separation system that already keeps them off each other,
 /// rather than the grid refusing to route through the tile.
 ///
 /// Every newly summoned minion (see MinionSummoner / CreatureController)
-/// must reach a cell inside this footprint before it is considered part of
-/// the faction — FindApproachCell is what CreatureController paths to.
+/// must reach a cell inside its faction's footprint before it is considered
+/// part of the faction — FindApproachCell is what CreatureController paths to.
 /// </summary>
 public class DungeonHeart : MonoBehaviour
 {
-    // ── Per-faction registry ───────────────────────────────────────────
-    private static readonly Dictionary<FactionID, DungeonHeart> _registry = new();
-
-    public static DungeonHeart GetForFaction(FactionID faction) =>
-        _registry.TryGetValue(faction, out var h) ? h : null;
-
-    public static IReadOnlyDictionary<FactionID, DungeonHeart> All => _registry;
+    public static DungeonHeart Instance { get; private set; }
 
     /// <summary>Fired once, the moment a faction's heart HP reaches 0.</summary>
     public static event System.Action<FactionID> OnFactionEliminated;
 
     // ── Inspector ──────────────────────────────────────────────────────
-    [Header("Identity")]
-    [SerializeField] private FactionID faction = FactionID.Player;
-
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
     [Header("Health")]
-    [Tooltip("Total hit points for the whole heart structure. Reaching 0 eliminates the faction.")]
-    [SerializeField] private int maxHitPoints = 1000;
+    [Tooltip("Hit points for a faction's heart when no override below applies.")]
+    [SerializeField] private int defaultMaxHitPoints = 1000;
 
     [Header("Crystal")]
-    [Tooltip("Physical obstacle spawned at the footprint's centre once discovered. " +
-             "Must carry a GridAgent with Static Obstacle ticked, so it is sized " +
-             "like a token and registered for separation but never moves.")]
+    [Tooltip("Physical obstacle spawned at each heart's footprint centre, when no " +
+             "override below applies. Must carry a GridAgent with Static Obstacle " +
+             "ticked, so it is sized like a token and registered for separation but " +
+             "never moves.")]
     [SerializeField] private GameObject crystalPrefab;
 
+    [Header("Per-faction overrides")]
+    [Tooltip("Optional. A faction not listed here just uses the defaults above.")]
+    [SerializeField] private List<FactionOverride> overrides = new();
+
+    [System.Serializable]
+    public class FactionOverride
+    {
+        public FactionID faction;
+        [Tooltip("0 = use defaultMaxHitPoints.")]
+        public int maxHitPoints = 0;
+        [Tooltip("Empty = use the shared crystalPrefab.")]
+        public GameObject crystalPrefab;
+    }
+
     // ── Runtime ────────────────────────────────────────────────────────
-    private readonly List<GridCell> _footprint = new();
+
+    private class HeartState
+    {
+        public readonly List<GridCell> Footprint = new();
+        public GridCell CrystalCell;
+        public int MaxHitPoints;
+        public int CurrentHP;
+        public bool Eliminated;
+    }
+
+    private readonly Dictionary<FactionID, HeartState> _hearts             = new();
+    private readonly Dictionary<FactionID, int>        _pendingRestoreHP   = new();
     private GridPathfinder _pathfinder;
-    private GameObject _crystalInstance;
-    private GridCell   _crystalCell;
-    private int   _currentHP;
-    private bool  _footprintReady;
-    private bool  _eliminated;
-    private int?  _pendingRestoreHP;
+    private bool _ready;
 
-    public FactionID Faction        => faction;
-    public int       MaxHitPoints   => maxHitPoints;
-    public int       CurrentHP      => _currentHP;
-    public bool      IsReady        => _footprintReady;
-    public IReadOnlyList<GridCell> Footprint => _footprint;
+    /// <summary>Fired whenever a heart takes damage. Args: faction, currentHP, maxHP.</summary>
+    public event System.Action<FactionID, int, int> OnDamaged;
 
-    /// <summary>Fired whenever the heart takes damage. Args: currentHP, maxHP.</summary>
-    public event System.Action<int, int> OnDamaged;
-
-    /// <summary>Fired when a creature finishes reporting for duty here.</summary>
-    public event System.Action<CreatureController> OnCreatureReported;
+    /// <summary>Fired when a creature finishes reporting for duty at its faction's heart.</summary>
+    public event System.Action<FactionID, CreatureController> OnCreatureReported;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
     private void Awake()
     {
-        _registry[faction] = this;
-        _pathfinder = new GridPathfinder(gridManager);
-        _currentHP  = maxHitPoints;
+        Instance     = this;
+        _pathfinder  = new GridPathfinder(gridManager);
     }
 
     private void OnDestroy()
     {
-        if (_registry.TryGetValue(faction, out var h) && h == this)
-            _registry.Remove(faction);
-        GameManager2D.OnWalletsReady -= DiscoverFootprint;
+        if (Instance == this) Instance = null;
+        GameManager2D.OnWalletsReady -= DiscoverAll;
     }
 
     private void Start()
     {
-        if (gridManager.Width > 0) DiscoverFootprint();
-        else GameManager2D.OnWalletsReady += DiscoverFootprint;
+        if (gridManager.Width > 0) DiscoverAll();
+        else GameManager2D.OnWalletsReady += DiscoverAll;
     }
 
-    private void DiscoverFootprint()
+    private void DiscoverAll()
     {
-        GameManager2D.OnWalletsReady -= DiscoverFootprint;
+        GameManager2D.OnWalletsReady -= DiscoverAll;
 
-        _footprint.Clear();
+        _hearts.Clear();
+        foreach (var setup in GameManager2D.Instance.ActiveFactions)
+            _hearts[setup.factionId] = new HeartState { MaxHitPoints = MaxHitPointsFor(setup.factionId) };
+
         for (int x = 0; x < gridManager.Width;  x++)
         for (int y = 0; y < gridManager.Height; y++)
         {
             var cell = gridManager.GetCell(x, y);
-            if (cell.TileType == TileType.Heart && cell.Owner == faction)
-                _footprint.Add(cell);
+            if (cell.TileType == TileType.Heart && _hearts.TryGetValue(cell.Owner, out var state))
+                state.Footprint.Add(cell);
         }
 
-        if (_footprint.Count == 0)
-            Debug.LogWarning($"[DungeonHeart] No Heart tiles found for faction {faction}.");
-        else
-            SpawnCrystal();
+        foreach (var pair in _hearts)
+        {
+            FactionID faction = pair.Key;
+            HeartState state  = pair.Value;
 
-        _currentHP        = _pendingRestoreHP ?? maxHitPoints;
-        _pendingRestoreHP = null;
-        _eliminated        = _currentHP <= 0;
-        _footprintReady    = true;
+            state.CurrentHP = _pendingRestoreHP.TryGetValue(faction, out int hp)
+                ? Mathf.Clamp(hp, 0, state.MaxHitPoints)
+                : state.MaxHitPoints;
+            state.Eliminated = state.CurrentHP <= 0;
+
+            if (state.Footprint.Count == 0)
+                Debug.LogWarning($"[DungeonHeart] No Heart tiles found for faction {faction}.");
+            else
+                SpawnCrystal(faction, state);
+        }
+
+        _pendingRestoreHP.Clear();
+        _ready = true;
+    }
+
+    private int MaxHitPointsFor(FactionID faction)
+    {
+        var ov = FindOverride(faction);
+        return ov != null && ov.maxHitPoints > 0 ? ov.maxHitPoints : defaultMaxHitPoints;
+    }
+
+    private GameObject CrystalPrefabFor(FactionID faction)
+    {
+        var ov = FindOverride(faction);
+        return ov != null && ov.crystalPrefab != null ? ov.crystalPrefab : crystalPrefab;
+    }
+
+    private FactionOverride FindOverride(FactionID faction)
+    {
+        foreach (var o in overrides)
+            if (o.faction == faction) return o;
+        return null;
     }
 
     /// <summary>
@@ -127,98 +163,119 @@ public class DungeonHeart : MonoBehaviour
     /// it sits correctly even if a level's Heart footprint isn't a perfect
     /// odd-sized square with a single centre cell.
     /// </summary>
-    private void SpawnCrystal()
+    private void SpawnCrystal(FactionID faction, HeartState state)
     {
-        if (crystalPrefab == null)
+        var prefab = CrystalPrefabFor(faction);
+        if (prefab == null)
         {
-            Debug.LogWarning($"[DungeonHeart] {faction} has no crystalPrefab assigned.");
+            Debug.LogWarning($"[DungeonHeart] No crystalPrefab for faction {faction}.");
             return;
         }
 
         Vector3 sum = Vector3.zero;
-        foreach (var cell in _footprint)
+        foreach (var cell in state.Footprint)
             sum += gridManager.CellToWorld(cell.X, cell.Y);
 
-        Vector3 centre = sum / _footprint.Count;
-        _crystalInstance = Instantiate(crystalPrefab, centre, Quaternion.identity, transform);
+        Vector3 centre = sum / state.Footprint.Count;
+        Instantiate(prefab, centre, Quaternion.identity, transform);
 
         // Excluded from FindApproachCell below — a destination sitting under
         // the crystal's own collision radius could leave a creature
         // permanently oscillating just outside arriveTolerance, never
         // registering as arrived.
         if (gridManager.WorldToCell(centre, out int cx, out int cy))
-            _crystalCell = gridManager.GetCell(cx, cy);
+            state.CrystalCell = gridManager.GetCell(cx, cy);
 
-        var agent = _crystalInstance.GetComponent<GridAgent>();
+        var agent = prefab.GetComponent<GridAgent>();
         if (agent == null || !agent.IsStatic)
             Debug.LogWarning($"[DungeonHeart] {faction}'s crystalPrefab should carry a " +
                              "GridAgent with Static Obstacle ticked, or it will try to path/move.");
     }
 
-    // ── Damage / elimination ────────────────────────────────────────────
+    // ── Queries ────────────────────────────────────────────────────────
 
-    public void TakeDamage(int amount)
+    public bool IsReady(FactionID faction) =>
+        _ready && _hearts.TryGetValue(faction, out var s) && s.Footprint.Count > 0;
+
+    public int CurrentHP(FactionID faction) =>
+        _hearts.TryGetValue(faction, out var s) ? s.CurrentHP : 0;
+
+    public int MaxHitPoints(FactionID faction) =>
+        _hearts.TryGetValue(faction, out var s) ? s.MaxHitPoints : 0;
+
+    // ── Damage / elimination ─────────────────────────────────────────────
+
+    public void TakeDamage(FactionID faction, int amount)
     {
-        if (_eliminated || amount <= 0) return;
+        if (!_hearts.TryGetValue(faction, out var state) || state.Eliminated || amount <= 0) return;
 
-        _currentHP = Mathf.Max(0, _currentHP - amount);
-        OnDamaged?.Invoke(_currentHP, maxHitPoints);
+        state.CurrentHP = Mathf.Max(0, state.CurrentHP - amount);
+        OnDamaged?.Invoke(faction, state.CurrentHP, state.MaxHitPoints);
 
-        if (_currentHP <= 0)
+        if (state.CurrentHP <= 0)
         {
-            _eliminated = true;
+            state.Eliminated = true;
             OnFactionEliminated?.Invoke(faction);
         }
     }
 
     // ── Save / load ──────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Restores HP from a save. Safe to call before the footprint has been
-    /// discovered — GameManager2D and DungeonHeart both key off
-    /// OnWalletsReady, so their relative firing order isn't guaranteed; the
-    /// value is cached and applied as soon as DiscoverFootprint runs.
-    /// </summary>
-    public void RestoreHP(int hp)
+    public Dictionary<FactionID, int> SnapshotHP()
     {
-        if (_footprintReady)
-        {
-            _currentHP  = Mathf.Clamp(hp, 0, maxHitPoints);
-            _eliminated = _currentHP <= 0;
-        }
-        else
-        {
-            _pendingRestoreHP = hp;
-        }
+        var result = new Dictionary<FactionID, int>();
+        foreach (var pair in _hearts) result[pair.Key] = pair.Value.CurrentHP;
+        return result;
     }
 
-    public static void RestoreAllFromSave(IReadOnlyDictionary<FactionID, int> savedHP)
+    /// <summary>
+    /// Restores HP from a save. Safe to call before the grid scan has run —
+    /// GameManager2D and DungeonHeart both key off OnWalletsReady, so their
+    /// relative firing order isn't guaranteed; values are cached and applied
+    /// to each faction's HeartState as soon as DiscoverAll creates it.
+    /// </summary>
+    public void RestoreAll(IReadOnlyDictionary<FactionID, int> savedHP)
     {
         if (savedHP == null) return;
+
+        if (!_ready)
+        {
+            foreach (var pair in savedHP) _pendingRestoreHP[pair.Key] = pair.Value;
+            return;
+        }
+
         foreach (var pair in savedHP)
-            if (_registry.TryGetValue(pair.Key, out var heart))
-                heart.RestoreHP(pair.Value);
+        {
+            if (!_hearts.TryGetValue(pair.Key, out var state)) continue;
+            state.CurrentHP  = Mathf.Clamp(pair.Value, 0, state.MaxHitPoints);
+            state.Eliminated = state.CurrentHP <= 0;
+        }
     }
 
     // ── Reporting for duty ───────────────────────────────────────────────
 
     /// <summary>
-    /// Nearest walkable cell inside this heart's footprint. The footprint is
-    /// ordinary floor, so a minion can walk right in — the crystal at its
-    /// centre deflects it via separation as it gets close, rather than the
-    /// pathfinder needing to route around a "hole" in the tile grid. Null if
-    /// the footprint hasn't been discovered yet or nothing reachable is inside it.
+    /// Nearest walkable cell inside the given faction's heart footprint. The
+    /// footprint is ordinary floor, so a minion can walk right in — the
+    /// crystal at its centre deflects it via separation as it gets close,
+    /// rather than the pathfinder needing to route around a "hole" in the
+    /// tile grid. Null if that faction has no heart yet, or nothing
+    /// reachable is inside it.
     /// </summary>
-    public GridCell FindApproachCell(GridCell from, TraversalCapability capability, float radius)
+    public GridCell FindApproachCell(FactionID faction, GridCell from,
+                                     TraversalCapability capability, float radius)
     {
-        if (!_footprintReady || from == null) return null;
-        return _pathfinder.FindNearestMatching(from, IsHeartCell, capability, faction, radius);
+        if (from == null || !_hearts.TryGetValue(faction, out var state) || state.Footprint.Count == 0)
+            return null;
+
+        return _pathfinder.FindNearestMatching(
+            from, cell => IsHeartCell(faction, state, cell), capability, faction, radius);
     }
 
-    private bool IsHeartCell(GridCell cell) =>
-        cell.TileType == TileType.Heart && cell.Owner == faction && cell != _crystalCell;
+    private static bool IsHeartCell(FactionID faction, HeartState state, GridCell cell) =>
+        cell.TileType == TileType.Heart && cell.Owner == faction && cell != state.CrystalCell;
 
     /// <summary>Called by CreatureController once it arrives and joins the faction.</summary>
-    public void NotifyReported(CreatureController creature) =>
-        OnCreatureReported?.Invoke(creature);
+    public void NotifyReported(FactionID faction, CreatureController creature) =>
+        OnCreatureReported?.Invoke(faction, creature);
 }
