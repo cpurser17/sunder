@@ -32,6 +32,7 @@ public class DigSelectionController : MonoBehaviour
 {
     // ── Runtime configuration (set by DigSelectionManager.Initialise) ─
     private FactionID          _faction;
+    private bool               _isLocalPlayer;
     private GridManager2D      _gridManager;
     private Camera             _mainCamera;
     private float              _markerHeight;
@@ -64,6 +65,13 @@ public class DigSelectionController : MonoBehaviour
     {
         if (!_initialised) return;
 
+        // Only the local player's own controller reads the shared mouse —
+        // every faction's controller doing so queued the same drag as dig
+        // orders for all of them at once. A non-local faction (AI today, or
+        // eventually another human on their own client) gets its queue
+        // populated through QueueCell/DequeueCell instead.
+        if (!_isLocalPlayer) return;
+
         bool hudActive = HUDController2D.Instance != null &&
                          HUDController2D.Instance.AnyButtonActive;
 
@@ -93,12 +101,13 @@ public class DigSelectionController : MonoBehaviour
     /// Configures this controller. Called immediately after AddComponent
     /// by DigSelectionManager.
     /// </summary>
-    public void Initialise(FactionID faction, GridManager2D gridManager,
+    public void Initialise(FactionID faction, bool isLocalPlayer, GridManager2D gridManager,
                            Camera mainCamera, float markerHeight, Color markerColour,
                            SelectionBoxVisuals selectionBox,
                            Color addBoxColour, Color removeBoxColour)
     {
         _faction         = faction;
+        _isLocalPlayer   = isLocalPlayer;
         _gridManager     = gridManager;
         _mainCamera      = mainCamera;
         _markerHeight    = markerHeight;
@@ -284,6 +293,17 @@ public class DigSelectionController : MonoBehaviour
     public IReadOnlyCollection<GridCell> GetDigQueue() => _queue.Keys;
     public bool                          IsQueued(GridCell cell) => _queue.ContainsKey(cell);
     public void                          DequeueCell(GridCell cell) => RemoveCell(cell);
+
+    /// <summary>
+    /// Queues a cell exactly as a local player's drag-select would, minus the
+    /// mouse — the entry point for a non-local faction's controller (AI
+    /// decision-making, not built yet) to add dig targets without reading input.
+    /// No-op if the cell isn't presently a valid dig target for this faction.
+    /// </summary>
+    public void QueueCell(GridCell cell)
+    {
+        if (cell != null && IsValidDigTarget(cell)) AddCell(cell);
+    }
 
     public void ClearQueue()
     {

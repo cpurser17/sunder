@@ -5,6 +5,11 @@ using UnityEngine;
 /// Spawns and owns one DigSelectionController per active faction.
 /// Reads the faction list from LevelData via GameManager2D at Start().
 ///
+/// Only localPlayer's controller reads mouse input on this client — every
+/// other faction's (AI today; another human's own client, eventually) sits
+/// idle, since driving a shared mouse from every controller at once queued
+/// every faction's dig orders from the same drag.
+///
 /// Selection box GOs must exist in the scene BEFORE Play mode so their
 /// SelectionBoxVisuals Inspector values (Pillar Height, Base Y, Alpha) are
 /// serialised and persist. Create one child GO per faction under this GO,
@@ -30,6 +35,13 @@ public class DigSelectionManager : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
     [SerializeField] private Camera        mainCamera;
+
+    [Header("Local Player")]
+    [Tooltip("Only this faction's controller reads mouse input on this client. " +
+             "Every other faction's controller — AI or, eventually, another " +
+             "human player's own client — sits idle until something calls " +
+             "QueueCell/DequeueCell on it directly.")]
+    [SerializeField] private FactionID localPlayer = FactionID.Player;
 
     [Header("Marker Defaults")]
     [Tooltip("Height above grid at which dig markers are placed.")]
@@ -131,8 +143,8 @@ public class DigSelectionManager : MonoBehaviour
         go.transform.SetParent(transform, false);
 
         var ctrl = go.AddComponent<DigSelectionController>();
-        ctrl.Initialise(faction, gridManager, mainCamera, markerHeight,
-                        markerColour, box, addBoxColour, removeBoxColour);
+        ctrl.Initialise(faction, faction == localPlayer, gridManager, mainCamera,
+                        markerHeight, markerColour, box, addBoxColour, removeBoxColour);
 
         _controllers[faction] = ctrl;
     }

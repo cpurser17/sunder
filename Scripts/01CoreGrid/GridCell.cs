@@ -52,6 +52,21 @@ public class GridCell
         Owner          = owner;
     }
 
+    /// <summary>
+    /// Restores a cell exactly as saved, including a Bridge's underlying
+    /// liquid type. Unlike PlaceBridgeInternal — which derives UnderlyingType
+    /// from whatever this cell's TileType currently is, correct for placing a
+    /// NEW bridge over existing liquid at runtime — a freshly constructed
+    /// GridCell has no prior state to derive from, so loading a saved Bridge
+    /// through PlaceBridgeInternal silently lost its underlying liquid type.
+    /// </summary>
+    public void LoadFromSave(TileType tileType, TileType underlyingType, FactionID owner)
+    {
+        TileType       = tileType;
+        UnderlyingType = underlyingType;
+        Owner          = owner;
+    }
+
     /// <summary>Sell a bridge — restores the underlying liquid tile.</summary>
     public void RemoveBridgeInternal()
     {
