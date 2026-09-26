@@ -35,30 +35,17 @@ public class DungeonHeart : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
-    [Header("Health")]
-    [Tooltip("Hit points for a faction's heart when no override below applies.")]
+    [Header("Health (fallback)")]
+    [Tooltip("Used only for a seat with no FactionDefinition assigned, or whose " +
+             "FactionDefinition leaves maxHeartHitPoints at 0.")]
     [SerializeField] private int defaultMaxHitPoints = 1000;
 
-    [Header("Crystal")]
-    [Tooltip("Physical obstacle spawned at each heart's footprint centre, when no " +
-             "override below applies. Must carry a GridAgent with Static Obstacle " +
-             "ticked, so it is sized like a token and registered for separation but " +
-             "never moves.")]
+    [Header("Crystal (fallback)")]
+    [Tooltip("Used only for a seat with no FactionDefinition assigned, or whose " +
+             "FactionDefinition leaves crystalPrefab empty. Must carry a GridAgent " +
+             "with Static Obstacle ticked, so it is sized like a token and registered " +
+             "for separation but never moves.")]
     [SerializeField] private GameObject crystalPrefab;
-
-    [Header("Per-faction overrides")]
-    [Tooltip("Optional. A faction not listed here just uses the defaults above.")]
-    [SerializeField] private List<FactionOverride> overrides = new();
-
-    [System.Serializable]
-    public class FactionOverride
-    {
-        public FactionID faction;
-        [Tooltip("0 = use defaultMaxHitPoints.")]
-        public int maxHitPoints = 0;
-        [Tooltip("Empty = use the shared crystalPrefab.")]
-        public GameObject crystalPrefab;
-    }
 
     // ── Runtime ────────────────────────────────────────────────────────
 
@@ -140,21 +127,14 @@ public class DungeonHeart : MonoBehaviour
 
     private int MaxHitPointsFor(FactionID faction)
     {
-        var ov = FindOverride(faction);
-        return ov != null && ov.maxHitPoints > 0 ? ov.maxHitPoints : defaultMaxHitPoints;
+        var def = GameManager2D.Instance?.GetFactionDefinition(faction);
+        return def != null && def.maxHeartHitPoints > 0 ? def.maxHeartHitPoints : defaultMaxHitPoints;
     }
 
     private GameObject CrystalPrefabFor(FactionID faction)
     {
-        var ov = FindOverride(faction);
-        return ov != null && ov.crystalPrefab != null ? ov.crystalPrefab : crystalPrefab;
-    }
-
-    private FactionOverride FindOverride(FactionID faction)
-    {
-        foreach (var o in overrides)
-            if (o.faction == faction) return o;
-        return null;
+        var def = GameManager2D.Instance?.GetFactionDefinition(faction);
+        return def != null && def.crystalPrefab != null ? def.crystalPrefab : crystalPrefab;
     }
 
     /// <summary>
