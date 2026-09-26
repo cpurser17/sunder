@@ -302,7 +302,7 @@ public class GameManager2D : MonoBehaviour
             GetWallet(FactionID.Player)?.SetGold(save.gameState.currentGold);
         }
 
-        DungeonHeart.RestoreAllFromSave(save.gameState.factionHeartHP);
+        DungeonHeart.Instance?.RestoreAll(save.gameState.factionHeartHP);
     }
 
     // ── Save routing ───────────────────────────────────────────────────
@@ -420,9 +420,9 @@ public class GameManager2D : MonoBehaviour
             data.factionGold[pair.Key] = pair.Value.Gold;
 
         // Populate per-faction Dungeon Heart HP.
-        data.factionHeartHP = new Dictionary<FactionID, int>();
-        foreach (var pair in DungeonHeart.All)
-            data.factionHeartHP[pair.Key] = pair.Value.CurrentHP;
+        data.factionHeartHP = DungeonHeart.Instance != null
+            ? DungeonHeart.Instance.SnapshotHP()
+            : new Dictionary<FactionID, int>();
 
         // Keep currentGold as the player's gold for backwards compatibility.
         data.currentGold = GetWallet(FactionID.Player)?.Gold ?? 0;

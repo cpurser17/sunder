@@ -2,13 +2,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Timer-driven minion summoning for one faction.
+/// Timer-driven minion summoning for every faction.
 ///
-/// Every faction's roster is a list of MinionDefinitions it MIGHT summon. On
-/// each tick, eligibility is narrowed by four independent gates — population
-/// headroom, mission design (GameManager2D.AllowedMinionIds), rooms built,
-/// and research completed — then one survivor is picked by weighted random,
-/// the same pattern ImpTaskManager uses for job selection.
+/// One instance of this component exists in the scene, ever. Once the grid
+/// exists it reads GameManager2D.ActiveFactions and creates one logical
+/// summoning state per active faction — there is no per-faction prefab or
+/// scene object to hand-place. Each faction gets its own roster/population/
+/// timing either from the shared defaults below or, if listed, its entry in
+/// overrides — that per-faction variability is still exactly as tunable as
+/// before, it just no longer requires a whole extra scene object per faction
+/// to get it.
+///
+/// On each faction's tick, eligibility is narrowed by four independent gates
+/// — population headroom, mission design (GameManager2D.AllowedMinionIds),
+/// rooms built, and research completed — then one survivor is picked by
+/// weighted random, the same pattern ImpTaskManager uses for job selection.
 ///
 /// The interval between summons is base +/- random jitter, then scaled by
 /// the faction's research multiplier, so different factions — and a single
@@ -17,97 +25,155 @@ using UnityEngine;
 /// </summary>
 public class MinionSummoner : MonoBehaviour
 {
-    // ── Per-faction registry ───────────────────────────────────────────
-    private static readonly Dictionary<FactionID, MinionSummoner> _registry = new();
-
-    public static MinionSummoner GetForFaction(FactionID faction) =>
-        _registry.TryGetValue(faction, out var s) ? s : null;
+    public static MinionSummoner Instance { get; private set; }
 
     // ── Inspector ──────────────────────────────────────────────────────
-    [Header("Identity")]
-    [SerializeField] private FactionID faction = FactionID.Player;
-
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
     [Header("Roster")]
-    [Tooltip("Every minion type this faction could ever summon, subject to the gates below.")]
-    [SerializeField] private List<MinionDefinition> roster = new();
+    [Tooltip("Every minion type a faction could summon, when no override below applies.")]
+    [SerializeField] private List<MinionDefinition> defaultRoster = new();
 
     [Header("Population")]
-    [SerializeField] private int populationLimit = 10;
+    [SerializeField] private int defaultPopulationLimit = 10;
 
     [Header("Timing")]
     [Tooltip("Average seconds between summons.")]
-    [SerializeField] private float baseSummonInterval = 30f;
+    [SerializeField] private float defaultBaseSummonInterval = 30f;
     [Tooltip("Random offset applied to each interval, in seconds. X = min, Y = max.")]
-    [SerializeField] private Vector2 summonIntervalJitter = new(-5f, 5f);
-    [Tooltip("Seed for interval/pick randomness — reproducible, like ImpTaskManager's.")]
-    [SerializeField] private int randomSeed = 54321;
+    [SerializeField] private Vector2 defaultSummonIntervalJitter = new(-5f, 5f);
+
+    [Header("Per-faction overrides")]
+    [Tooltip("Optional. A faction not listed here just uses the defaults above.")]
+    [SerializeField] private List<FactionOverride> overrides = new();
+
+    [System.Serializable]
+    public class FactionOverride
+    {
+        public FactionID faction;
+        [Tooltip("Empty = use defaultRoster.")]
+        public List<MinionDefinition> roster = new();
+        [Tooltip("0 = use defaultPopulationLimit.")]
+        public int populationLimit = 0;
+        [Tooltip("0 = use defaultBaseSummonInterval.")]
+        public float baseSummonInterval = 0f;
+        [Tooltip("Only used when useCustomJitter is ticked; otherwise falls back to " +
+                 "defaultSummonIntervalJitter.")]
+        public Vector2 summonIntervalJitter = new(-5f, 5f);
+        public bool useCustomJitter = false;
+    }
 
     // ── Runtime ────────────────────────────────────────────────────────
-    private System.Random _rng;
-    private float _nextSummonTime;
-    private int   _population;
+
+    private class FactionState
+    {
+        public System.Random Rng;
+        public List<MinionDefinition> Roster;
+        public int   PopulationLimit;
+        public float BaseSummonInterval;
+        public Vector2 Jitter;
+        public float NextSummonTime;
+        public int   Population;
+    }
+
+    private readonly Dictionary<FactionID, FactionState> _states = new();
 
     // Scratch buffers, reused to keep per-tick allocation down.
     private readonly List<MinionDefinition> _candidates = new();
     private readonly List<float>            _weights    = new();
 
-    public FactionID Faction         => faction;
-    public int       Population      => _population;
-    public int       PopulationLimit => populationLimit;
-
     // ── Unity lifecycle ────────────────────────────────────────────────
 
-    private void Awake()
-    {
-        _registry[faction] = this;
-        _rng = new System.Random(randomSeed);
-    }
+    private void Awake() => Instance = this;
 
     private void OnDestroy()
     {
-        if (_registry.TryGetValue(faction, out var s) && s == this)
-            _registry.Remove(faction);
+        if (Instance == this) Instance = null;
+        GameManager2D.OnWalletsReady -= Setup;
     }
 
-    private void Start() => _nextSummonTime = Time.time + NextInterval();
+    private void Start()
+    {
+        if (gridManager.Width > 0) Setup();
+        else GameManager2D.OnWalletsReady += Setup;
+    }
+
+    private void Setup()
+    {
+        GameManager2D.OnWalletsReady -= Setup;
+
+        _states.Clear();
+        foreach (var setup in GameManager2D.Instance.ActiveFactions)
+        {
+            var ov    = FindOverride(setup.factionId);
+            var state = new FactionState
+            {
+                Rng                = new System.Random(StableSeed(setup.factionId)),
+                Roster              = ov != null && ov.roster.Count > 0 ? ov.roster : defaultRoster,
+                PopulationLimit     = ov != null && ov.populationLimit > 0 ? ov.populationLimit : defaultPopulationLimit,
+                BaseSummonInterval  = ov != null && ov.baseSummonInterval > 0f ? ov.baseSummonInterval : defaultBaseSummonInterval,
+                Jitter              = ov != null && ov.useCustomJitter ? ov.summonIntervalJitter : defaultSummonIntervalJitter,
+            };
+            state.NextSummonTime = Time.time + NextInterval(state, setup.factionId);
+            _states[setup.factionId] = state;
+        }
+    }
+
+    /// <summary>
+    /// Deterministic per-faction seed, so runs stay reproducible without
+    /// needing an override entry just to get a different random stream than
+    /// another faction.
+    /// </summary>
+    private static int StableSeed(FactionID faction) => 12345 + (int)faction * 977;
+
+    private FactionOverride FindOverride(FactionID faction)
+    {
+        foreach (var o in overrides)
+            if (o.faction == faction) return o;
+        return null;
+    }
 
     private void Update()
     {
-        if (Time.time < _nextSummonTime) return;
-        _nextSummonTime = Time.time + NextInterval();
-        TrySummon();
+        foreach (var pair in _states)
+        {
+            FactionID    faction = pair.Key;
+            FactionState state   = pair.Value;
+
+            if (Time.time < state.NextSummonTime) continue;
+            state.NextSummonTime = Time.time + NextInterval(state, faction);
+            TrySummon(faction, state);
+        }
     }
 
-    private float NextInterval()
+    private float NextInterval(FactionState state, FactionID faction)
     {
-        float jitter = (float)(_rng.NextDouble() *
-            (summonIntervalJitter.y - summonIntervalJitter.x) + summonIntervalJitter.x);
+        float jitter = (float)(state.Rng.NextDouble() *
+            (state.Jitter.y - state.Jitter.x) + state.Jitter.x);
 
         float multiplier = GameManager2D.Instance?.GetResearch(faction)?.SummonIntervalMultiplier ?? 1f;
-        return Mathf.Max(1f, (baseSummonInterval + jitter) * multiplier);
+        return Mathf.Max(1f, (state.BaseSummonInterval + jitter) * multiplier);
     }
 
     // ── Summoning ──────────────────────────────────────────────────────
 
-    private void TrySummon()
+    private void TrySummon(FactionID faction, FactionState state)
     {
-        var portal = Portal.GetForFaction(faction);
-        if (portal == null || !portal.IsReady) return;
+        var portal = Portal.Instance;
+        if (portal == null || !portal.IsReady(faction)) return;
 
-        var chosen = PickMinion();
+        var chosen = PickMinion(faction, state);
         if (chosen == null) return;
 
-        Spawn(chosen, portal);
+        Spawn(faction, state, chosen, portal);
     }
 
-    private MinionDefinition PickMinion()
+    private MinionDefinition PickMinion(FactionID faction, FactionState state)
     {
         _candidates.Clear();
-        foreach (var def in roster)
-            if (def != null && IsEligible(def)) _candidates.Add(def);
+        foreach (var def in state.Roster)
+            if (def != null && IsEligible(faction, state, def)) _candidates.Add(def);
 
         if (_candidates.Count == 0) return null;
 
@@ -121,7 +187,7 @@ public class MinionSummoner : MonoBehaviour
         }
         if (total <= 0f) return null;
 
-        float roll = (float)_rng.NextDouble() * total;
+        float roll = (float)state.Rng.NextDouble() * total;
         for (int i = 0; i < _candidates.Count; i++)
         {
             roll -= _weights[i];
@@ -130,12 +196,12 @@ public class MinionSummoner : MonoBehaviour
         return _candidates[^1];
     }
 
-    private bool IsEligible(MinionDefinition def)
+    private bool IsEligible(FactionID faction, FactionState state, MinionDefinition def)
     {
-        if (_population + def.populationCost > populationLimit) return false;
-        if (!LevelAllows(def))            return false;
-        if (!HasRequiredRooms(def))        return false;
-        if (!HasRequiredResearch(def))     return false;
+        if (state.Population + def.populationCost > state.PopulationLimit) return false;
+        if (!LevelAllows(def))                      return false;
+        if (!HasRequiredRooms(faction, def))         return false;
+        if (!HasRequiredResearch(faction, def))      return false;
         return true;
     }
 
@@ -145,7 +211,7 @@ public class MinionSummoner : MonoBehaviour
         return allowed == null || allowed.Count == 0 || allowed.Contains(def.minionId);
     }
 
-    private bool HasRequiredRooms(MinionDefinition def)
+    private bool HasRequiredRooms(FactionID faction, MinionDefinition def)
     {
         if (def.requiredRoomTypes.Count == 0) return true;
 
@@ -160,7 +226,7 @@ public class MinionSummoner : MonoBehaviour
         return true;
     }
 
-    private bool HasRequiredResearch(MinionDefinition def)
+    private bool HasRequiredResearch(FactionID faction, MinionDefinition def)
     {
         if (def.requiredResearchIds.Count == 0) return true;
 
@@ -172,7 +238,7 @@ public class MinionSummoner : MonoBehaviour
         return true;
     }
 
-    private void Spawn(MinionDefinition def, Portal portal)
+    private void Spawn(FactionID faction, FactionState state, MinionDefinition def, Portal portal)
     {
         if (def.prefab == null)
         {
@@ -180,8 +246,8 @@ public class MinionSummoner : MonoBehaviour
             return;
         }
 
-        var go  = Instantiate(def.prefab, portal.SpawnPoint, Quaternion.identity);
-        go.name = $"{def.minionId}_{faction}_{_population}";
+        var go  = Instantiate(def.prefab, portal.SpawnPoint(faction), Quaternion.identity);
+        go.name = $"{def.minionId}_{faction}_{state.Population}";
 
         var creature = go.GetComponent<CreatureController>();
         if (creature == null)
@@ -192,18 +258,25 @@ public class MinionSummoner : MonoBehaviour
         }
 
         creature.Initialise(faction, def);
-        _population += def.populationCost;
+        state.Population += def.populationCost;
 
         Debug.Log($"[MinionSummoner] Summoned {def.minionId} for {faction}. " +
-                  $"Population {_population}/{populationLimit}.");
+                  $"Population {state.Population}/{state.PopulationLimit}.");
     }
 
     // ── Population bookkeeping ─────────────────────────────────────────
 
     /// <summary>Called by CreatureController.Die() to free its population slot.</summary>
-    public void NotifyCreatureDied(MinionDefinition def)
+    public void NotifyCreatureDied(FactionID faction, MinionDefinition def)
     {
+        if (!_states.TryGetValue(faction, out var state)) return;
         int cost = def != null ? def.populationCost : 1;
-        _population = Mathf.Max(0, _population - cost);
+        state.Population = Mathf.Max(0, state.Population - cost);
     }
+
+    public int Population(FactionID faction) =>
+        _states.TryGetValue(faction, out var s) ? s.Population : 0;
+
+    public int PopulationLimit(FactionID faction) =>
+        _states.TryGetValue(faction, out var s) ? s.PopulationLimit : 0;
 }
