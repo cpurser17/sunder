@@ -31,6 +31,7 @@ public class GameManager2D : MonoBehaviour
     [SerializeField] private SelectionController2D selectionController;
     [SerializeField] private HUDController2D       hudController;
     [SerializeField] private TileVisualizer3D      tileVisualizer;
+    [SerializeField] private FactionRegistry       factionRegistry;
 
     [Header("Editor Fallback")]
     [Tooltip("Level ID used when entering Play mode directly without a scene flow.")]
@@ -59,6 +60,11 @@ public class GameManager2D : MonoBehaviour
     /// <summary>Mission-wide summon restriction from the active level. Empty = no restriction.</summary>
     public List<string> AllowedMinionIds { get; private set; } = new();
 
+    // ── Faction content ────────────────────────────────────────────────
+    // Which FactionDefinition each seat is playing, resolved from
+    // FactionSetup.contentFactionId whenever _activeFactions is (re)loaded.
+    private readonly Dictionary<FactionID, FactionDefinition> _factionDefinitions = new();
+
     // ── Accessors ──────────────────────────────────────────────────────
     public GridManager2D         Grid           => gridManager;
     public SelectionController2D Selection      => selectionController;
@@ -81,12 +87,18 @@ public class GameManager2D : MonoBehaviour
     public FactionResearchState GetResearch(FactionID faction) =>
         _research.TryGetValue(faction, out var r) ? r : null;
 
+    /// <summary>Returns which FactionDefinition the given seat is playing, or null if unassigned.</summary>
+    public FactionDefinition GetFactionDefinition(FactionID faction) =>
+        _factionDefinitions.TryGetValue(faction, out var def) ? def : null;
+
     // ── Unity lifecycle ────────────────────────────────────────────────
 
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         if (Instance == null) Instance = this;
+
+        if (factionRegistry != null) factionRegistry.Initialise();
     }
 
     private void Start()
@@ -208,6 +220,7 @@ public class GameManager2D : MonoBehaviour
             _activeLevelId    = string.IsNullOrEmpty(levelId) ? "unknown" : levelId;
             _activeFactions   = new List<FactionSetup>();
             AllowedMinionIds  = new List<string>();
+            RebuildFactionDefinitions();
             gridManager.Initialise(fallbackWidth, fallbackHeight);
             InitialiseWallets(null, fallbackGold);
             return;
@@ -216,6 +229,7 @@ public class GameManager2D : MonoBehaviour
         _activeLevelId   = level.levelId;
         _activeFactions  = level.factions        ?? new List<FactionSetup>();
         AllowedMinionIds = level.allowedMinionIds ?? new List<string>();
+        RebuildFactionDefinitions();
         SaveLoadSystem.ApplyGrid(gridManager, level.grid);
         InitialiseWallets(_activeFactions, level.startingGold);
 
@@ -273,6 +287,30 @@ public class GameManager2D : MonoBehaviour
         var level = SaveLoadSystem.LoadLevel(levelId);
         _activeFactions  = level?.factions        ?? new List<FactionSetup>();
         AllowedMinionIds = level?.allowedMinionIds ?? new List<string>();
+        RebuildFactionDefinitions();
+    }
+
+    /// <summary>
+    /// Resolves each active seat's FactionSetup.contentFactionId through
+    /// factionRegistry, so GetFactionDefinition(seat) is ready before
+    /// DungeonHeart/MinionSummoner read it off OnWalletsReady.
+    /// </summary>
+    private void RebuildFactionDefinitions()
+    {
+        _factionDefinitions.Clear();
+        if (factionRegistry == null) return;
+
+        foreach (var setup in _activeFactions)
+        {
+            if (string.IsNullOrEmpty(setup.contentFactionId)) continue;
+
+            var def = factionRegistry.GetDefinition(setup.contentFactionId);
+            if (def != null)
+                _factionDefinitions[setup.factionId] = def;
+            else
+                Debug.LogWarning($"[GameManager2D] No FactionDefinition found for " +
+                                 $"contentFactionId '{setup.contentFactionId}' (seat {setup.factionId}).");
+        }
     }
 
     /// <summary>

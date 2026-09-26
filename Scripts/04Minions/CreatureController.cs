@@ -41,6 +41,7 @@ public class CreatureController : MonoBehaviour
     {
         faction     = owningFaction;
         _definition = definition;
+        _agent.SetFaction(owningFaction);
     }
 
     private void Update()
@@ -98,7 +99,35 @@ public class CreatureController : MonoBehaviour
         if (_state == CreatureState.Dead) return;
 
         _state = CreatureState.Dead;
-        MinionSummoner.Instance?.NotifyCreatureDied(faction, _definition);
+        MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
         Destroy(gameObject, 0.1f);
+    }
+
+    // ── Conversion ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Switches this creature to a new faction in place — same GameObject,
+    /// same prefab, same model, just a new owner. Groundwork for capture/
+    /// torture-to-convert: nothing calls this yet, but when a future Prison
+    /// room finishes converting a captured creature, this is the one call it
+    /// needs to make.
+    ///
+    /// Re-enters ReportingForDuty so the creature treks to its new masters'
+    /// heart before counting as truly theirs, same as a freshly summoned one.
+    /// </summary>
+    public void ConvertTo(FactionID newFaction)
+    {
+        if (_state == CreatureState.Dead || newFaction == faction) return;
+
+        MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
+
+        faction = newFaction;
+        _agent.SetFaction(newFaction);
+
+        MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
+
+        _headingToHeart    = false;
+        _nextReportAttempt = 0f;
+        _state             = CreatureState.ReportingForDuty;
     }
 }

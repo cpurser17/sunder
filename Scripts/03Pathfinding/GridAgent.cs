@@ -119,6 +119,14 @@ public class GridAgent : MonoBehaviour
     public FactionID           Faction    => faction;
     public bool                IsStatic   => isStatic;
 
+    /// <summary>
+    /// Reassigns which faction this agent belongs to. Whatever owns this
+    /// agent (e.g. CreatureController on conversion) must call this — faction
+    /// is tracked here independently of any owning component's own faction
+    /// field, and traversal/hazard rules read it from here.
+    /// </summary>
+    public void SetFaction(FactionID newFaction) => faction = newFaction;
+
     /// <summary>Token radius in world units, including padding.</summary>
     public float Radius => _radius;
 

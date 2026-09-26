@@ -5,13 +5,14 @@ using UnityEngine;
 /// Timer-driven minion summoning for every faction.
 ///
 /// One instance of this component exists in the scene, ever. Once the grid
-/// exists it reads GameManager2D.ActiveFactions and creates one logical
-/// summoning state per active faction — there is no per-faction prefab or
-/// scene object to hand-place. Each faction gets its own roster/population/
-/// timing either from the shared defaults below or, if listed, its entry in
-/// overrides — that per-faction variability is still exactly as tunable as
-/// before, it just no longer requires a whole extra scene object per faction
-/// to get it.
+/// exists it reads GameManager2D.ActiveFactions and, for each active seat,
+/// resolves that seat's FactionDefinition (via GameManager2D.GetFactionDefinition
+/// — assigned per level through FactionSetup.contentFactionId) to get its
+/// roster, population limit, and summon pacing. There is no per-faction
+/// prefab or scene object to hand-place, and no shared roster either — every
+/// faction's content is bespoke, authored on its own FactionDefinition asset.
+/// A seat with no FactionDefinition assigned falls back to this component's
+/// own defaultX fields, purely as a missing-data safety net.
 ///
 /// On each faction's tick, eligibility is narrowed by four independent gates
 /// — population headroom, mission design (GameManager2D.AllowedMinionIds),
@@ -31,38 +32,18 @@ public class MinionSummoner : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
-    [Header("Roster")]
-    [Tooltip("Every minion type a faction could summon, when no override below applies.")]
+    [Header("Roster (fallback)")]
+    [Tooltip("Used only for a seat with no FactionDefinition assigned.")]
     [SerializeField] private List<MinionDefinition> defaultRoster = new();
 
-    [Header("Population")]
+    [Header("Population (fallback)")]
     [SerializeField] private int defaultPopulationLimit = 10;
 
-    [Header("Timing")]
+    [Header("Timing (fallback)")]
     [Tooltip("Average seconds between summons.")]
     [SerializeField] private float defaultBaseSummonInterval = 30f;
     [Tooltip("Random offset applied to each interval, in seconds. X = min, Y = max.")]
     [SerializeField] private Vector2 defaultSummonIntervalJitter = new(-5f, 5f);
-
-    [Header("Per-faction overrides")]
-    [Tooltip("Optional. A faction not listed here just uses the defaults above.")]
-    [SerializeField] private List<FactionOverride> overrides = new();
-
-    [System.Serializable]
-    public class FactionOverride
-    {
-        public FactionID faction;
-        [Tooltip("Empty = use defaultRoster.")]
-        public List<MinionDefinition> roster = new();
-        [Tooltip("0 = use defaultPopulationLimit.")]
-        public int populationLimit = 0;
-        [Tooltip("0 = use defaultBaseSummonInterval.")]
-        public float baseSummonInterval = 0f;
-        [Tooltip("Only used when useCustomJitter is ticked; otherwise falls back to " +
-                 "defaultSummonIntervalJitter.")]
-        public Vector2 summonIntervalJitter = new(-5f, 5f);
-        public bool useCustomJitter = false;
-    }
 
     // ── Runtime ────────────────────────────────────────────────────────
 
@@ -106,14 +87,14 @@ public class MinionSummoner : MonoBehaviour
         _states.Clear();
         foreach (var setup in GameManager2D.Instance.ActiveFactions)
         {
-            var ov    = FindOverride(setup.factionId);
+            var def   = GameManager2D.Instance.GetFactionDefinition(setup.factionId);
             var state = new FactionState
             {
                 Rng                = new System.Random(StableSeed(setup.factionId)),
-                Roster              = ov != null && ov.roster.Count > 0 ? ov.roster : defaultRoster,
-                PopulationLimit     = ov != null && ov.populationLimit > 0 ? ov.populationLimit : defaultPopulationLimit,
-                BaseSummonInterval  = ov != null && ov.baseSummonInterval > 0f ? ov.baseSummonInterval : defaultBaseSummonInterval,
-                Jitter              = ov != null && ov.useCustomJitter ? ov.summonIntervalJitter : defaultSummonIntervalJitter,
+                Roster              = def != null && def.roster.Count > 0 ? def.roster : defaultRoster,
+                PopulationLimit     = def != null && def.populationLimit > 0 ? def.populationLimit : defaultPopulationLimit,
+                BaseSummonInterval  = def != null && def.baseSummonInterval > 0f ? def.baseSummonInterval : defaultBaseSummonInterval,
+                Jitter              = def != null ? def.summonIntervalJitter : defaultSummonIntervalJitter,
             };
             state.NextSummonTime = Time.time + NextInterval(state, setup.factionId);
             _states[setup.factionId] = state;
@@ -126,13 +107,6 @@ public class MinionSummoner : MonoBehaviour
     /// another faction.
     /// </summary>
     private static int StableSeed(FactionID faction) => 12345 + (int)faction * 977;
-
-    private FactionOverride FindOverride(FactionID faction)
-    {
-        foreach (var o in overrides)
-            if (o.faction == faction) return o;
-        return null;
-    }
 
     private void Update()
     {
@@ -266,12 +240,27 @@ public class MinionSummoner : MonoBehaviour
 
     // ── Population bookkeeping ─────────────────────────────────────────
 
-    /// <summary>Called by CreatureController.Die() to free its population slot.</summary>
-    public void NotifyCreatureDied(FactionID faction, MinionDefinition def)
+    /// <summary>
+    /// Frees a population slot for the given faction — called whenever a
+    /// creature leaves its population for any reason: death (CreatureController.Die)
+    /// or converting to another faction (CreatureController.ConvertTo).
+    /// </summary>
+    public void NotifyCreatureRemoved(FactionID faction, MinionDefinition def)
     {
         if (!_states.TryGetValue(faction, out var state)) return;
         int cost = def != null ? def.populationCost : 1;
         state.Population = Mathf.Max(0, state.Population - cost);
+    }
+
+    /// <summary>
+    /// Claims a population slot for the given faction without going through
+    /// Spawn — used when a creature joins a faction any way other than being
+    /// freshly summoned, e.g. converting from another faction.
+    /// </summary>
+    public void NotifyCreatureJoined(FactionID faction, MinionDefinition def)
+    {
+        if (!_states.TryGetValue(faction, out var state)) return;
+        state.Population += def != null ? def.populationCost : 1;
     }
 
     public int Population(FactionID faction) =>

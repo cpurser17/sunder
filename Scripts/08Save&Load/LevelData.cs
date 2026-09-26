@@ -15,6 +15,12 @@ public class FactionSetup
     public string    colourHex = "#FFFFFF";
     public bool      isHuman;        // true = local player, false = AI
     public int       startingGold;   // per-faction starting gold (overrides level default if > 0)
+
+    // Which FactionDefinition (roster, prerequisites, heart/crystal, summon
+    // pacing) this seat is playing, resolved via FactionRegistry at runtime.
+    // Empty = seat has no assigned content faction (falls back to
+    // DungeonHeart/MinionSummoner's own missing-data defaults).
+    public string    contentFactionId = "";
 }
 
 /// <summary>
