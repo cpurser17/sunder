@@ -179,10 +179,18 @@ public class GameManager2D : MonoBehaviour
         GameplaySceneArgs.Clear();
         EnsureSlotInitialised();
 
-        if (isNewGame || _activeSaveIndex < 0)
+        // loadAuto must be checked before the saveIndex<0 fallback below —
+        // an autosave load doesn't need a specific SaveIndex (it's one fixed
+        // file per slot, keyed by AutosavePath(slot) alone), and SaveIndex
+        // defaults to -1. Checking saveIndex<0 first meant a caller asking
+        // to load the autosave silently got a new game instead unless it
+        // also happened to set a non-negative SaveIndex for no real reason.
+        if (isNewGame)
             StartNewGame(_activeLevelId);
         else if (loadAuto)
             LoadAutosave();
+        else if (_activeSaveIndex < 0)
+            StartNewGame(_activeLevelId);
         else
             ResumeFromSave(_activeSlot, _activeBranchId, _activeSaveIndex);
     }

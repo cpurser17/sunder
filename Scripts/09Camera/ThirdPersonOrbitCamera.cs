@@ -21,10 +21,16 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
     [SerializeField] private float snapSpeed = 20f;
 
     [Header("Zoom")]
+    [Tooltip("Distance change per physical wheel notch (see scrollUnitsPerNotch below), not per raw scroll unit.")]
     [SerializeField] private float zoomSpeed = 5f;
     [SerializeField] private float minDistance = 2f;
     [SerializeField] private float maxDistance = 15f;
     [SerializeField] private float zoomSmoothTime = 0.1f;
+    [Tooltip("Raw units Mouse.current.scroll reports per physical notch. The " +
+             "new Input System commonly reports the old Windows WHEEL_DELTA " +
+             "value (120) here rather than a normalised 1, which made a single " +
+             "notch jump the entire zoom range.")]
+    [SerializeField] private float scrollUnitsPerNotch = 120f;
 
     [Header("Cursor")]
     [SerializeField] private bool lockCursorWhileRotating = false;
@@ -170,7 +176,8 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
 
         if (Mathf.Abs(scroll) > 0.01f)
         {
-            targetDistance -= scroll * zoomSpeed;
+            float notches = scroll / scrollUnitsPerNotch;
+            targetDistance -= notches * zoomSpeed;
             targetDistance = Mathf.Clamp(targetDistance, minDistance, maxDistance);
         }
 

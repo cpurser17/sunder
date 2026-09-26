@@ -143,12 +143,7 @@ public class GridManager2D : MonoBehaviour
             {
                 var d = cellData[x, y];
                 if (d != null)
-                {
-                    if (d.tileType == TileType.Bridge)
-                        _grid[x, y].PlaceBridgeInternal(d.owner);
-                    else
-                        _grid[x, y].SetTileTypeInternal(d.tileType, d.owner);
-                }
+                    _grid[x, y].LoadFromSave(d.tileType, d.underlyingType, d.owner);
             }
 
             int cell = y * width + x;
