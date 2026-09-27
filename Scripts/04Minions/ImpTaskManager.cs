@@ -66,11 +66,6 @@ public class ImpTaskManager : MonoBehaviour
     [SerializeField] private float claimWeight     = 2f;
     [SerializeField] private float reinforceWeight = 1f;
 
-    [Header("Determinism")]
-    [Tooltip("Seed for job-choice randomness. Fixed so runs are reproducible — " +
-             "important for lockstep multiplayer and for debugging.")]
-    [SerializeField] private int randomSeed = 12345;
-
     // ── Runtime ────────────────────────────────────────────────────────
     private readonly Dictionary<JobKey, DungeonJob> _jobs = new();
     private readonly List<ImpController>            _imps = new();
@@ -85,8 +80,6 @@ public class ImpTaskManager : MonoBehaviour
     public int                          JobCount => _jobs.Count;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
-
-    private void Awake() => _rng = new System.Random(randomSeed);
 
     private void Start()
     {
@@ -234,6 +227,12 @@ public class ImpTaskManager : MonoBehaviour
     public void RebuildAll()
     {
         GameManager2D.OnWalletsReady -= RebuildAll;
+
+        // Deferred to here (rather than Awake) because GameManager2D hasn't
+        // resolved MasterSeed yet at Awake time — Unity runs every component's
+        // Awake before any Start, and MasterSeed is only set partway through
+        // GameManager2D's own Start.
+        _rng = new System.Random(GameManager2D.Instance.DeriveFactionSeed(faction, "ImpTaskManager"));
 
         // Drop everything first rather than reconciling. Loading a save calls
         // GridManager2D.Initialise, which replaces every GridCell object, so

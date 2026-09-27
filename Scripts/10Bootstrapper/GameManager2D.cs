@@ -41,6 +41,12 @@ public class GameManager2D : MonoBehaviour
     [Tooltip("Starting gold used when no level file is found.")]
     [SerializeField] private int    fallbackGold     = 500;
 
+    [Header("Determinism")]
+    [Tooltip("Master random seed override for a NEW game (ignored on resume, which " +
+             "always restores the seed from the save). 0 = generate one randomly. " +
+             "Set nonzero to pin it for reproducible testing.")]
+    [SerializeField] private int debugFixedSeed = 0;
+
     // ── Runtime session state ──────────────────────────────────────────
     private int           _activeSlot;
     private string        _activeBranchId;
@@ -64,6 +70,15 @@ public class GameManager2D : MonoBehaviour
     // Which FactionDefinition each seat is playing, resolved from
     // FactionSetup.contentFactionId whenever _activeFactions is (re)loaded.
     private readonly Dictionary<FactionID, FactionDefinition> _factionDefinitions = new();
+
+    // ── Determinism ────────────────────────────────────────────────────
+    /// <summary>
+    /// This match's master random seed. Set once in StartNewGame — or restored
+    /// from a save on resume, never regenerated — and used to derive every other
+    /// random stream in the game (see DeriveFactionSeed), so any client that
+    /// agrees on this one value agrees on every derived stream too.
+    /// </summary>
+    public int MasterSeed { get; private set; }
 
     // ── Accessors ──────────────────────────────────────────────────────
     public GridManager2D         Grid           => gridManager;
@@ -219,6 +234,7 @@ public class GameManager2D : MonoBehaviour
         _loadedFromAutosave  = false;
         _loadedFromBranchTip = false;
         _activeSaveIndex     = -1;
+        MasterSeed           = debugFixedSeed != 0 ? debugFixedSeed : GenerateRandomMasterSeed();
 
         var level = SaveLoadSystem.LoadLevel(levelId);
         if (level == null)
@@ -254,6 +270,7 @@ public class GameManager2D : MonoBehaviour
         _loadedFromBranchTip = false;
         _activeLevelId       = save.levelId;
         _activeSaveIndex     = -1;
+        RestoreMasterSeed(save);
 
         LoadLevelMeta(_activeLevelId);
         SaveLoadSystem.ApplyGrid(gridManager, save.grid);
@@ -269,6 +286,7 @@ public class GameManager2D : MonoBehaviour
         _loadedFromAutosave = false;
         _activeLevelId      = save.levelId;
         _activeSaveIndex    = saveIndex;
+        RestoreMasterSeed(save);
 
         var manifest = SaveLoadSystem.LoadManifest(slot);
         _loadedFromBranchTip = manifest != null &&
@@ -318,6 +336,49 @@ public class GameManager2D : MonoBehaviour
             else
                 Debug.LogWarning($"[GameManager2D] No FactionDefinition found for " +
                                  $"contentFactionId '{setup.contentFactionId}' (seat {setup.factionId}).");
+        }
+    }
+
+    /// <summary>
+    /// Restores MasterSeed from a save rather than regenerating it, so resuming
+    /// reproduces the same derived random streams as the run being resumed. A
+    /// save from before this system existed has no seed on file (masterSeed == 0)
+    /// and falls back to a fresh random one — those old saves had no guaranteed
+    /// determinism to preserve in the first place.
+    /// </summary>
+    private void RestoreMasterSeed(SaveData save)
+    {
+        MasterSeed = save.gameState != null && save.gameState.masterSeed != 0
+            ? save.gameState.masterSeed
+            : GenerateRandomMasterSeed();
+    }
+
+    /// <summary>
+    /// Non-deterministic on purpose — used only to pick a NEW match's master
+    /// seed. Once chosen it is persisted, so every derived random stream (and
+    /// every subsequent resume) is fully deterministic from this one value.
+    /// </summary>
+    private static int GenerateRandomMasterSeed() =>
+        BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0);
+
+    /// <summary>
+    /// Deterministically derives a per-faction, per-system seed from MasterSeed.
+    /// Systems that each just used MasterSeed directly would end up with
+    /// correlated random streams (and factions sharing MasterSeed alone would
+    /// roll identically); folding in the faction and a purpose tag keeps every
+    /// stream independent while still reproducing identically for a given
+    /// MasterSeed — which is what makes this safe for lockstep multiplayer.
+    /// </summary>
+    public int DeriveFactionSeed(FactionID faction, string purpose)
+    {
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 31 + MasterSeed;
+            hash = hash * 31 + (int)faction;
+            foreach (char c in purpose)
+                hash = hash * 31 + c;
+            return hash;
         }
     }
 
@@ -472,6 +533,8 @@ public class GameManager2D : MonoBehaviour
 
         // Keep currentGold as the player's gold for backwards compatibility.
         data.currentGold = GetWallet(FactionID.Player)?.Gold ?? 0;
+
+        data.masterSeed = MasterSeed;
 
         return data;
     }
