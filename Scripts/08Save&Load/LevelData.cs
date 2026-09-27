@@ -107,6 +107,11 @@ public class GameStateSaveData
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public System.Collections.Generic.Dictionary<FactionID, int> factionHeartHP;
 
+    // This match's master random seed (see GameManager2D.MasterSeed). 0 in
+    // saves predating this system — GameManager2D falls back to a fresh
+    // random seed on load rather than treating 0 as a real seed value.
+    public int masterSeed;
+
     // ── Future extension slots ─────────────────────────────────────────
     // public int   score;
     // public float missionElapsedTime;

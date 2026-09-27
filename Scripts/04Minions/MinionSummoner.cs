@@ -90,7 +90,7 @@ public class MinionSummoner : MonoBehaviour
             var def   = GameManager2D.Instance.GetFactionDefinition(setup.factionId);
             var state = new FactionState
             {
-                Rng                = new System.Random(StableSeed(setup.factionId)),
+                Rng                = new System.Random(GameManager2D.Instance.DeriveFactionSeed(setup.factionId, "MinionSummoner")),
                 Roster              = def != null && def.roster.Count > 0 ? def.roster : defaultRoster,
                 PopulationLimit     = def != null && def.populationLimit > 0 ? def.populationLimit : defaultPopulationLimit,
                 BaseSummonInterval  = def != null && def.baseSummonInterval > 0f ? def.baseSummonInterval : defaultBaseSummonInterval,
@@ -100,13 +100,6 @@ public class MinionSummoner : MonoBehaviour
             _states[setup.factionId] = state;
         }
     }
-
-    /// <summary>
-    /// Deterministic per-faction seed, so runs stay reproducible without
-    /// needing an override entry just to get a different random stream than
-    /// another faction.
-    /// </summary>
-    private static int StableSeed(FactionID faction) => 12345 + (int)faction * 977;
 
     private void Update()
     {
