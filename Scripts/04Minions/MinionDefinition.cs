@@ -130,6 +130,19 @@ public class MinionDefinition : ScriptableObject
         return 0f;
     }
 
+    /// <summary>
+    /// Like GetStat, but false when the stat has no row on the _Levels sheet
+    /// yet — so callers with their own tuning (e.g. the imp prefab) can keep
+    /// it until the data is filled in, instead of dropping to a 0 default.
+    /// </summary>
+    public bool TryGetAuthoredStat(MinionStat stat, int level, out float value)
+    {
+        foreach (var curve in stats)
+            if (curve.stat == stat && curve.authored) { value = curve.Evaluate(level, maxLevel); return true; }
+        value = 0f;
+        return false;
+    }
+
     /// <summary>Total experience needed to be at the given level.</summary>
     public float ExperienceForLevel(int level) => GetStat(MinionStat.Experience, level);
 
@@ -162,6 +175,28 @@ public class MinionDefinition : ScriptableObject
     {
         foreach (var a in abilities)
             if (a.ability != null && a.gainLevel <= level) yield return a.ability;
+    }
+
+    /// <summary>
+    /// Configures a spawned template (summoned creature or imp) as this
+    /// minion: token on its SpriteRenderer, movement on its GridAgent, and the
+    /// agent's radius re-measured for the new token. A 3D model and animator
+    /// override will hang off here the same way.
+    /// </summary>
+    public void ApplyTo(GameObject target, GridAgent agent)
+    {
+        if (token != null)
+        {
+            var sprite = target.GetComponentInChildren<SpriteRenderer>();
+            if (sprite != null) sprite.sprite = token;
+            else Debug.LogWarning($"[MinionDefinition] {target.name} has no SpriteRenderer for {factionId} {minionId}'s token.");
+        }
+
+        if (agent != null)
+        {
+            agent.SetCapability(movement);
+            agent.RemeasureRadius();
+        }
     }
 
     /// <summary>1 = likes, -1 = hates, 0 = neutral or unrelated.</summary>

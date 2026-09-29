@@ -19,6 +19,17 @@ using UnityEngine;
 /// Depositing    brief pause at the treasury, then back to Idle for new work
 /// Fleeing       pushed into a hazard — drops the job and escapes
 /// Dead          releases its slot and unregisters
+///
+/// Data
+/// ----
+/// ImpSpawner passes in the faction's Worker MinionDefinition (the W row of
+/// the MinionData workbook), which sets the token and movement, and these
+/// stats at the imp's level:
+///   Health     → max health
+///   Strength   → dig damage per second
+///   SkillBuild → claim/reinforce speed multiplier (1 = the durations below)
+/// Any stat without a row on the _Levels sheet yet keeps this prefab's own
+/// Inspector value, so imps keep working while the data is being filled in.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class ImpController : MonoBehaviour
@@ -28,10 +39,12 @@ public class ImpController : MonoBehaviour
     [SerializeField] private FactionID faction = FactionID.Player;
 
     [Header("Work")]
+    [Tooltip("Used when the Worker data has no Strength row.")]
     [SerializeField] private float damagePerSecond   = 20f;
-    [Tooltip("Seconds to convert Cave to Tunnel, or to capture an enemy tile.")]
+    [Tooltip("Seconds to convert Cave to Tunnel, or to capture an enemy tile, " +
+             "at SkillBuild 1.")]
     [SerializeField] private float claimDuration     = 2f;
-    [Tooltip("Seconds to convert Stone into Wall.")]
+    [Tooltip("Seconds to convert Stone into Wall, at SkillBuild 1.")]
     [SerializeField] private float reinforceDuration = 3f;
     [Tooltip("Seconds between work ticks. Damage and progress scale by this.")]
     [SerializeField] private float workTickInterval  = 0.25f;
@@ -53,6 +66,7 @@ public class ImpController : MonoBehaviour
     [SerializeField] private float depositRetryInterval = 3f;
 
     [Header("Survival")]
+    [Tooltip("Used when the Worker data has no Health row.")]
     [SerializeField] private float maxHealth = 100f;
 
     [Header("Job requests")]
@@ -69,6 +83,13 @@ public class ImpController : MonoBehaviour
     private ImpState       _state = ImpState.Idle;
     private DungeonJob     _job;
     private ImpTaskManager _taskManager;
+    private MinionDefinition _definition;
+    private int            _level = 1;
+
+    // Effective values: Worker data where authored, otherwise the Inspector's.
+    private float _maxHealth;
+    private float _digDamagePerSecond;
+    private float _buildSpeed = 1f;
 
     private int       _carryingGold;
     private float     _health;
@@ -84,6 +105,10 @@ public class ImpController : MonoBehaviour
     public ImpState   State   => _state;
     public DungeonJob Job     => _job;
     public GridCell   Cell    => _agent != null ? _agent.CurrentCell : null;
+    public MinionDefinition Definition => _definition;
+    public int        Level   => _level;
+    public float      Health    => _health;
+    public float      MaxHealth => _maxHealth;
 
     public enum ImpState
     {
@@ -94,8 +119,9 @@ public class ImpController : MonoBehaviour
 
     private void Awake()
     {
-        _agent  = GetComponent<GridAgent>();
-        _health = maxHealth;
+        _agent = GetComponent<GridAgent>();
+        ApplyStats();
+        _health = _maxHealth;
 
         // Prefab assets cannot reference scene objects, so a spawned imp starts
         // with gridManager null. Resolve it from the scene bootstrapper.
@@ -116,12 +142,35 @@ public class ImpController : MonoBehaviour
     private void OnEnable()  => _agent.OnStandingInHazard += HandleHazard;
     private void OnDisable() => _agent.OnStandingInHazard -= HandleHazard;
 
-    /// <summary>Called by ImpSpawner immediately after instantiation.</summary>
-    public void Initialise(FactionID owningFaction, ImpTaskManager taskManager)
+    /// <summary>
+    /// Called by ImpSpawner immediately after instantiation. definition is the
+    /// faction's Worker data; null keeps the prefab exactly as authored.
+    /// </summary>
+    public void Initialise(FactionID owningFaction, ImpTaskManager taskManager,
+                           MinionDefinition definition = null, int level = 1)
     {
         faction      = owningFaction;
         _taskManager = taskManager;
+        _agent.SetFaction(owningFaction);
+
+        _definition = definition;
+        _level      = definition != null ? Mathf.Clamp(level, 1, definition.maxLevel) : 1;
+        definition?.ApplyTo(gameObject, _agent);
+
+        ApplyStats();
+        _health = _maxHealth;
     }
+
+    /// <summary>Resolves the effective stats from the Worker data at the current level.</summary>
+    private void ApplyStats()
+    {
+        _maxHealth          = Stat(MinionStat.Health,     maxHealth);
+        _digDamagePerSecond = Stat(MinionStat.Strength,   damagePerSecond);
+        _buildSpeed         = Mathf.Max(0.01f, Stat(MinionStat.SkillBuild, 1f));
+    }
+
+    private float Stat(MinionStat stat, float fallback) =>
+        _definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback;
 
     private void Update()
     {
@@ -233,7 +282,7 @@ public class ImpController : MonoBehaviour
     private bool TickClaim()
     {
         _workProgress += workTickInterval;
-        if (_workProgress < claimDuration) return false;
+        if (_workProgress < claimDuration / _buildSpeed) return false;
 
         var cell = _job.Target;
 
@@ -257,7 +306,7 @@ public class ImpController : MonoBehaviour
     private bool TickReinforce()
     {
         _workProgress += workTickInterval;
-        if (_workProgress < reinforceDuration) return false;
+        if (_workProgress < reinforceDuration / _buildSpeed) return false;
 
         _completing = true;
         gridManager.SetTileType(_job.Target, TileType.Wall, faction);
@@ -273,7 +322,7 @@ public class ImpController : MonoBehaviour
 
         // Accumulate fractional damage so non-integer DPS stays accurate across
         // ticks instead of being rounded away every time.
-        _damageAccumulator += damagePerSecond * workTickInterval;
+        _damageAccumulator += _digDamagePerSecond * workTickInterval;
         int damage = Mathf.FloorToInt(_damageAccumulator);
         if (damage <= 0) return false;
         _damageAccumulator -= damage;

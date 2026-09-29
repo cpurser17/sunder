@@ -9,7 +9,7 @@ using UnityEngine;
 /// <summary>
 /// Sunder > Import Minion Data: reads the MinionData workbook and creates or
 /// updates one MinionDefinition per faction per minion, one AbilityDefinition
-/// per ability, and each FactionDefinition's roster.
+/// per ability, and each FactionDefinition's roster and worker (imp).
 ///
 /// Assets are matched by path (built from FactionID + MinionID / AbilityID)
 /// and updated in place, so their GUIDs — and every reference to them —
@@ -245,7 +245,8 @@ public static class MinionDataImporter
     }
 
     /// <summary>
-    /// Each faction's roster becomes its summonable minions, in sheet order.
+    /// Each faction's roster becomes its summonable minions, in sheet order,
+    /// and its worker the Worker-stance row (what its imps are built from).
     /// A faction with no FactionDefinition yet gets one (with default
     /// population/timing to tune by hand), added to every FactionRegistry.
     /// </summary>
@@ -280,9 +281,11 @@ public static class MinionDataImporter
             }
 
             var roster = group.Where(m => m.Summonable).Select(m => minions[m.Key]).ToList();
+            var worker = data.WorkerFor(factionId);
             foreach (var faction in factions)
             {
                 faction.roster = new List<MinionDefinition>(roster);
+                faction.worker = worker != null ? minions[worker.Key] : null;
                 EditorUtility.SetDirty(faction);
             }
             report.RostersUpdated.Add($"{factionId} ({roster.Count} summonable)");

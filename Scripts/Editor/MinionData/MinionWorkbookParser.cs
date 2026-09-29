@@ -98,6 +98,7 @@ public class MinionWorkbookParser
         p.FillMissingStats();
         foreach (var sheet in SheetsEndingWith(book, "_Relations")) p.ReadRelationsSheet(sheet);
         p.CheckAbilityReferences();
+        p.CheckWorkers();
         return p;
     }
 
@@ -332,6 +333,7 @@ public class MinionWorkbookParser
                 curve       = Float(row, "Curve", 0f),
                 skew        = Float(row, "Skew", 0f),
                 wholeNumber = Stats[stat].WholeNumber,
+                authored    = true,
             };
 
             int existing = m.Stats.FindIndex(s => s.stat == stat);
@@ -390,6 +392,25 @@ public class MinionWorkbookParser
             }
         }
     }
+
+    /// <summary>Each faction's imp comes from its one Worker row.</summary>
+    private void CheckWorkers()
+    {
+        foreach (var faction in Minions.GroupBy(m => m.FactionId, StringComparer.OrdinalIgnoreCase))
+        {
+            var workers = faction.Where(m => m.Stance == MinionDefinition.MinionStance.Worker).ToList();
+            if (workers.Count == 0)
+                Warnings.Add($"{faction.Key}: no Worker row — its imps will use the imp prefab's own token and stats.");
+            else if (workers.Count > 1)
+                Warnings.Add($"{faction.Key}: {workers.Count} Worker rows ({string.Join(", ", workers.Select(w => w.MinionId))}) — " +
+                             $"imps use the first, {workers[0].MinionId}.");
+        }
+    }
+
+    /// <summary>The Worker row the faction's imps are built from, or null.</summary>
+    public MinionRecord WorkerFor(string factionId) =>
+        Minions.FirstOrDefault(m => string.Equals(m.FactionId, factionId, StringComparison.OrdinalIgnoreCase) &&
+                                    m.Stance == MinionDefinition.MinionStance.Worker);
 
     private void CheckAbilityReferences()
     {

@@ -31,6 +31,9 @@ public struct StatCurve
     public float skew;
     [Tooltip("Round to a whole number (from the Stats sheet's WholeNumber column).")]
     public bool wholeNumber;
+    [Tooltip("True when this stat has a row on the _Levels sheet. False = not filled in " +
+             "yet; min/max hold the Stats sheet default.")]
+    public bool authored;
 
     public float Evaluate(int level, int maxLevel)
     {

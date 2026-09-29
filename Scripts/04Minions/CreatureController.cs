@@ -52,30 +52,10 @@ public class CreatureController : MonoBehaviour
         _definition = definition;
         _agent.SetFaction(owningFaction);
 
-        ApplyDefinition();
+        definition?.ApplyTo(gameObject, _agent);
 
         _level      = definition != null ? Mathf.Clamp(level, 1, definition.maxLevel) : 1;
         _experience = definition != null ? definition.ExperienceForLevel(_level) : 0f;
-    }
-
-    /// <summary>
-    /// Configures the shared template for this minion type. Only the token is
-    /// swapped for now; a 3D model and animator override will hang off the
-    /// definition the same way.
-    /// </summary>
-    private void ApplyDefinition()
-    {
-        if (_definition == null) return;
-
-        if (_definition.token != null)
-        {
-            var sprite = GetComponentInChildren<SpriteRenderer>();
-            if (sprite != null) sprite.sprite = _definition.token;
-            else Debug.LogWarning($"[CreatureController] {name} has no SpriteRenderer for {_definition.minionId}'s token.");
-        }
-
-        _agent.SetCapability(_definition.movement);
-        _agent.RemeasureRadius();
     }
 
     // ── Stats & levelling ──────────────────────────────────────────────

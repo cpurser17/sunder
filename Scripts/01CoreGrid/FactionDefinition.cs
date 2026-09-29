@@ -36,6 +36,10 @@ public class FactionDefinition : ScriptableObject
              "rows for this faction — hand edits are overwritten on import.")]
     public List<MinionDefinition> roster = new();
 
+    [Tooltip("This faction's imp: token, movement and stats. Set by Sunder > Import " +
+             "Minion Data from the faction's Worker row. Empty = the imp prefab's own values.")]
+    public MinionDefinition worker;
+
     [Header("Population")]
     public int populationLimit = 10;
 

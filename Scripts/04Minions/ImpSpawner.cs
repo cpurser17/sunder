@@ -22,6 +22,13 @@ using UnityEngine.UI;
 /// 1. Create child GO under GameManager. Name it "ImpSpawner_Player".
 /// 2. Attach ImpSpawner. Set faction, assign impPrefab, gridManager, mainCamera.
 /// 3. Wire the Summon Imp HUD button to ToggleSummonMode().
+///
+/// Data
+/// ----
+/// impPrefab is a template: each imp is configured from its faction's Worker
+/// MinionDefinition (FactionDefinition.worker, filled in by Sunder > Import
+/// Minion Data from the W row) — token, movement and stats. A faction with
+/// no Worker data spawns the prefab exactly as authored.
 /// </summary>
 public class ImpSpawner : MonoBehaviour
 {
@@ -190,12 +197,12 @@ public class ImpSpawner : MonoBehaviour
             return;
         }
 
-        // GridAgent measures its radius in Awake, which has already run as part
-        // of Instantiate, so the clamp below can use the real token size.
+        // Initialise first: it swaps in the faction's token and re-measures the
+        // GridAgent radius, so the clamp below uses the real token size.
+        imp.Initialise(faction, taskManager, WorkerDefinition);
         go.transform.position = ClampInsideCell(clickPoint, cell, centre,
                                                 go.GetComponent<GridAgent>());
 
-        imp.Initialise(faction, taskManager);
         _activeImpCount++;
         taskManager.RegisterImp(imp);
 
@@ -212,8 +219,8 @@ public class ImpSpawner : MonoBehaviour
     /// In both cases the imp must actually be able to stand there. Ownership
     /// alone is not enough — Wall is owned but impassable, and an imp placed
     /// inside it would be stuck in solid rock. Passability comes from the
-    /// prefab's own capability rather than being assumed, so this stays correct
-    /// if imps ever become amphibious or flying.
+    /// Worker data's (or prefab's) own capability rather than being assumed, so
+    /// this stays correct for factions whose imps are amphibious or flying.
     /// </summary>
     private bool IsValidSpawnCell(GridCell cell)
     {
@@ -227,8 +234,18 @@ public class ImpSpawner : MonoBehaviour
 
         if (!owned && !unclaimedCave) return false;
 
-        return TraversalRules.CanPathOn(cell.TileType, PrefabCapability, faction);
+        var capability = WorkerDefinition != null ? WorkerDefinition.movement : PrefabCapability;
+        return TraversalRules.CanPathOn(cell.TileType, capability, faction);
     }
+
+    /// <summary>
+    /// This faction's Worker data, from the FactionDefinition its seat plays.
+    /// Looked up each time (a dictionary hit) rather than cached, since seats
+    /// are assigned during level setup, after this component's Awake. Null
+    /// when the faction has no Worker row.
+    /// </summary>
+    private MinionDefinition WorkerDefinition =>
+        GameManager2D.Instance?.GetFactionDefinition(faction)?.worker;
 
     /// <summary>
     /// Traversal capability declared on the imp prefab's GridAgent.
