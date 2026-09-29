@@ -127,6 +127,20 @@ public class GridAgent : MonoBehaviour
     /// </summary>
     public void SetFaction(FactionID newFaction) => faction = newFaction;
 
+    /// <summary>
+    /// Reassigns where this agent may path. Used when one shared template
+    /// prefab is configured from a MinionDefinition after instantiation.
+    /// Call before setting a destination; an existing path is not re-validated.
+    /// </summary>
+    public void SetCapability(TraversalCapability newCapability) => capability = newCapability;
+
+    /// <summary>
+    /// Re-measures the token radius from the current renderers. Awake measures
+    /// whatever the prefab shipped with, so call this after swapping the
+    /// token/model at runtime.
+    /// </summary>
+    public void RemeasureRadius() => _radius = MeasureRadius() + radiusPadding;
+
     /// <summary>Token radius in world units, including padding.</summary>
     public float Radius => _radius;
 

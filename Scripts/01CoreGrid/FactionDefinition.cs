@@ -31,7 +31,9 @@ public class FactionDefinition : ScriptableObject
 
     [Header("Roster")]
     [Tooltip("Every minion type this faction can summon, subject to each " +
-             "MinionDefinition's own prerequisites and the mission's allowedMinionIds.")]
+             "MinionDefinition's own prerequisites and the mission's allowedMinionIds. " +
+             "Rebuilt by Sunder > Import Minion Data from the workbook's summonable " +
+             "rows for this faction — hand edits are overwritten on import.")]
     public List<MinionDefinition> roster = new();
 
     [Header("Population")]

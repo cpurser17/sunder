@@ -23,6 +23,10 @@ using UnityEngine;
 /// the faction's research multiplier, so different factions — and a single
 /// faction over the course of a mission, as research completes — summon at
 /// different rates without any of it being hardcoded.
+///
+/// Every minion spawns from the one minionTemplate prefab (unless its
+/// definition sets its own prefab override); CreatureController.Initialise
+/// then applies the definition's token, movement and stats to it.
 /// </summary>
 public class MinionSummoner : MonoBehaviour
 {
@@ -31,6 +35,12 @@ public class MinionSummoner : MonoBehaviour
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
+
+    [Header("Template")]
+    [Tooltip("Shared prefab every minion spawns from: GridAgent, CreatureController " +
+             "and a SpriteRenderer (on it or a child) for the token. A " +
+             "MinionDefinition's own prefab, if set, overrides this.")]
+    [SerializeField] private GameObject minionTemplate;
 
     [Header("Roster (fallback)")]
     [Tooltip("Used only for a seat with no FactionDefinition assigned.")]
@@ -165,6 +175,7 @@ public class MinionSummoner : MonoBehaviour
 
     private bool IsEligible(FactionID faction, FactionState state, MinionDefinition def)
     {
+        if (!def.summonable)                         return false;
         if (state.Population + def.populationCost > state.PopulationLimit) return false;
         if (!LevelAllows(def))                      return false;
         if (!HasRequiredRooms(faction, def))         return false;
@@ -180,14 +191,15 @@ public class MinionSummoner : MonoBehaviour
 
     private bool HasRequiredRooms(FactionID faction, MinionDefinition def)
     {
-        if (def.requiredRoomTypes.Count == 0) return true;
+        if (def.requiredRooms.Count == 0) return true;
 
         var rooms = gridManager.GetRoomsForFaction(faction);
-        foreach (var requiredType in def.requiredRoomTypes)
+        foreach (var required in def.requiredRooms)
         {
             bool found = false;
             foreach (var room in rooms)
-                if (room.TileType == requiredType) { found = true; break; }
+                if (room.TileType == required.roomType && room.Cells.Count >= required.minTiles)
+                { found = true; break; }
             if (!found) return false;
         }
         return true;
@@ -207,13 +219,14 @@ public class MinionSummoner : MonoBehaviour
 
     private void Spawn(FactionID faction, FactionState state, MinionDefinition def, Portal portal)
     {
-        if (def.prefab == null)
+        var prefab = def.prefab != null ? def.prefab : minionTemplate;
+        if (prefab == null)
         {
-            Debug.LogError($"[MinionSummoner] {def.minionId} has no prefab assigned.");
+            Debug.LogError($"[MinionSummoner] No minion template assigned, and {def.minionId} has no prefab override.");
             return;
         }
 
-        var go  = Instantiate(def.prefab, portal.SpawnPoint(faction), Quaternion.identity);
+        var go  = Instantiate(prefab, portal.SpawnPoint(faction), Quaternion.identity);
         go.name = $"{def.minionId}_{faction}_{state.Population}";
 
         var creature = go.GetComponent<CreatureController>();
