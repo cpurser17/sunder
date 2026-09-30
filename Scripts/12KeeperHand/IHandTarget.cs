@@ -34,6 +34,12 @@ public interface IHandTarget
     /// </summary>
     void OnDropped(Vector3 worldPosition, GridCell cell);
 
+    /// <summary>
+    /// Dropped onto its faction's portal: it leaves the dungeon for good.
+    /// Called while held, in place of OnDropped.
+    /// </summary>
+    void OnAbandon();
+
     /// <summary>Slapped by the hand: hurt a little, angered, and briefly faster at work.</summary>
     void OnSlapped(in HandSlap slap);
 }

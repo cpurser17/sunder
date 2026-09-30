@@ -16,7 +16,8 @@ using UnityEngine;
 /// -------------
 /// Picking a creature up wipes whatever it was doing; it reassesses when set
 /// down. A creature that hadn't yet reported sets off for the heart again
-/// from wherever it lands. Dropping one on a room remembers that room's type
+/// from wherever it lands. Dropping one on its portal makes it abandon the
+/// dungeon — it despawns and frees its population slot. Dropping one on a room remembers that room's type
 /// for dropAffinityDuration seconds (see TryGetDropAffinity) — the hook for
 /// room-work behaviour to weight that room more heavily. A slap costs a
 /// little health, adds anger and speeds up work for a while (see
@@ -237,6 +238,13 @@ public class CreatureController : MonoBehaviour, IHandTarget
             _headingToHeart    = false;
             _nextReportAttempt = 0f;
         }
+    }
+
+    /// <summary>Dropped on the portal: leaves the dungeon, freeing its population slot.</summary>
+    public void OnAbandon()
+    {
+        if (!IsAlive) return;
+        Die();
     }
 
     public void OnSlapped(in HandSlap slap)

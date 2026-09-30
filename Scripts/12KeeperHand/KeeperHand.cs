@@ -10,14 +10,15 @@ using UnityEngine.EventSystems;
 ///   LMB on a minion         — pick it up. Up to <see cref="capacity"/> held.
 ///   RMB while holding       — drop the most recently picked-up minion.
 ///   Shift + RMB             — drop every held minion at once.
+///   Dropping onto your portal — the minion abandons the dungeon (despawns).
 ///   RMB, hand empty         — slap the minion under the cursor: a little
 ///                             damage, some anger, a temporary work speed boost.
 ///   Moving over a minion    — it pauses briefly so it can be grabbed. A
 ///                             minion walking under a still cursor does not.
 ///
-/// Only the local player's own minions are grabbed or slapped, and minions
-/// are only dropped on floor the local player owns that they can stand on
-/// safely.
+/// Only the local player's own minions are grabbed, slapped or paused by
+/// hovering — other factions' minions ignore this hand entirely. Minions are
+/// only dropped on floor the local player owns that they can stand on safely.
 ///
 /// Sharing the mouse
 /// -----------------
@@ -92,7 +93,7 @@ public class KeeperHand : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float slapDamageFraction  = 0.05f;
     [Tooltip("Off: a slap never takes a minion's last point of health.")]
-    [SerializeField] private bool  slapCanKill         = false;
+    [SerializeField] private bool  slapCanKill         = true;
     [Tooltip("Anger added per slap, on a 0-1 scale.")]
     [Range(0f, 1f)]
     [SerializeField] private float slapAngerGain       = 0.2f;
@@ -294,7 +295,8 @@ public class KeeperHand : MonoBehaviour
         if (!TryGetGroundPoint(out Vector3 point)) return;
 
         var target = _held[_held.Count - 1];
-        if (!TryDrop(target, point)) return;
+        if (IsOwnPortal(CellAt(point))) target.OnAbandon();
+        else if (!TryDrop(target, point)) return;
 
         _held.RemoveAt(_held.Count - 1);
         OnHeldChanged?.Invoke();
@@ -305,10 +307,19 @@ public class KeeperHand : MonoBehaviour
     /// they don't land on a single point. A minion whose spread spot is
     /// illegal tries the cursor point itself; if that's illegal too (e.g. a
     /// land minion over a bridge gap it can't stand on) it stays in the hand.
+    /// With the cursor on the portal, every held minion abandons the dungeon.
     /// </summary>
     private void DropAll()
     {
         if (!TryGetGroundPoint(out Vector3 point)) return;
+
+        if (IsOwnPortal(CellAt(point)))
+        {
+            for (int i = _held.Count - 1; i >= 0; i--) _held[i].OnAbandon();
+            _held.Clear();
+            OnHeldChanged?.Invoke();
+            return;
+        }
 
         int  count   = _held.Count;
         bool changed = false;
@@ -329,8 +340,7 @@ public class KeeperHand : MonoBehaviour
 
     private bool TryDrop(IHandTarget target, Vector3 point)
     {
-        if (!gridManager.WorldToCell(point, out int x, out int y)) return false;
-        var cell = gridManager.GetCell(x, y);
+        var cell = CellAt(point);
         if (!CanDropOn(target, cell)) return false;
 
         target.OnDropped(point, cell);
@@ -339,11 +349,15 @@ public class KeeperHand : MonoBehaviour
 
     /// <summary>
     /// A minion may be set down on floor the local player owns, that it can
-    /// stand on without harm, and that has room for its token.
+    /// stand on without harm, and that has room for its token. Never the
+    /// portal: landing there means abandoning, which only the cursor itself
+    /// being on the portal triggers — a Shift+RMB spread spot that happens to
+    /// clip it shouldn't dismiss anyone.
     /// </summary>
     private bool CanDropOn(IHandTarget target, GridCell cell)
     {
         if (cell == null || cell.Owner != localPlayer) return false;
+        if (cell.TileType == TileType.Portal)          return false;
 
         var agent = target.Agent;
         if (!TraversalRules.CanOccupy(cell.TileType, agent.Capability, target.Faction)) return false;
@@ -352,6 +366,12 @@ public class KeeperHand : MonoBehaviour
         var clearance = gridManager.Clearance;
         return clearance == null || clearance.Fits(cell, agent.Capability, agent.Radius);
     }
+
+    private GridCell CellAt(Vector3 point) =>
+        gridManager.WorldToCell(point, out int x, out int y) ? gridManager.GetCell(x, y) : null;
+
+    private bool IsOwnPortal(GridCell cell) =>
+        cell != null && cell.TileType == TileType.Portal && cell.Owner == localPlayer;
 
     // ── Slap ───────────────────────────────────────────────────────────
 
