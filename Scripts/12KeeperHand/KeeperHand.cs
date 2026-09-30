@@ -10,7 +10,9 @@ using UnityEngine.EventSystems;
 ///   LMB on a minion         — pick it up. Up to <see cref="capacity"/> held.
 ///   RMB while holding       — drop the most recently picked-up minion.
 ///   Shift + RMB             — drop every held minion at once.
-///   Dropping onto your portal — the minion abandons the dungeon (despawns).
+///   Dropping onto your portal — a summoned creature abandons the dungeon
+///                             (despawns). Imps, commanders and the general
+///                             can't be dismissed; they're just set down there.
 ///   RMB, hand empty         — slap the minion under the cursor: a little
 ///                             damage, some anger, a temporary work speed boost.
 ///   Moving over a minion    — it pauses briefly so it can be grabbed. A
@@ -295,7 +297,7 @@ public class KeeperHand : MonoBehaviour
         if (!TryGetGroundPoint(out Vector3 point)) return;
 
         var target = _held[_held.Count - 1];
-        if (IsOwnPortal(CellAt(point))) target.OnAbandon();
+        if (IsOwnPortal(CellAt(point)) && target.CanAbandon) target.OnAbandon();
         else if (!TryDrop(target, point)) return;
 
         _held.RemoveAt(_held.Count - 1);
@@ -307,27 +309,30 @@ public class KeeperHand : MonoBehaviour
     /// they don't land on a single point. A minion whose spread spot is
     /// illegal tries the cursor point itself; if that's illegal too (e.g. a
     /// land minion over a bridge gap it can't stand on) it stays in the hand.
-    /// With the cursor on the portal, every held minion abandons the dungeon.
+    /// With the cursor on the portal, every held minion that can be dismissed
+    /// abandons the dungeon; the rest are set down as usual.
     /// </summary>
     private void DropAll()
     {
         if (!TryGetGroundPoint(out Vector3 point)) return;
 
-        if (IsOwnPortal(CellAt(point)))
-        {
-            for (int i = _held.Count - 1; i >= 0; i--) _held[i].OnAbandon();
-            _held.Clear();
-            OnHeldChanged?.Invoke();
-            return;
-        }
-
-        int  count   = _held.Count;
-        bool changed = false;
+        bool onPortal = IsOwnPortal(CellAt(point));
+        int  count    = _held.Count;
+        bool changed  = false;
 
         for (int i = count - 1; i >= 0; i--)
         {
-            var     target = _held[i];
-            Vector3 spot   = point + SpreadOffset(count - 1 - i, count, dropAllSpread);
+            var target = _held[i];
+
+            if (onPortal && target.CanAbandon)
+            {
+                target.OnAbandon();
+                _held.RemoveAt(i);
+                changed = true;
+                continue;
+            }
+
+            Vector3 spot = point + SpreadOffset(count - 1 - i, count, dropAllSpread);
 
             if (!TryDrop(target, spot) && !TryDrop(target, point)) continue;
 
@@ -349,15 +354,14 @@ public class KeeperHand : MonoBehaviour
 
     /// <summary>
     /// A minion may be set down on floor the local player owns, that it can
-    /// stand on without harm, and that has room for its token. Never the
-    /// portal: landing there means abandoning, which only the cursor itself
-    /// being on the portal triggers — a Shift+RMB spread spot that happens to
-    /// clip it shouldn't dismiss anyone.
+    /// stand on without harm, and that has room for its token. The portal
+    /// counts as floor here — dismissal is decided before this, and only when
+    /// the cursor itself is on the portal, so a Shift+RMB spread spot that
+    /// clips it just sets the minion down.
     /// </summary>
     private bool CanDropOn(IHandTarget target, GridCell cell)
     {
         if (cell == null || cell.Owner != localPlayer) return false;
-        if (cell.TileType == TileType.Portal)          return false;
 
         var agent = target.Agent;
         if (!TraversalRules.CanOccupy(cell.TileType, agent.Capability, target.Faction)) return false;

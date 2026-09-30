@@ -35,8 +35,14 @@ public interface IHandTarget
     void OnDropped(Vector3 worldPosition, GridCell cell);
 
     /// <summary>
+    /// True if dropping it on its faction's portal dismisses it. Only minions
+    /// that came through the portal can leave by it.
+    /// </summary>
+    bool CanAbandon { get; }
+
+    /// <summary>
     /// Dropped onto its faction's portal: it leaves the dungeon for good.
-    /// Called while held, in place of OnDropped.
+    /// Called while held, in place of OnDropped, and only if CanAbandon.
     /// </summary>
     void OnAbandon();
 

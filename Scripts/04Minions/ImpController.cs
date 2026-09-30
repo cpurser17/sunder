@@ -619,12 +619,9 @@ public class ImpController : MonoBehaviour, IHandTarget
         GoIdle();
     }
 
-    /// <summary>Dropped on the portal: leaves the dungeon, carried gold and all.</summary>
-    public void OnAbandon()
-    {
-        if (!IsAlive) return;
-        Die();
-    }
+    /// <summary>Imps aren't summoned through the portal, so they can't leave by it.</summary>
+    public bool CanAbandon => false;
+    public void OnAbandon() { }
 
     public void OnSlapped(in HandSlap slap)
     {

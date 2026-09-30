@@ -16,8 +16,9 @@ using UnityEngine;
 /// -------------
 /// Picking a creature up wipes whatever it was doing; it reassesses when set
 /// down. A creature that hadn't yet reported sets off for the heart again
-/// from wherever it lands. Dropping one on its portal makes it abandon the
-/// dungeon — it despawns and frees its population slot. Dropping one on a room remembers that room's type
+/// from wherever it lands. Dropping a summoned creature on its portal makes
+/// it abandon the dungeon — it despawns and frees its population slot.
+/// Non-summonable ones (commanders, the general) are just set down there. Dropping one on a room remembers that room's type
 /// for dropAffinityDuration seconds (see TryGetDropAffinity) — the hook for
 /// room-work behaviour to weight that room more heavily. A slap costs a
 /// little health, adds anger and speeds up work for a while (see
@@ -240,10 +241,17 @@ public class CreatureController : MonoBehaviour, IHandTarget
         }
     }
 
+    /// <summary>
+    /// Only creatures that come through the portal can leave by it — the
+    /// definition's summonable flag, which is false for commanders, workers
+    /// and the general.
+    /// </summary>
+    public bool CanAbandon => _definition != null && _definition.summonable;
+
     /// <summary>Dropped on the portal: leaves the dungeon, freeing its population slot.</summary>
     public void OnAbandon()
     {
-        if (!IsAlive) return;
+        if (!IsAlive || !CanAbandon) return;
         Die();
     }
 
