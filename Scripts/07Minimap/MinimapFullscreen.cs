@@ -59,6 +59,12 @@ public class MinimapFullscreen : MonoBehaviour
 
     // ── Runtime ────────────────────────────────────────────────────────
     private bool    _open;
+
+    /// <summary>
+    /// True while the fullscreen map is up. Its clicks are map clicks, so
+    /// world click handlers (the Keeper's hand) stand down.
+    /// </summary>
+    public static bool IsOpen { get; private set; }
     private Vector2 _uvOffset;   // bottom-left corner of the current view in UV space
     private float   _uvSize;     // width and height of the view in UV space
 
@@ -87,6 +93,7 @@ public class MinimapFullscreen : MonoBehaviour
 
     private void OnDestroy()
     {
+        IsOpen = false;
         MinimapRenderer.OnTextureReady -= ConnectTextures;
     }
 
@@ -132,7 +139,8 @@ public class MinimapFullscreen : MonoBehaviour
 
     private void SetOpen(bool open)
     {
-        _open = open;
+        _open  = open;
+        IsOpen = open;
         fullscreenPanel.SetActive(open);
         ThirdPersonOrbitCamera.ZoomSuspended  = open;
         ThirdPersonOrbitCamera.OrbitSuspended = open;

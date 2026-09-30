@@ -105,6 +105,7 @@ public class GridAgent : MonoBehaviour
     private bool           _hasDestination;
     private bool           _pathDirty;
     private float          _nextPathRefresh;
+    private float          _pausedUntil;
 
     /// <summary>
     /// The cell the agent currently stands in, derived from its continuous
@@ -118,6 +119,12 @@ public class GridAgent : MonoBehaviour
     public TraversalCapability Capability => capability;
     public FactionID           Faction    => faction;
     public bool                IsStatic   => isStatic;
+
+    /// <summary>
+    /// True while a Pause is holding the agent in place. Its path is kept, so
+    /// it is not reported as arrived and simply resumes when the pause ends.
+    /// </summary>
+    public bool                IsPaused   => Time.time < _pausedUntil;
 
     /// <summary>
     /// Reassigns which faction this agent belongs to. Whatever owns this
@@ -239,6 +246,10 @@ public class GridAgent : MonoBehaviour
             RecomputePath();
         }
 
+        // Paused agents hold still entirely — separation included, or the
+        // crowd would slide a minion out from under the Keeper's hand.
+        if (IsPaused) return;
+
         if (HasPath)         FollowPath();
         if (useSeparation)   ApplySeparation();
     }
@@ -336,6 +347,50 @@ public class GridAgent : MonoBehaviour
         _destinationCell = null;
         _hasDestination  = false;
         _pathDirty       = false;
+    }
+
+    /// <summary>
+    /// Holds the agent in place for the given seconds, keeping its path. Used
+    /// when the Keeper's hand passes over a minion so it can be picked up.
+    /// Never pauses an agent standing in a hazard — freezing it there would
+    /// hold it in the damage.
+    /// </summary>
+    public void Pause(float seconds)
+    {
+        if (isStatic || IsInHazard) return;
+        _pausedUntil = Mathf.Max(_pausedUntil, Time.time + seconds);
+    }
+
+    /// <summary>
+    /// Places the agent at an exact world position, clearing any path or
+    /// pause — used when the Keeper's hand drops a minion. The position is
+    /// pulled toward its cell centre as far as needed for the token to clear
+    /// the nearest wall. Returns false, leaving the agent untouched, if the
+    /// position is off the grid.
+    /// </summary>
+    public bool WarpTo(Vector3 worldPosition)
+    {
+        if (!gridManager.WorldToCell(worldPosition, out int x, out int y)) return false;
+        var cell = gridManager.GetCell(x, y);
+        if (cell == null) return false;
+
+        Stop();
+        _pausedUntil = 0f;
+
+        Vector3 centre = gridManager.CellToWorld(cell.X, cell.Y);
+        Vector3 offset = worldPosition - centre;
+        offset.y = 0f;
+
+        var clearance = gridManager.Clearance;
+        if (clearance != null)
+        {
+            float room = Mathf.Max(0f, clearance.GetClearance(cell, capability) - _radius);
+            if (offset.magnitude > room) offset = offset.normalized * room;
+        }
+
+        transform.position = new Vector3(centre.x + offset.x, agentHeight, centre.z + offset.z);
+        CurrentCell = cell;
+        return true;
     }
 
     /// <summary>True if the agent's current tile damages it.</summary>

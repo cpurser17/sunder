@@ -18,6 +18,8 @@ using UnityEngine;
 ///               the mining slot is released when this run begins
 /// Depositing    brief pause at the treasury, then back to Idle for new work
 /// Fleeing       pushed into a hazard — drops the job and escapes
+/// Held          in the Keeper's hand — job dropped, agent switched off;
+///               goes Idle (banking any gold first) where it's set down
 /// Dead          releases its slot and unregisters
 ///
 /// Data
@@ -28,11 +30,13 @@ using UnityEngine;
 ///   Health     → max health
 ///   Strength   → dig damage per second
 ///   SkillBuild → claim/reinforce speed multiplier (1 = the durations below)
+/// A slap from the Keeper's hand multiplies dig damage and claim/reinforce
+/// speed for a while on top of these (see MinionTemper).
 /// Any stat without a row on the _Levels sheet yet keeps this prefab's own
 /// Inspector value, so imps keep working while the data is being filled in.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
-public class ImpController : MonoBehaviour
+public class ImpController : MonoBehaviour, IHandTarget
 {
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Identity")]
@@ -69,6 +73,9 @@ public class ImpController : MonoBehaviour
     [Tooltip("Used when the Worker data has no Health row.")]
     [SerializeField] private float maxHealth = 100f;
 
+    [Tooltip("Anger lost per second after a slap, on a 0-1 scale.")]
+    [SerializeField] private float angerDecayPerSecond = 0.02f;
+
     [Header("Job requests")]
     [Tooltip("Seconds between requests while idle. Stops idle imps hammering " +
              "the registry every frame when there is no work.")]
@@ -99,6 +106,7 @@ public class ImpController : MonoBehaviour
     private float     _nextDepositAttempt;
     private Coroutine _workCoroutine;
     private bool      _completing;          // suppresses re-entrant abandon
+    private MinionTemper _temper;
 
     public bool       IsIdle  => _state == ImpState.Idle;
     public FactionID  Faction => faction;
@@ -109,17 +117,24 @@ public class ImpController : MonoBehaviour
     public int        Level   => _level;
     public float      Health    => _health;
     public float      MaxHealth => _maxHealth;
+    public float      Anger     => _temper.Anger;
+
+    // IHandTarget
+    public GridAgent  Agent   => _agent;
+    public bool       IsAlive => _state != ImpState.Dead;
+    public bool       IsHeld  => _state == ImpState.Held;
 
     public enum ImpState
     {
-        Idle, MovingToJob, Working, MovingToVault, Depositing, Fleeing, Dead
+        Idle, MovingToJob, Working, MovingToVault, Depositing, Fleeing, Dead, Held
     }
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
     private void Awake()
     {
-        _agent = GetComponent<GridAgent>();
+        _agent  = GetComponent<GridAgent>();
+        _temper = new MinionTemper(angerDecayPerSecond);
         ApplyStats();
         _health = _maxHealth;
 
@@ -139,8 +154,17 @@ public class ImpController : MonoBehaviour
         if (gridManager != null) _pathfinder = new GridPathfinder(gridManager);
     }
 
-    private void OnEnable()  => _agent.OnStandingInHazard += HandleHazard;
-    private void OnDisable() => _agent.OnStandingInHazard -= HandleHazard;
+    private void OnEnable()
+    {
+        _agent.OnStandingInHazard += HandleHazard;
+        KeeperHand.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        _agent.OnStandingInHazard -= HandleHazard;
+        KeeperHand.Unregister(this);
+    }
 
     /// <summary>
     /// Called by ImpSpawner immediately after instantiation. definition is the
@@ -281,7 +305,7 @@ public class ImpController : MonoBehaviour
     /// <summary>Returns true when the job finished and the routine should stop.</summary>
     private bool TickClaim()
     {
-        _workProgress += workTickInterval;
+        _workProgress += workTickInterval * _temper.WorkSpeedMultiplier;
         if (_workProgress < claimDuration / _buildSpeed) return false;
 
         var cell = _job.Target;
@@ -305,7 +329,7 @@ public class ImpController : MonoBehaviour
 
     private bool TickReinforce()
     {
-        _workProgress += workTickInterval;
+        _workProgress += workTickInterval * _temper.WorkSpeedMultiplier;
         if (_workProgress < reinforceDuration / _buildSpeed) return false;
 
         _completing = true;
@@ -322,7 +346,7 @@ public class ImpController : MonoBehaviour
 
         // Accumulate fractional damage so non-integer DPS stays accurate across
         // ticks instead of being rounded away every time.
-        _damageAccumulator += _digDamagePerSecond * workTickInterval;
+        _damageAccumulator += _digDamagePerSecond * _temper.WorkSpeedMultiplier * workTickInterval;
         int damage = Mathf.FloorToInt(_damageAccumulator);
         if (damage <= 0) return false;
         _damageAccumulator -= damage;
@@ -483,20 +507,26 @@ public class ImpController : MonoBehaviour
 
         if (_workCoroutine != null) { StopCoroutine(_workCoroutine); _workCoroutine = null; }
 
-        if (_job != null)
-        {
-            // Only reset tile HP if we were the last one working it.
-            if (_job.Type == JobType.Dig && _job.Workers.Count <= 1)
-                _job.Target.ResetHP();
-
-            _taskManager?.ReleaseJob(_job, this);
-            _job = null;
-        }
-
+        ReleaseJob();
         _agent.Stop();
 
         // Fleeing sets its own state immediately after, so don't stomp it.
         if (_state != ImpState.Fleeing && _state != ImpState.Dead) GoIdle();
+    }
+
+    /// <summary>
+    /// Hands the current job's slot back. A dig tile's HP is only reset if
+    /// this imp was the last one working it.
+    /// </summary>
+    private void ReleaseJob()
+    {
+        if (_job == null) return;
+
+        if (_job.Type == JobType.Dig && _job.Workers.Count <= 1)
+            _job.Target.ResetHP();
+
+        _taskManager?.ReleaseJob(_job, this);
+        _job = null;
     }
 
     /// <summary>
@@ -550,6 +580,53 @@ public class ImpController : MonoBehaviour
 
     private void SetState(ImpState state) => _state = state;
 
+    // ── Keeper's hand ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Lifted by the hand: the job is dropped (its slot freed for another
+    /// imp), any deposit run is abandoned — the gold stays carried — and the
+    /// agent is switched off so the hand can move the token freely.
+    /// </summary>
+    public void OnPickedUp()
+    {
+        if (!IsAlive || IsHeld) return;
+
+        // Covers both the work loop and a deposit in progress.
+        StopAllCoroutines();
+        _workCoroutine = null;
+
+        ReleaseJob();
+        _workProgress = 0f;
+
+        _agent.Stop();
+        _agent.enabled = false;
+        SetState(ImpState.Held);
+    }
+
+    /// <summary>
+    /// Set down: switch the agent back on where it landed and go Idle, which
+    /// banks any carried gold first and otherwise asks for the nearest job
+    /// from here.
+    /// </summary>
+    public void OnDropped(Vector3 worldPosition, GridCell cell)
+    {
+        if (!IsHeld) return;
+
+        _agent.enabled = true;
+        if (!_agent.WarpTo(worldPosition)) _agent.SnapTo(cell);
+
+        _nextDepositAttempt = 0f;
+        GoIdle();
+    }
+
+    public void OnSlapped(in HandSlap slap)
+    {
+        if (!IsAlive) return;
+
+        _temper.ApplySlap(slap);
+        TakeDamage(slap.DamageFor(_health, _maxHealth));
+    }
+
     // ── Damage and death ───────────────────────────────────────────────
 
     public void TakeDamage(float amount)
@@ -564,13 +641,7 @@ public class ImpController : MonoBehaviour
 
         if (_workCoroutine != null) StopCoroutine(_workCoroutine);
 
-        if (_job != null)
-        {
-            if (_job.Type == JobType.Dig && _job.Workers.Count <= 1)
-                _job.Target.ResetHP();
-            _taskManager?.ReleaseJob(_job, this);
-            _job = null;
-        }
+        ReleaseJob();
 
         _taskManager?.UnregisterImp(this);
         ImpSpawner.GetForFaction(faction)?.NotifyImpDied();

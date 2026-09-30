@@ -114,6 +114,11 @@ public class GameManager2D : MonoBehaviour
         if (Instance == null) Instance = this;
 
         if (factionRegistry != null) factionRegistry.Initialise();
+
+        // The Keeper's hand needs no scene wiring, so make sure one exists
+        // rather than relying on it being placed by hand.
+        if (FindAnyObjectByType<KeeperHand>() == null)
+            gameObject.AddComponent<KeeperHand>();
     }
 
     private void Start()

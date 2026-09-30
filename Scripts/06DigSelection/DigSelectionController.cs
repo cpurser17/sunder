@@ -21,6 +21,8 @@ using UnityEngine.EventSystems;
 ///   RMB press/drag — rectangle-deselect; pillar box shown in removeBoxColour.
 ///                    Drag only begins if the first cell already has a marker.
 ///   On mouse-up    — commits the rectangle, hides the box, places/removes markers.
+///   A press the Keeper's hand takes (grabbing, dropping or slapping a
+///   minion — see KeeperHand.OwnsMouseButton) never starts a drag.
 ///
 /// Suspension
 /// ----------
@@ -131,6 +133,7 @@ public class DigSelectionController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             if (IsPointerOverUI()) return;
+            if (KeeperHand.OwnsMouseButton(0)) return;
             if (!TryGetCellCoords(out int x, out int y)) return;
             var startCell = _gridManager.GetCell(x, y);
             if (startCell == null || !IsValidDigTarget(startCell)) return;
@@ -164,6 +167,7 @@ public class DigSelectionController : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             if (IsPointerOverUI()) return;
+            if (KeeperHand.OwnsMouseButton(1)) return;
             if (!TryGetCellCoords(out int x, out int y)) return;
             var startCell = _gridManager.GetCell(x, y);
             if (startCell == null || !_queue.ContainsKey(startCell)) return;
