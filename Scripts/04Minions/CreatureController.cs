@@ -11,9 +11,21 @@ using UnityEngine;
 /// its MinionDefinition (token, movement, radius) and sets its level. Stats
 /// are never stored per creature — GetStat reads them from the definition
 /// at the current level, so a re-import rebalances existing creatures too.
+///
+/// Keeper's hand
+/// -------------
+/// Picking a creature up wipes whatever it was doing; it reassesses when set
+/// down. A creature that hadn't yet reported sets off for the heart again
+/// from wherever it lands. Dropping a summoned creature on its portal makes
+/// it abandon the dungeon — it despawns and frees its population slot.
+/// Non-summonable ones (commanders, the general) are just set down there. Dropping one on a room remembers that room's type
+/// for dropAffinityDuration seconds (see TryGetDropAffinity) — the hook for
+/// room-work behaviour to weight that room more heavily. A slap costs a
+/// little health, adds anger and speeds up work for a while (see
+/// MinionTemper and WorkSpeedMultiplier).
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
-public class CreatureController : MonoBehaviour
+public class CreatureController : MonoBehaviour, IHandTarget
 {
     public enum CreatureState { ReportingForDuty, Active, Dead }
 
@@ -25,6 +37,16 @@ public class CreatureController : MonoBehaviour
              "(e.g. it hasn't been discovered, or territory isn't connected).")]
     [SerializeField] private float reportRetryInterval = 1f;
 
+    [Header("Survival")]
+    [Tooltip("Used when the definition has no Health row.")]
+    [SerializeField] private float fallbackMaxHealth = 100f;
+
+    [Header("Keeper's hand")]
+    [Tooltip("Seconds a creature dropped on a room favours working in that room type.")]
+    [SerializeField] private float dropAffinityDuration = 30f;
+    [Tooltip("Anger lost per second after a slap, on a 0-1 scale.")]
+    [SerializeField] private float angerDecayPerSecond  = 0.02f;
+
     // ── Runtime ────────────────────────────────────────────────────────
     private GridAgent        _agent;
     private MinionDefinition _definition;
@@ -34,16 +56,54 @@ public class CreatureController : MonoBehaviour
     private bool             _startedReporting;
     private bool             _headingToHeart;
     private float            _nextReportAttempt;
+    private float            _health;
+    private bool             _held;
+    private MinionTemper     _temper;
+    private TileType         _dropRoomType;
+    private float            _dropAffinityUntil = float.NegativeInfinity;
 
     public FactionID        Faction    => faction;
     public MinionDefinition Definition => _definition;
     public CreatureState    State      => _state;
     public int              Level      => _level;
     public float            Experience => _experience;
+    public float            Health     => _health;
+    public float            Anger      => _temper.Anger;
+
+    /// <summary>Multiplier for any work this creature does — above 1 while a slap's boost lasts.</summary>
+    public float            WorkSpeedMultiplier => _temper.WorkSpeedMultiplier;
+
+    /// <summary>Health at the current level; the Inspector fallback until the data has a Health row.</summary>
+    public float MaxHealth =>
+        _definition != null && _definition.TryGetAuthoredStat(MinionStat.Health, _level, out float v)
+            ? v : fallbackMaxHealth;
+
+    // IHandTarget
+    public GridAgent        Agent   => _agent;
+    public bool             IsAlive => _state != CreatureState.Dead;
+    public bool             IsHeld  => _held;
+
+    /// <summary>
+    /// The room type this creature was recently dropped on, if the drop is
+    /// still fresh. For room-work behaviour to favour that room.
+    /// </summary>
+    public bool TryGetDropAffinity(out TileType roomType)
+    {
+        roomType = _dropRoomType;
+        return Time.time < _dropAffinityUntil;
+    }
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
-    private void Awake() => _agent = GetComponent<GridAgent>();
+    private void Awake()
+    {
+        _agent  = GetComponent<GridAgent>();
+        _temper = new MinionTemper(angerDecayPerSecond);
+        _health = MaxHealth;
+    }
+
+    private void OnEnable()  => KeeperHand.Register(this);
+    private void OnDisable() => KeeperHand.Unregister(this);
 
     /// <summary>Called by MinionSummoner immediately after instantiation.</summary>
     public void Initialise(FactionID owningFaction, MinionDefinition definition, int level = 1)
@@ -56,6 +116,7 @@ public class CreatureController : MonoBehaviour
 
         _level      = definition != null ? Mathf.Clamp(level, 1, definition.maxLevel) : 1;
         _experience = definition != null ? definition.ExperienceForLevel(_level) : 0f;
+        _health     = MaxHealth;
     }
 
     // ── Stats & levelling ──────────────────────────────────────────────
@@ -76,12 +137,18 @@ public class CreatureController : MonoBehaviour
         int newLevel = _definition.LevelForExperience(_experience);
         if (newLevel <= _level) return false;
 
-        _level = newLevel;
+        // Keep the same fraction of health across the level-up.
+        float fraction = MaxHealth > 0f ? _health / MaxHealth : 1f;
+        _level  = newLevel;
+        _health = fraction * MaxHealth;
         return true;
     }
 
     private void Update()
     {
+        // In the hand: the hand moves the token and nothing else happens.
+        if (_held) return;
+
         // Deferred to the first Update rather than Start: GridAgent.Start()
         // sets CurrentCell, and Start-order across components isn't
         // guaranteed, but every Start in the scene runs before any Update —
@@ -126,6 +193,87 @@ public class CreatureController : MonoBehaviour
         _headingToHeart = false;
         _state          = CreatureState.Active;
         DungeonHeart.Instance?.NotifyReported(faction, this);
+    }
+
+    // ── Keeper's hand ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Lifted by the hand: forgets where it was going and switches the agent
+    /// off so the hand can move the token freely.
+    /// </summary>
+    public void OnPickedUp()
+    {
+        if (!IsAlive || _held) return;
+
+        _held              = true;
+        _headingToHeart    = false;
+        _dropAffinityUntil = float.NegativeInfinity;
+
+        _agent.Stop();
+        _agent.enabled = false;
+    }
+
+    /// <summary>
+    /// Set down: switch the agent back on where it landed and reassess. Not
+    /// yet reported → head for the heart again, from here. Landed on a room
+    /// → remember it for a while.
+    /// </summary>
+    public void OnDropped(Vector3 worldPosition, GridCell cell)
+    {
+        if (!_held) return;
+        _held = false;
+
+        _agent.enabled = true;
+        if (!_agent.WarpTo(worldPosition)) _agent.SnapTo(cell);
+
+        if (IsRoom(cell.TileType))
+        {
+            _dropRoomType      = cell.TileType;
+            _dropAffinityUntil = Time.time + dropAffinityDuration;
+        }
+
+        // Also covers a creature grabbed before its first Update.
+        _startedReporting = true;
+        if (_state == CreatureState.ReportingForDuty)
+        {
+            _headingToHeart    = false;
+            _nextReportAttempt = 0f;
+        }
+    }
+
+    /// <summary>
+    /// Only creatures that come through the portal can leave by it — the
+    /// definition's summonable flag, which is false for commanders, workers
+    /// and the general.
+    /// </summary>
+    public bool CanAbandon => _definition != null && _definition.summonable;
+
+    /// <summary>Dropped on the portal: leaves the dungeon, freeing its population slot.</summary>
+    public void OnAbandon()
+    {
+        if (!IsAlive || !CanAbandon) return;
+        Die();
+    }
+
+    public void OnSlapped(in HandSlap slap)
+    {
+        if (!IsAlive) return;
+
+        _temper.ApplySlap(slap);
+        TakeDamage(slap.DamageFor(_health, MaxHealth));
+    }
+
+    private static bool IsRoom(TileType type) =>
+        type == TileType.RoomA || type == TileType.RoomB || type == TileType.RoomC;
+
+    // ── Damage and death ───────────────────────────────────────────────
+
+    public void TakeDamage(float amount)
+    {
+        if (!IsAlive || amount <= 0f) return;
+
+        _health -= amount;
+        if (_health <= 0f) Die();
     }
 
     // ── Death ──────────────────────────────────────────────────────────

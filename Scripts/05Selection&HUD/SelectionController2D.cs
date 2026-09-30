@@ -113,6 +113,8 @@ public class SelectionController2D : MonoBehaviour
     private void HandleRightClick()
     {
         if (!Input.GetMouseButtonDown(1)) return;
+        // Dropping or slapping a minion — the hand's click, not a deselect.
+        if (KeeperHand.OwnsMouseButton(1)) return;
         if (_dragging) CancelDrag();
         else           HUDController2D.Instance?.RequestDeselect();
     }
