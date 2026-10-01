@@ -128,7 +128,7 @@ public class GridAgent : MonoBehaviour
 
     /// <summary>
     /// Reassigns which faction this agent belongs to. Whatever owns this
-    /// agent (e.g. CreatureController on conversion) must call this — faction
+    /// agent (e.g. MinionController on conversion) must call this — faction
     /// is tracked here independently of any owning component's own faction
     /// field, and traversal/hazard rules read it from here.
     /// </summary>

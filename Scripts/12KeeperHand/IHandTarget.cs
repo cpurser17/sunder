@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Anything the Keeper's hand can pick up, drop and slap. Implemented by
-/// ImpController and CreatureController, which register themselves with
+/// MinionController (every imp and creature), which registers itself with
 /// KeeperHand while enabled.
 ///
 /// The hand owns only the mechanics — what's under the cursor, the held

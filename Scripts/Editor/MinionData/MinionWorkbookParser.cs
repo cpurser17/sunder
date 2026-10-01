@@ -52,6 +52,7 @@ public class MinionWorkbookParser
         public float ResearchPreference, TrainPreference, BuildPreference, PrayPreference, TorturePreference;
         public List<(int GainLevel, string AbilityId)> Abilities = new();
         public bool  Summonable;
+        public bool  CanDoWorkerJobs;
         public float SummonWeight;
         public int   PopulationCost;
         public List<MinionDefinition.RoomRequirement> RequiredRooms = new();
@@ -81,7 +82,7 @@ public class MinionWorkbookParser
         "FactionID", "MinionID", "DisplayName", "Stance", "Movement",
         "ResearchPreference", "TrainPreference", "BuildPreference", "PrayPreference", "TorturePreference",
         "Gain1", "Ability1", "Gain2", "Ability2", "Gain3", "Ability3", "Gain4", "Ability4", "Gain5", "Ability5",
-        "Summonable", "SummonWeight", "PopulationCost", "RequiredRooms", "MinRoomTiles", "RequiredResearch",
+        "Summonable", "WorkerJobs", "SummonWeight", "PopulationCost", "RequiredRooms", "MinRoomTiles", "RequiredResearch",
     };
 
     private static readonly Regex TierPattern = new(@"^T(\d+)", RegexOptions.IgnoreCase);
@@ -255,6 +256,10 @@ public class MinionWorkbookParser
                                        m.Stance != MinionDefinition.MinionStance.Worker &&
                                        m.Stance != MinionDefinition.MinionStance.General;
             m.Summonable = Bool(row, "Summonable", summonableByDefault);
+
+            // Workers always do worker jobs; anyone else (enemy diggers,
+            // helpful utility minions) only if the sheet says so.
+            m.CanDoWorkerJobs = Bool(row, "WorkerJobs", false) || m.Stance == MinionDefinition.MinionStance.Worker;
 
             if (Minions.Any(x => x.Key == m.Key))
             {

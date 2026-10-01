@@ -20,15 +20,18 @@ using UnityEngine.UI;
 /// Scene setup
 /// -----------
 /// 1. Create child GO under GameManager. Name it "ImpSpawner_Player".
-/// 2. Attach ImpSpawner. Set faction, assign impPrefab, gridManager, mainCamera.
+/// 2. Attach ImpSpawner. Set faction, gridManager, mainCamera. Leave impPrefab
+///    empty to use MinionSummoner's shared minion template.
 /// 3. Wire the Summon Imp HUD button to ToggleSummonMode().
 ///
 /// Data
 /// ----
-/// impPrefab is a template: each imp is configured from its faction's Worker
-/// MinionDefinition (FactionDefinition.worker, filled in by Sunder > Import
-/// Minion Data from the W row) — token, movement and stats. A faction with
-/// no Worker data spawns the prefab exactly as authored.
+/// Imps are ordinary minions: the same template prefab as everything the
+/// portal summons, configured from the faction's Worker MinionDefinition
+/// (FactionDefinition.worker, filled in by Sunder > Import Minion Data from
+/// the W row) — token, movement, stats — and running WorkerBehaviour. Only
+/// how they arrive differs: placed by a click, for gold. A faction with no
+/// Worker data spawns the template as authored, still as a worker.
 /// </summary>
 public class ImpSpawner : MonoBehaviour
 {
@@ -61,10 +64,11 @@ public class ImpSpawner : MonoBehaviour
     [SerializeField] private FactionID faction = FactionID.Player;
 
     [Header("References")]
+    [Tooltip("Optional. Empty = MinionSummoner's shared minion template, which " +
+             "is what you want. The Worker definition's own prefab overrides both.")]
     [SerializeField] private GameObject    impPrefab;
     [SerializeField] private GridManager2D gridManager;
     [SerializeField] private Camera        mainCamera;
-    [SerializeField] private ImpTaskManager taskManager;
 
     [Header("Placement")]
     [Tooltip("Gap kept between the spawned token edge and the tile boundary, "
@@ -78,6 +82,7 @@ public class ImpSpawner : MonoBehaviour
     // ── Runtime ────────────────────────────────────────────────────────
     private bool _summonModeActive;
     private TraversalCapability? _prefabCapability;
+    private bool _warnedNoWorkerData;
     private int  _activeImpCount;
 
     public bool IsSummonModeActive => _summonModeActive;
@@ -179,35 +184,67 @@ public class ImpSpawner : MonoBehaviour
             return;
         }
 
-        SpawnImp(cell, clickPoint);
+        if (!SpawnImp(cell, clickPoint)) wallet.Earn(cost);
     }
 
-    private void SpawnImp(GridCell cell, Vector3 clickPoint)
+    private bool SpawnImp(GridCell cell, Vector3 clickPoint)
     {
         Vector3 centre = gridManager.CellToWorld(cell.X, cell.Y);
 
-        var go  = Instantiate(impPrefab, centre, Quaternion.identity);
+        var worker = WorkerDefinition;
+        if (worker == null && !_warnedNoWorkerData)
+        {
+            _warnedNoWorkerData = true;
+            Debug.LogWarning($"[ImpSpawner] {faction} has no Worker data (no FactionDefinition, " +
+                             "or no Worker row imported) — imps use the template's own token and values.");
+        }
+
+        if (Template == null)
+        {
+            Debug.LogError("[ImpSpawner] No minion template — assign MinionSummoner's Minion " +
+                           "Template (Sunder > Create Minion Template Prefab does this).");
+            return false;
+        }
+
+        var go  = Instantiate(Template, centre, Quaternion.identity);
         go.name = $"Imp_{faction}_{_activeImpCount}";
 
-        var imp = go.GetComponent<ImpController>();
+        var imp = go.GetComponent<MinionController>();
         if (imp == null)
         {
-            Debug.LogError("[ImpSpawner] Imp prefab missing ImpController component.");
+            Debug.LogError($"[ImpSpawner] {Template.name} is missing MinionController — " +
+                           "rebuild it with Sunder > Create Minion Template Prefab.");
             Destroy(go);
-            return;
+            return false;
         }
 
         // Initialise first: it swaps in the faction's token and re-measures the
-        // GridAgent radius, so the clamp below uses the real token size.
-        imp.Initialise(faction, taskManager, WorkerDefinition);
+        // GridAgent radius, so the clamp below uses the real token size. The
+        // worker registers itself with the faction's ImpTaskManager.
+        imp.Initialise(faction, worker, 1, MinionController.SpawnSource.WorkerSpawner);
         go.transform.position = ClampInsideCell(clickPoint, cell, centre,
                                                 go.GetComponent<GridAgent>());
 
         _activeImpCount++;
-        taskManager.RegisterImp(imp);
 
         Debug.Log($"[ImpSpawner] Spawned imp {_activeImpCount} for {faction}. " +
                   $"Next cost: {CurrentSummonCost}g.");
+        return true;
+    }
+
+    /// <summary>
+    /// The prefab imps spawn from: the Worker definition's own override, else
+    /// this spawner's impPrefab, else MinionSummoner's shared template.
+    /// </summary>
+    private GameObject Template
+    {
+        get
+        {
+            var worker = WorkerDefinition;
+            if (worker != null && worker.prefab != null) return worker.prefab;
+            if (impPrefab != null) return impPrefab;
+            return MinionSummoner.Instance != null ? MinionSummoner.Instance.Template : null;
+        }
     }
 
     /// <summary>
@@ -248,7 +285,8 @@ public class ImpSpawner : MonoBehaviour
         GameManager2D.Instance?.GetFactionDefinition(faction)?.worker;
 
     /// <summary>
-    /// Traversal capability declared on the imp prefab's GridAgent.
+    /// Traversal capability declared on the template's GridAgent, used when
+    /// the faction has no Worker data.
     /// Cached after the first read; falls back to LandOnly if absent.
     /// </summary>
     private TraversalCapability PrefabCapability
@@ -257,7 +295,8 @@ public class ImpSpawner : MonoBehaviour
         {
             if (_prefabCapability.HasValue) return _prefabCapability.Value;
 
-            var agent = impPrefab != null ? impPrefab.GetComponent<GridAgent>() : null;
+            var template = Template;
+            var agent    = template != null ? template.GetComponent<GridAgent>() : null;
             _prefabCapability = agent != null ? agent.Capability
                                               : TraversalCapability.LandOnly;
             return _prefabCapability.Value;
@@ -326,6 +365,6 @@ public class ImpSpawner : MonoBehaviour
 
     // ── Imp death notification ─────────────────────────────────────────
 
-    /// <summary>Called by ImpController.Die() to decrement the active count.</summary>
+    /// <summary>Called by MinionController when one of this spawner's imps dies or converts.</summary>
     public void NotifyImpDied() => _activeImpCount = Mathf.Max(0, _activeImpCount - 1);
 }

@@ -20,9 +20,9 @@ using UnityEngine;
 /// the same separation system that already keeps them off each other,
 /// rather than the grid refusing to route through the tile.
 ///
-/// Every newly summoned minion (see MinionSummoner / CreatureController)
+/// Every newly summoned minion (see MinionSummoner / CreatureBehaviour)
 /// must reach a cell inside its faction's footprint before it is considered
-/// part of the faction — FindApproachCell is what CreatureController paths to.
+/// part of the faction — FindApproachCell is what CreatureBehaviour paths to.
 /// </summary>
 public class DungeonHeart : MonoBehaviour
 {
@@ -67,7 +67,7 @@ public class DungeonHeart : MonoBehaviour
     public event System.Action<FactionID, int, int> OnDamaged;
 
     /// <summary>Fired when a creature finishes reporting for duty at its faction's heart.</summary>
-    public event System.Action<FactionID, CreatureController> OnCreatureReported;
+    public event System.Action<FactionID, MinionController> OnCreatureReported;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -255,7 +255,7 @@ public class DungeonHeart : MonoBehaviour
     private static bool IsHeartCell(FactionID faction, HeartState state, GridCell cell) =>
         cell.TileType == TileType.Heart && cell.Owner == faction && cell != state.CrystalCell;
 
-    /// <summary>Called by CreatureController once it arrives and joins the faction.</summary>
-    public void NotifyReported(FactionID faction, CreatureController creature) =>
-        OnCreatureReported?.Invoke(faction, creature);
+    /// <summary>Called by MinionController once it arrives and joins the faction.</summary>
+    public void NotifyReported(FactionID faction, MinionController minion) =>
+        OnCreatureReported?.Invoke(faction, minion);
 }

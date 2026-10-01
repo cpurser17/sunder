@@ -34,7 +34,7 @@ public class DungeonJob
     public GridCell  WorkCell { get; }
     public int       Capacity { get; }
 
-    public List<ImpController> Workers { get; } = new();
+    public List<WorkerBehaviour> Workers { get; } = new();
 
     public bool HasRoom => Workers.Count < Capacity;
     public bool IsEmpty => Workers.Count == 0;
@@ -47,14 +47,14 @@ public class DungeonJob
         Capacity = capacity;
     }
 
-    public bool AddWorker(ImpController imp)
+    public bool AddWorker(WorkerBehaviour imp)
     {
         if (!HasRoom || Workers.Contains(imp)) return false;
         Workers.Add(imp);
         return true;
     }
 
-    public void RemoveWorker(ImpController imp) => Workers.Remove(imp);
+    public void RemoveWorker(WorkerBehaviour imp) => Workers.Remove(imp);
 
     /// <summary>Stable dictionary key. Two jobs match only if all three parts match.</summary>
     public JobKey Key => new(Type, Target, WorkCell);

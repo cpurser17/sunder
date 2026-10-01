@@ -12,7 +12,9 @@ using UnityEngine;
 /// prefab or scene object to hand-place, and no shared roster either — every
 /// faction's content is bespoke, authored on its own FactionDefinition asset.
 /// A seat with no FactionDefinition assigned falls back to this component's
-/// own defaultX fields, purely as a missing-data safety net.
+/// own defaultX fields, purely as a missing-data safety net — with a warning,
+/// since it usually means the level's contentFactionId or the GameManager2D's
+/// Faction Registry isn't set up.
 ///
 /// On each faction's tick, eligibility is narrowed by four independent gates
 /// — population headroom, mission design (GameManager2D.AllowedMinionIds),
@@ -25,21 +27,27 @@ using UnityEngine;
 /// different rates without any of it being hardcoded.
 ///
 /// Every minion spawns from the one minionTemplate prefab (unless its
-/// definition sets its own prefab override); CreatureController.Initialise
-/// then applies the definition's token, movement and stats to it.
+/// definition sets its own prefab override); MinionController.Initialise
+/// then applies the definition's token, movement, stats and behaviour to it.
+/// ImpSpawner spawns workers from the same template (see Template).
 /// </summary>
 public class MinionSummoner : MonoBehaviour
 {
     public static MinionSummoner Instance { get; private set; }
+
+    /// <summary>The shared minion prefab. ImpSpawner uses it for workers too.</summary>
+    public GameObject Template => minionTemplate;
 
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Dependencies")]
     [SerializeField] private GridManager2D gridManager;
 
     [Header("Template")]
-    [Tooltip("Shared prefab every minion spawns from: GridAgent, CreatureController " +
-             "and a SpriteRenderer (on it or a child) for the token. A " +
-             "MinionDefinition's own prefab, if set, overrides this.")]
+    [Tooltip("Shared prefab every minion spawns from — portal creatures and " +
+             "ImpSpawner's workers alike: GridAgent, MinionController, the " +
+             "behaviours and a SpriteRenderer child for the token. Build it with " +
+             "Sunder > Create Minion Template Prefab. A MinionDefinition's own " +
+             "prefab, if set, overrides this.")]
     [SerializeField] private GameObject minionTemplate;
 
     [Header("Roster (fallback)")]
@@ -98,6 +106,13 @@ public class MinionSummoner : MonoBehaviour
         foreach (var setup in GameManager2D.Instance.ActiveFactions)
         {
             var def   = GameManager2D.Instance.GetFactionDefinition(setup.factionId);
+            if (def == null)
+                Debug.LogWarning($"[MinionSummoner] Seat {setup.factionId} has no FactionDefinition " +
+                                 "(check the level's contentFactionId and GameManager2D's Faction " +
+                                 "Registry) — summoning from this component's Default Roster instead.");
+            else if (def.roster.Count == 0)
+                Debug.LogWarning($"[MinionSummoner] {def.factionContentId}'s roster is empty (run " +
+                                 "Sunder > Import Minion Data) — summoning from the Default Roster instead.");
             var state = new FactionState
             {
                 Rng                = new System.Random(GameManager2D.Instance.DeriveFactionSeed(setup.factionId, "MinionSummoner")),
@@ -229,15 +244,16 @@ public class MinionSummoner : MonoBehaviour
         var go  = Instantiate(prefab, portal.SpawnPoint(faction), Quaternion.identity);
         go.name = $"{def.minionId}_{faction}_{state.Population}";
 
-        var creature = go.GetComponent<CreatureController>();
-        if (creature == null)
+        var minion = go.GetComponent<MinionController>();
+        if (minion == null)
         {
-            Debug.LogError($"[MinionSummoner] {def.minionId} prefab is missing CreatureController.");
+            Debug.LogError($"[MinionSummoner] {prefab.name} is missing MinionController — " +
+                           "rebuild it with Sunder > Create Minion Template Prefab.");
             Destroy(go);
             return;
         }
 
-        creature.Initialise(faction, def);
+        minion.Initialise(faction, def, 1, MinionController.SpawnSource.Portal);
         state.Population += def.populationCost;
 
         Debug.Log($"[MinionSummoner] Summoned {def.minionId} for {faction}. " +
@@ -248,8 +264,8 @@ public class MinionSummoner : MonoBehaviour
 
     /// <summary>
     /// Frees a population slot for the given faction — called whenever a
-    /// creature leaves its population for any reason: death (CreatureController.Die)
-    /// or converting to another faction (CreatureController.ConvertTo).
+    /// creature leaves its population for any reason: death or abandoning
+    /// (MinionController.Die) or converting to another faction (MinionController.ConvertTo).
     /// </summary>
     public void NotifyCreatureRemoved(FactionID faction, MinionDefinition def)
     {

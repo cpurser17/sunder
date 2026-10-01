@@ -29,8 +29,8 @@ public static class MinionDataImporter
     private const string AbilitiesRoot       = GeneratedRoot + "/Abilities";
     private const string FactionsRoot        = GeneratedRoot + "/Factions";
 
-    /// <summary>Token convention: Assets/Tokens/01U/Token_01U_C1.png</summary>
-    private static string TokenPath(string faction, string minion) => $"Assets/Tokens/{faction}/Token_{faction}_{minion}.png";
+    /// <summary>Token naming convention: Token_01U_C1 — found anywhere in the project.</summary>
+    private static string TokenName(string faction, string minion) => $"Token_{faction}_{minion}";
 
     private static string MinionPath(string faction, string minion) => $"{MinionsRoot}/{faction}/{faction}_{minion}.asset";
     private static string AbilityPath(string abilityId)             => $"{AbilitiesRoot}/{abilityId}.asset";
@@ -90,11 +90,12 @@ public static class MinionDataImporter
         try
         {
             AssetDatabase.StartAssetEditing();
-            try { PrepareTokens(data, warnings, report); }
+            Dictionary<string, string> tokens;
+            try { tokens = PrepareTokens(data, warnings, report); }
             finally { AssetDatabase.StopAssetEditing(); }
 
             var abilities = ImportAbilities(data, report);
-            var minions   = ImportMinions(data, abilities, warnings, report);
+            var minions   = ImportMinions(data, abilities, tokens, warnings, report);
             ImportRelations(data, minions);
             UpdateFactions(data, minions, warnings, report);
             FindOrphans(data, report);
@@ -115,27 +116,56 @@ public static class MinionDataImporter
     }
 
     /// <summary>
-    /// Token PNGs import as plain textures by default. Switch any the data
-    /// uses to Sprite so they can go on a SpriteRenderer — batched, since each
-    /// reimport is slow.
+    /// Finds each minion's token by exact file name (Token_01U_T1F) anywhere
+    /// in the project, so the folder layout doesn't matter. Returns minion key
+    /// → asset path; minions with no match are left out (their token is
+    /// cleared) and reported.
+    ///
+    /// Searches textures, not sprites: token PNGs import as plain textures by
+    /// default, which a sprite search would miss. Any that aren't Sprites yet
+    /// are switched over so they can go on a SpriteRenderer — batched by the
+    /// caller, since each reimport is slow.
     /// </summary>
-    private static void PrepareTokens(MinionWorkbookParser data, List<string> warnings, Report report)
+    private static Dictionary<string, string> PrepareTokens(MinionWorkbookParser data, List<string> warnings, Report report)
     {
+        // One search for every token-named texture, indexed by exact file name.
+        // (FindAssets matches partial names — "Token_01U_T1" would also find T1F.)
+        var byName = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var guid in AssetDatabase.FindAssets("Token_ t:Texture2D"))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string name = Path.GetFileNameWithoutExtension(path);
+            if (!byName.TryGetValue(name, out var paths)) byName[name] = paths = new List<string>();
+            paths.Add(path);
+        }
+
+        var found = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var m in data.Minions)
         {
-            string path = TokenPath(m.FactionId, m.MinionId);
-            if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
+            string name = TokenName(m.FactionId, m.MinionId);
+            if (!byName.TryGetValue(name, out var paths))
             {
-                warnings.Add($"{m.FactionId} {m.MinionId}: no token at {path}.");
+                warnings.Add($"{m.FactionId} {m.MinionId}: no texture named {name} in the project — token left empty.");
                 continue;
             }
-            if (importer.textureType == TextureImporterType.Sprite) continue;
+
+            paths.Sort(StringComparer.Ordinal);
+            if (paths.Count > 1)
+                warnings.Add($"{m.FactionId} {m.MinionId}: {paths.Count} textures named {name} " +
+                             $"({string.Join(", ", paths)}) — using {paths[0]}.");
+
+            string tokenPath = paths[0];
+            found[m.Key] = tokenPath;
+
+            if (AssetImporter.GetAtPath(tokenPath) is not TextureImporter importer ||
+                importer.textureType == TextureImporterType.Sprite) continue;
 
             importer.textureType      = TextureImporterType.Sprite;
             importer.spriteImportMode = SpriteImportMode.Single;
             importer.SaveAndReimport();
             report.TokensConverted++;
         }
+        return found;
     }
 
     private static Dictionary<string, AbilityDefinition> ImportAbilities(MinionWorkbookParser data, Report report)
@@ -177,7 +207,8 @@ public static class MinionDataImporter
     }
 
     private static Dictionary<string, MinionDefinition> ImportMinions(
-        MinionWorkbookParser data, Dictionary<string, AbilityDefinition> abilities, List<string> warnings, Report report)
+        MinionWorkbookParser data, Dictionary<string, AbilityDefinition> abilities,
+        Dictionary<string, string> tokens, List<string> warnings, Report report)
     {
         var map = new Dictionary<string, MinionDefinition>(StringComparer.OrdinalIgnoreCase);
 
@@ -193,10 +224,12 @@ public static class MinionDataImporter
             def.factionId           = m.FactionId;
             def.minionId            = m.MinionId;
             def.displayName         = m.DisplayName;
-            def.token               = AssetDatabase.LoadAssetAtPath<Sprite>(TokenPath(m.FactionId, m.MinionId));
+            def.token               = tokens.TryGetValue(m.Key, out var tokenPath)
+                                      ? AssetDatabase.LoadAssetAtPath<Sprite>(tokenPath) : null;
             def.stance              = m.Stance;
             def.tier                = m.Tier;
             def.movement            = m.Movement;
+            def.canDoWorkerJobs     = m.CanDoWorkerJobs;
             def.damageTaken         = new List<MinionDefinition.DamageMultiplier>(m.DamageTaken);
             def.researchPreference  = m.ResearchPreference;
             def.trainPreference     = m.TrainPreference;

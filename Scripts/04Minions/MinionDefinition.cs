@@ -11,10 +11,11 @@ using UnityEngine.Serialization;
 /// edit the workbook and re-import rather than editing generated assets, as
 /// the import overwrites them. Hand-made assets still work for tests.
 ///
-/// There is no prefab per minion. MinionSummoner instantiates one shared
-/// template and CreatureController applies this definition to it (token,
-/// movement, stats). <see cref="prefab"/> is only an optional override for a
-/// minion whose structure genuinely differs from the template.
+/// There is no prefab per minion. MinionSummoner (portal) and ImpSpawner
+/// (workers) instantiate one shared template and MinionController.Initialise
+/// applies this definition to it (token, movement, stats, behaviour).
+/// <see cref="prefab"/> is only an optional override for a minion whose
+/// structure genuinely differs from the template.
 ///
 /// A faction's roster (see FactionDefinition) holds the summonable ones;
 /// which it can actually summon at any moment is narrowed by
@@ -83,6 +84,12 @@ public class MinionDefinition : ScriptableObject
 
     [Header("Movement")]
     public TraversalCapability movement = TraversalCapability.LandOnly;
+
+    [Header("Worker jobs")]
+    [Tooltip("Digs, claims, reinforces and hauls gold once it has reported for duty. " +
+             "Always true in effect for the Worker stance; set it for e.g. enemy " +
+             "diggers or utility minions that help out.")]
+    public bool canDoWorkerJobs;
 
     [Header("Defence")]
     [Tooltip("Damage types not listed take normal (x1) damage.")]
@@ -185,11 +192,16 @@ public class MinionDefinition : ScriptableObject
     /// </summary>
     public void ApplyTo(GameObject target, GridAgent agent)
     {
+        var sprite = target.GetComponentInChildren<SpriteRenderer>();
         if (token != null)
         {
-            var sprite = target.GetComponentInChildren<SpriteRenderer>();
             if (sprite != null) sprite.sprite = token;
             else Debug.LogWarning($"[MinionDefinition] {target.name} has no SpriteRenderer for {factionId} {minionId}'s token.");
+        }
+        else if (sprite != null && sprite.sprite == null)
+        {
+            Debug.LogWarning($"[MinionDefinition] {factionId} {minionId} has no token, so it spawns " +
+                             $"invisible — add a Token_{factionId}_{minionId} image and re-import.");
         }
 
         if (agent != null)

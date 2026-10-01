@@ -8,7 +8,7 @@
 /// Owner          — FactionID.Unaligned for all environmental and liquid tiles.
 ///                  Set to the placing faction for Tunnel, Wall, Rooms, Bridge.
 ///
-/// CurrentHP      — -1 when not being worked. Set by ImpController when work begins.
+/// CurrentHP      — -1 when not being worked. Set by WorkerBehaviour when work begins.
 /// WealthRemaining — remaining harvestable wealth for Gold/Gem tiles.
 /// </summary>
 public class GridCell

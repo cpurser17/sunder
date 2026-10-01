@@ -4,6 +4,9 @@ using UnityEngine;
 /// <summary>
 /// Job registry and dispatcher for one faction.
 ///
+/// "Imps" here means any minion running WorkerBehaviour — the faction's
+/// Worker-stance minions, plus any creature whose data sets canDoWorkerJobs.
+///
 /// Pull, not push
 /// --------------
 /// Imps ask for work when they go idle; jobs are never pushed onto a specific
@@ -68,16 +71,16 @@ public class ImpTaskManager : MonoBehaviour
 
     // ── Runtime ────────────────────────────────────────────────────────
     private readonly Dictionary<JobKey, DungeonJob> _jobs = new();
-    private readonly List<ImpController>            _imps = new();
+    private readonly List<WorkerBehaviour>          _imps = new();
     private System.Random _rng;
 
     // Scratch buffers, reused to keep per-request allocation down.
     private readonly List<DungeonJob> _candidates = new();
     private readonly List<float>      _weights    = new();
 
-    public FactionID                    Faction  => faction;
-    public IReadOnlyList<ImpController> Imps     => _imps;
-    public int                          JobCount => _jobs.Count;
+    public FactionID                      Faction  => faction;
+    public IReadOnlyList<WorkerBehaviour> Imps     => _imps;
+    public int                            JobCount => _jobs.Count;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -101,12 +104,12 @@ public class ImpTaskManager : MonoBehaviour
 
     // ── Imp registration ───────────────────────────────────────────────
 
-    public void RegisterImp(ImpController imp)
+    public void RegisterImp(WorkerBehaviour imp)
     {
         if (!_imps.Contains(imp)) _imps.Add(imp);
     }
 
-    public void UnregisterImp(ImpController imp)
+    public void UnregisterImp(WorkerBehaviour imp)
     {
         _imps.Remove(imp);
         foreach (var job in _jobs.Values) job.RemoveWorker(imp);
@@ -123,7 +126,7 @@ public class ImpTaskManager : MonoBehaviour
     /// than strictly nearest, so a cluster of imps does not all converge on the
     /// same tile.
     /// </summary>
-    public DungeonJob RequestJob(ImpController imp)
+    public DungeonJob RequestJob(WorkerBehaviour imp)
     {
         var agent = imp.GetComponent<GridAgent>();
         if (agent == null) return null;
@@ -189,7 +192,7 @@ public class ImpTaskManager : MonoBehaviour
     public float NextRandom01() => (float)_rng.NextDouble();
 
     /// <summary>Releases an imp from a job it is no longer working.</summary>
-    public void ReleaseJob(DungeonJob job, ImpController imp)
+    public void ReleaseJob(DungeonJob job, WorkerBehaviour imp)
     {
         job?.RemoveWorker(imp);
     }
@@ -275,7 +278,7 @@ public class ImpTaskManager : MonoBehaviour
         foreach (var key in stale)
         {
             var job = _jobs[key];
-            foreach (var imp in new List<ImpController>(job.Workers))
+            foreach (var imp in new List<WorkerBehaviour>(job.Workers))
                 imp.OnJobCancelled(job);
             _jobs.Remove(key);
         }
@@ -395,7 +398,7 @@ public class ImpTaskManager : MonoBehaviour
     private void CancelAllJobs()
     {
         foreach (var job in _jobs.Values)
-            foreach (var imp in new List<ImpController>(job.Workers))
+            foreach (var imp in new List<WorkerBehaviour>(job.Workers))
                 imp.OnJobCancelled(job);
 
         _jobs.Clear();
