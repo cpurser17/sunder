@@ -22,7 +22,7 @@ MonoBehaviour:
   isIndestructible: 1
   maxHitPoints: 0
   wealthCapacity: 300
-  impDamagePerSecond: 20
+  workerDamagePerSecond: 20
   requiresAdjacency: 0
   placesOnLiquid: 0
   placesOnTunnel: 0

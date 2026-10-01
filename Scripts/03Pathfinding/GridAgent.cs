@@ -80,7 +80,7 @@ public class GridAgent : MonoBehaviour
     [SerializeField] private float maxSeparationSpeed = 0.6f;
 
     [Tooltip("Multiplier for an agent standing still. Above 1 means a working or " +
-             "depositing imp gives way more readily than one in transit.")]
+             "depositing worker gives way more readily than one in transit.")]
     [SerializeField] private float stationaryYieldMultiplier = 1.5f;
 
     [Header("Static obstacle")]
@@ -236,7 +236,7 @@ public class GridAgent : MonoBehaviour
             OnStandingInHazard?.Invoke(CurrentCell);
         }
 
-        // Staggered by agent index so a dig that dirties fifty imps spreads
+        // Staggered by agent index so a dig that dirties fifty workers spreads
         // their recomputes across frames instead of spiking one.
         if (HasPath && _pathDirty && Time.time >= _nextPathRefresh)
         {
@@ -491,7 +491,7 @@ public class GridAgent : MonoBehaviour
     /// time, the way particles in a fluid settle into even spacing.
     ///
     /// Why not solid bodies: any model where minions physically block one
-    /// another deadlocks once traffic is dense enough. Two imps meeting in a
+    /// another deadlocks once traffic is dense enough. Two workers meeting in a
     /// one-wide corridor have no legal way past, and no local rule reliably
     /// resolves it — they stall nose to nose. Letting them interpenetrate and
     /// settle afterwards removes the failure mode instead of managing it.
@@ -575,8 +575,8 @@ public class GridAgent : MonoBehaviour
     /// nearest wall.
     ///
     /// A cell-level fit test is not enough here. Clearance is measured from the
-    /// cell CENTRE, so an imp already standing hard against a face — which is
-    /// exactly where mining imps stand — passes that test while its token is
+    /// cell CENTRE, so a worker already standing hard against a face — which is
+    /// exactly where mining workers stand — passes that test while its token is
     /// only a hair from the rock. Nudging it further then pushes it in.
     /// </summary>
     private Vector3 ClampToClearance(Vector3 proposed, Vector3 current, GridCell cell)

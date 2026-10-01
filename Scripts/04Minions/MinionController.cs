@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// The one controller every minion has — imps, summoned creatures,
+/// The one controller every minion has — workers, summoned creatures,
 /// commanders, all of them, on the one shared template prefab.
 ///
 /// It owns what every minion has in common: which MinionDefinition it is,
@@ -14,7 +14,7 @@ using UnityEngine;
 ///
 /// Which behaviour
 /// ---------------
-///   Worker stance (or no data, from ImpSpawner)  → WorkerBehaviour
+///   Worker stance (or no data, from WorkerSpawner)  → WorkerBehaviour
 ///   everything else                              → CreatureBehaviour, which
 ///     reports for duty at the heart; if the definition's canDoWorkerJobs is
 ///     set, it then helps with worker jobs (digging, claiming, hauling)
@@ -22,7 +22,7 @@ using UnityEngine;
 /// Where the data comes from
 /// -------------------------
 /// The prefab holds no MinionDefinition. Whatever spawns it — MinionSummoner
-/// at the portal, ImpSpawner on a click — calls Initialise with the right
+/// at the portal, WorkerSpawner on a click — calls Initialise with the right
 /// one straight after Instantiate. A minion placed by hand in a scene (for
 /// testing) uses placedDefinition instead.
 ///
@@ -99,7 +99,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>
     /// True if this minion does worker jobs: the Worker stance, a definition
-    /// with canDoWorkerJobs set, or no data at all when ImpSpawner made it.
+    /// with canDoWorkerJobs set, or no data at all when WorkerSpawner made it.
     /// </summary>
     public bool CanDoWorkerJobs => _definition != null
         ? _definition.stance == MinionDefinition.MinionStance.Worker || _definition.canDoWorkerJobs
@@ -403,7 +403,7 @@ public class MinionController : MonoBehaviour, IHandTarget
                 MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
                 break;
             case SpawnSource.WorkerSpawner:
-                ImpSpawner.GetForFaction(faction)?.NotifyImpDied();
+                WorkerSpawner.GetForFaction(faction)?.NotifyWorkerDied();
                 break;
         }
     }
@@ -431,7 +431,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (_source == SpawnSource.Portal)
             MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
         else
-            _source = SpawnSource.Placed; // the new side's imp count never included it
+            _source = SpawnSource.Placed; // the new side's worker count never included it
 
         SwitchTo(IsWorkerFirst ? _worker : _creature);
     }

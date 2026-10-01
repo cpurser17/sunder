@@ -11,7 +11,7 @@ using UnityEngine.EventSystems;
 ///   RMB while holding       — drop the most recently picked-up minion.
 ///   Shift + RMB             — drop every held minion at once.
 ///   Dropping onto your portal — a summoned creature abandons the dungeon
-///                             (despawns). Imps, commanders and the general
+///                             (despawns). Workers, commanders and the general
 ///                             can't be dismissed; they're just set down there.
 ///   RMB, hand empty         — slap the minion under the cursor: a little
 ///                             damage, some anger, a temporary work speed boost.
@@ -206,7 +206,7 @@ public class KeeperHand : MonoBehaviour
     private static bool ShouldStandDown()
     {
         if (HUDController2D.Instance != null && HUDController2D.Instance.AnyButtonActive) return true;
-        if (ImpSpawner.AnySummonModeActive) return true;
+        if (WorkerSpawner.AnySummonModeActive) return true;
         if (MinimapFullscreen.IsOpen)       return true;
         return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
     }

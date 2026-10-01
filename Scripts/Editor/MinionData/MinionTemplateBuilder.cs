@@ -5,7 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// Sunder > Create Minion Template Prefab: builds (or repairs) the one
-/// prefab every minion spawns from — imps and portal creatures alike — and
+/// prefab every minion spawns from — workers and portal creatures alike — and
 /// hooks it up to the open scene's spawners.
 ///
 /// The prefab holds no MinionDefinition. It's a blank minion: a 0.1-scale
@@ -92,7 +92,7 @@ public static class MinionTemplateBuilder
 
     /// <summary>
     /// Points the open scene's MinionSummoner at the template, and clears every
-    /// ImpSpawner's own Imp Prefab so imps use the same template.
+    /// WorkerSpawner's own Worker Prefab so workers use the same template.
     /// </summary>
     private static void HookUpScene(GameObject prefab, List<string> changes)
     {
@@ -119,16 +119,16 @@ public static class MinionTemplateBuilder
         }
         else changes.Add("MinionSummoner already uses the template.");
 
-        foreach (var spawner in Object.FindObjectsByType<ImpSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var spawner in Object.FindObjectsByType<WorkerSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             var sso  = new SerializedObject(spawner);
-            var imp  = sso.FindProperty("impPrefab");
-            if (imp.objectReferenceValue == null) continue;
+            var worker = sso.FindProperty("workerPrefab");
+            if (worker.objectReferenceValue == null) continue;
 
-            string was = imp.objectReferenceValue.name;
-            imp.objectReferenceValue = null;
+            string was = worker.objectReferenceValue.name;
+            worker.objectReferenceValue = null;
             sso.ApplyModifiedProperties();
-            changes.Add($"{spawner.name}: cleared Imp Prefab (was {was}) so imps use the template.");
+            changes.Add($"{spawner.name}: cleared Worker Prefab (was {was}) so workers use the template.");
             dirty = true;
         }
 

@@ -20,7 +20,7 @@ public class GridCell
     public FactionID Owner          { get; private set; } = FactionID.Unaligned;
     public int       RoomId         { get; set; } = -1;
 
-    // ── Imp working state ──────────────────────────────────────────────
+    // ── Work state ────────────────────────────────────────────────────────
     /// <summary>Remaining HP. -1 = not currently being worked.</summary>
     public int CurrentHP        { get; private set; } = -1;
 
@@ -80,7 +80,7 @@ public class GridCell
 
     // ── HP management ──────────────────────────────────────────────────
 
-    /// <summary>Initialises HP when an imp starts working this tile.</summary>
+    /// <summary>Initialises HP when a worker starts working this tile.</summary>
     public void InitialiseHP(int maxHP) => CurrentHP = maxHP;
 
     /// <summary>
@@ -94,7 +94,7 @@ public class GridCell
         return CurrentHP <= 0;
     }
 
-    /// <summary>Resets HP when an imp abandons the job.</summary>
+    /// <summary>Resets HP when a worker abandons the job.</summary>
     public void ResetHP() => CurrentHP = -1;
 
     // ── Wealth management ──────────────────────────────────────────────
@@ -103,12 +103,12 @@ public class GridCell
     public void InitialiseWealth(int capacity) => WealthRemaining = capacity;
 
     /// <summary>
-    /// Extracts wealth equal to damage dealt, capped by the imp's remaining
+    /// Extracts wealth equal to damage dealt, capped by the worker's remaining
     /// carry space and the tile's remaining wealth. Returns amount collected.
     /// </summary>
-    public int ExtractWealth(int damage, int impCarrySpace)
+    public int ExtractWealth(int damage, int workerCarrySpace)
     {
-        int collected   = System.Math.Min(damage, impCarrySpace);
+        int collected   = System.Math.Min(damage, workerCarrySpace);
         collected       = System.Math.Min(collected, WealthRemaining);
         WealthRemaining = System.Math.Max(0, WealthRemaining - collected);
         return collected;

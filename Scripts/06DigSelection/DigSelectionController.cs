@@ -8,10 +8,10 @@ using UnityEngine.EventSystems;
 ///
 /// Valid dig targets
 /// -----------------
-///   Stone — no owner; imp digs → Cave (marker removed on tile change)
-///   Gold  — no owner; imp digs → Cave + currency (marker removed on tile change)
+///   Stone — no owner; worker digs → Cave (marker removed on tile change)
+///   Gold  — no owner; worker digs → Cave + currency (marker removed on tile change)
 ///   Wall  — must be owned by THIS faction (marker removed on tile change)
-///   Gem   — no owner; imp harvests for slow currency, tile never changes;
+///   Gem   — no owner; worker harvests for slow currency, tile never changes;
 ///           marker persists until manually deselected.
 ///
 /// Input
@@ -77,7 +77,7 @@ public class DigSelectionController : MonoBehaviour
         bool hudActive = HUDController2D.Instance != null &&
                          HUDController2D.Instance.AnyButtonActive;
 
-        if (hudActive || ImpSpawner.AnySummonModeActive)
+        if (hudActive || WorkerSpawner.AnySummonModeActive)
         {
             // Cancel any in-progress drag and hide the box if HUD becomes active.
             if (_lmbDragging || _rmbDragging)
@@ -241,7 +241,7 @@ public class DigSelectionController : MonoBehaviour
 
         // Job list is derived from tile state + dig markers, so just ask
         // the registry to re-evaluate this cell.
-        ImpTaskManager.GetForFaction(_faction)?.RefreshDigTarget(cell);
+        WorkerTaskManager.GetForFaction(_faction)?.RefreshDigTarget(cell);
     }
 
     private void RemoveCell(GridCell cell)
@@ -251,7 +251,7 @@ public class DigSelectionController : MonoBehaviour
         _queue.Remove(cell);
 
         // Marker gone — the cell no longer produces a dig job.
-        ImpTaskManager.GetForFaction(_faction)?.RefreshDigTarget(cell);
+        WorkerTaskManager.GetForFaction(_faction)?.RefreshDigTarget(cell);
     }
 
     // ── Tile change listener ───────────────────────────────────────────
@@ -291,7 +291,7 @@ public class DigSelectionController : MonoBehaviour
     private static bool IsPointerOverUI() =>
         EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
-    // ── Public API (imp system) ────────────────────────────────────────
+    // ── Public API (worker system) ────────────────────────────────────────
 
     public FactionID                     Faction       => _faction;
     public IReadOnlyCollection<GridCell> GetDigQueue() => _queue.Keys;

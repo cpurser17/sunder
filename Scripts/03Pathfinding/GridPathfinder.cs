@@ -157,7 +157,7 @@ public class GridPathfinder
     ///
     /// This is the difference between "the closest treasury as the crow flies"
     /// and "the treasury I can actually reach soonest". Picking by straight line
-    /// sends an imp toward a tile that may be on the far side of a wall, and if
+    /// sends a worker toward a tile that may be on the far side of a wall, and if
     /// no route exists at all the move simply fails.
     ///
     /// One search finds it, rather than running A* against every candidate.

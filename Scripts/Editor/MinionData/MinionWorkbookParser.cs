@@ -398,21 +398,21 @@ public class MinionWorkbookParser
         }
     }
 
-    /// <summary>Each faction's imp comes from its one Worker row.</summary>
+    /// <summary>Each faction's worker comes from its one Worker row.</summary>
     private void CheckWorkers()
     {
         foreach (var faction in Minions.GroupBy(m => m.FactionId, StringComparer.OrdinalIgnoreCase))
         {
             var workers = faction.Where(m => m.Stance == MinionDefinition.MinionStance.Worker).ToList();
             if (workers.Count == 0)
-                Warnings.Add($"{faction.Key}: no Worker row — its imps will use the imp prefab's own token and stats.");
+                Warnings.Add($"{faction.Key}: no Worker row — its workers will use the worker prefab's own token and stats.");
             else if (workers.Count > 1)
                 Warnings.Add($"{faction.Key}: {workers.Count} Worker rows ({string.Join(", ", workers.Select(w => w.MinionId))}) — " +
-                             $"imps use the first, {workers[0].MinionId}.");
+                             $"workers use the first, {workers[0].MinionId}.");
         }
     }
 
-    /// <summary>The Worker row the faction's imps are built from, or null.</summary>
+    /// <summary>The Worker row the faction's workers are built from, or null.</summary>
     public MinionRecord WorkerFor(string factionId) =>
         Minions.FirstOrDefault(m => string.Equals(m.FactionId, factionId, StringComparison.OrdinalIgnoreCase) &&
                                     m.Stance == MinionDefinition.MinionStance.Worker);

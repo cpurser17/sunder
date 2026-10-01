@@ -3,11 +3,11 @@ using UnityEngine;
 
 /// <summary>
 /// Worker jobs: digging, claiming, reinforcing and hauling gold to the
-/// treasury. The active behaviour for every Worker-stance minion (imps), and
+/// treasury. The active behaviour for every Worker-stance minion, and
 /// for any other minion whose definition sets canDoWorkerJobs, once it has
 /// reported for duty.
 ///
-/// Workers PULL work. When idle, the worker asks its faction's ImpTaskManager
+/// Workers PULL work. When idle, the worker asks its faction's WorkerTaskManager
 /// for a job and gets the nearest reachable one (with some weighted
 /// randomness so a group does not all converge on the same tile). Nothing is
 /// pushed onto a specific worker, which is what stops every worker servicing
@@ -75,7 +75,7 @@ public class WorkerBehaviour : MinionBehaviour
     private GridPathfinder _pathfinder;
     private WorkerState    _state = WorkerState.Idle;
     private DungeonJob     _job;
-    private ImpTaskManager _taskManager;
+    private WorkerTaskManager _taskManager;
 
     private int       _carryingGold;
     private float     _damageAccumulator;   // fractional damage carry-over
@@ -104,8 +104,8 @@ public class WorkerBehaviour : MinionBehaviour
     {
         if (_pathfinder == null && Grid != null) _pathfinder = new GridPathfinder(Grid);
 
-        _taskManager = ImpTaskManager.GetForFaction(Minion.Faction);
-        _taskManager?.RegisterImp(this);
+        _taskManager = WorkerTaskManager.GetForFaction(Minion.Faction);
+        _taskManager?.RegisterWorker(this);
         GoIdle();
     }
 
@@ -130,7 +130,7 @@ public class WorkerBehaviour : MinionBehaviour
     {
         StopRoutines();
         ReleaseJob();
-        _taskManager?.UnregisterImp(this);
+        _taskManager?.UnregisterWorker(this);
         _taskManager = null;
         _state = WorkerState.Idle;
     }
@@ -169,9 +169,9 @@ public class WorkerBehaviour : MinionBehaviour
         if (_taskManager == null)
         {
             // The faction's task manager may not have existed on Activate.
-            _taskManager = ImpTaskManager.GetForFaction(Minion.Faction);
+            _taskManager = WorkerTaskManager.GetForFaction(Minion.Faction);
             if (_taskManager == null) return;
-            _taskManager.RegisterImp(this);
+            _taskManager.RegisterWorker(this);
         }
 
         var job = _taskManager.RequestJob(this);
@@ -212,7 +212,7 @@ public class WorkerBehaviour : MinionBehaviour
     }
 
     /// <summary>
-    /// Called by ImpTaskManager when a job this worker holds is removed — the
+    /// Called by WorkerTaskManager when a job this worker holds is removed — the
     /// tile was mined by someone else, claimed, or otherwise stopped qualifying.
     /// </summary>
     public void OnJobCancelled(DungeonJob job)

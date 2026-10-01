@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // ── Tile categories ────────────────────────────────────────────────────────
 public enum TileCategory
@@ -22,8 +23,8 @@ public enum TileType
 {
     // Environmental
     Bedrock = 0,   // indestructible border / obstacle
-    Stone   = 1,   // impassable; imp-minable → Cave
-    Cave    = 2,   // passable, unowned; imp-claimable → Tunnel
+    Stone   = 1,   // impassable; worker-minable → Cave
+    Cave    = 2,   // passable, unowned; worker-claimable → Tunnel
 
     // Liquid
     Water   = 3,   // environmental, blocks movement; bridge target
@@ -31,15 +32,15 @@ public enum TileType
 
     // Owned
     Tunnel  = 5,   // base claimed floor; buy target for rooms
-    Wall    = 6,   // imp-reinforced perimeter; faction-owned, not buy/sellable via UI
+    Wall    = 6,   // worker-reinforced perimeter; faction-owned, not buy/sellable via UI
     RoomA   = 7,
     RoomB   = 8,
     RoomC   = 9,
     Bridge  = 10,  // built over Water/Lava; owned; sells back to underlying liquid
 
     // Environmental (resource)
-    Gold    = 11,  // impassable; imp-minable for currency → Cave on depletion
-    Gem     = 12,  // impassable; imp-harvestable for currency; indestructible
+    Gold    = 11,  // impassable; worker-minable for currency → Cave on depletion
+    Gem     = 12,  // impassable; worker-harvestable for currency; indestructible
 
     // Owned (structures)
     Heart   = 13,  // 3x3 win/lose structure; impassable, not buy/sellable via UI
@@ -67,8 +68,8 @@ public class TileDefinition : ScriptableObject
     [Tooltip("Gold returned when selling one cell. 0 = not sellable via UI.")]
     public int sellValue = 0;
 
-    [Header("Imp Interaction")]
-    [Tooltip("True for Bedrock and Gem: imps cannot mine or destroy this tile.")]
+    [Header("Worker Interaction")]
+    [Tooltip("True for Bedrock and Gem: workers cannot mine or destroy this tile.")]
     public bool isIndestructible = false;
 
     [Tooltip("Max hit points before this tile is destroyed. " +
@@ -78,8 +79,9 @@ public class TileDefinition : ScriptableObject
     [Tooltip("For Gold and Gem: total wealth available to harvest.")]
     public int  wealthCapacity   = 0;
 
-    [Tooltip("Damage per second an imp deals to this tile.")]
-    public float impDamagePerSecond = 20f;
+    [Tooltip("Damage per second a worker deals to this tile.")]
+    [FormerlySerializedAs("impDamagePerSecond")]
+    public float workerDamagePerSecond = 20f;
 
     [Header("Hazard")]
     [Tooltip("Damage per second dealt to a minion standing here that cannot "

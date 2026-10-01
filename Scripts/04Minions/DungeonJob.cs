@@ -2,8 +2,8 @@ using System.Collections.Generic;
 
 /// <summary>
 /// What kind of work a job represents.
-/// Priority between types is a weighting in ImpTaskManager, not a hard order —
-/// a distant high-priority job should not beat a job at the imp's feet.
+/// Priority between types is a weighting in WorkerTaskManager, not a hard order —
+/// a distant high-priority job should not beat a job at the worker's feet.
 /// </summary>
 public enum JobType
 {
@@ -20,12 +20,12 @@ public enum JobType
 ///
 /// A job is identified by (Type, Target, WorkCell) rather than by target cell
 /// alone, because a dig target is worked from its sides: a Stone tile with three
-/// exposed faces produces three jobs, each able to hold several imps. Keying by
+/// exposed faces produces three jobs, each able to hold several workers. Keying by
 /// target alone would cap the whole tile at one worker.
 ///
-/// WorkCell is where the imp physically stands:
+/// WorkCell is where the worker physically stands:
 ///   Dig / Reinforce — an adjacent walkable cell
-///   Claim           — the target itself, since the imp stands on what it claims
+///   Claim           — the target itself, since the worker stands on what it claims
 /// </summary>
 public class DungeonJob
 {
@@ -47,14 +47,14 @@ public class DungeonJob
         Capacity = capacity;
     }
 
-    public bool AddWorker(WorkerBehaviour imp)
+    public bool AddWorker(WorkerBehaviour worker)
     {
-        if (!HasRoom || Workers.Contains(imp)) return false;
-        Workers.Add(imp);
+        if (!HasRoom || Workers.Contains(worker)) return false;
+        Workers.Add(worker);
         return true;
     }
 
-    public void RemoveWorker(WorkerBehaviour imp) => Workers.Remove(imp);
+    public void RemoveWorker(WorkerBehaviour worker) => Workers.Remove(worker);
 
     /// <summary>Stable dictionary key. Two jobs match only if all three parts match.</summary>
     public JobKey Key => new(Type, Target, WorkCell);

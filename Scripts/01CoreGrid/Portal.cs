@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Every faction's summoning portal — the single tile every minion except
-/// imps (see MinionSummoner) spawns on. Purely a spawn point: it has no HP
+/// workers (see MinionSummoner) spawns on. Workers are placed by WorkerSpawner instead. Purely a spawn point: it has no HP
 /// and isn't part of the win/lose condition, unlike DungeonHeart.
 ///
 /// One instance of this component exists in the scene, ever. Once the grid

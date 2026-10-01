@@ -9,7 +9,7 @@ using UnityEngine;
 /// <summary>
 /// Sunder > Import Minion Data: reads the MinionData workbook and creates or
 /// updates one MinionDefinition per faction per minion, one AbilityDefinition
-/// per ability, and each FactionDefinition's roster and worker (imp).
+/// per ability, and each FactionDefinition's roster and worker.
 ///
 /// Assets are matched by path (built from FactionID + MinionID / AbilityID)
 /// and updated in place, so their GUIDs — and every reference to them —
@@ -279,7 +279,7 @@ public static class MinionDataImporter
 
     /// <summary>
     /// Each faction's roster becomes its summonable minions, in sheet order,
-    /// and its worker the Worker-stance row (what its imps are built from).
+    /// and its worker the Worker-stance row (what its workers are built from).
     /// A faction with no FactionDefinition yet gets one (with default
     /// population/timing to tune by hand), added to every FactionRegistry.
     /// </summary>

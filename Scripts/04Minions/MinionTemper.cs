@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// A minion's short-term temper: how angry it is, and the burst of work
-/// speed a slap from the Keeper's hand buys. Shared by imps and creatures so
+/// speed a slap from the Keeper's hand buys. Shared by workers and creatures so
 /// both respond to the hand the same way.
 ///
 /// Anger is groundwork for the mood system — nothing reads it yet beyond

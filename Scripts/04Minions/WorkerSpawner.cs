@@ -1,47 +1,48 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
-/// Handles imp summoning: cost calculation, click-to-place, and registration
-/// with ImpTaskManager.
+/// Handles worker summoning: cost calculation and click-to-place. Spawned
+/// workers register themselves with their faction's WorkerTaskManager.
 ///
 /// Cost formula: cost = b + k * c
-///   b = baseCost     (default 25 — cost of the first imp)
-///   c = costIncrement (default 25 — added per existing active imp)
-///   k = current active imp count (0 when no imps exist)
+///   b = baseCost     (default 25 — cost of the first worker)
+///   c = costIncrement (default 25 — added per existing active worker)
+///   k = current active worker count (0 when no workers exist)
 ///
 /// Usage
 /// -----
-/// 1. Player clicks "Summon Imp" HUD button → sets IsSummonModeActive = true.
-/// 2. Player left-clicks a valid world cell → imp spawns there, cost deducted.
+/// 1. Player clicks "Summon Worker" HUD button → sets IsSummonModeActive = true.
+/// 2. Player left-clicks a valid world cell → worker spawns there, cost deducted.
 /// 3. Right-click or pressing the button again cancels summon mode.
 ///
 /// Scene setup
 /// -----------
-/// 1. Create child GO under GameManager. Name it "ImpSpawner_Player".
-/// 2. Attach ImpSpawner. Set faction, gridManager, mainCamera. Leave impPrefab
+/// 1. Create child GO under GameManager. Name it "WorkerSpawner_Player".
+/// 2. Attach WorkerSpawner. Set faction, gridManager, mainCamera. Leave workerPrefab
 ///    empty to use MinionSummoner's shared minion template.
-/// 3. Wire the Summon Imp HUD button to ToggleSummonMode().
+/// 3. Wire the Summon Worker HUD button to ToggleSummonMode().
 ///
 /// Data
 /// ----
-/// Imps are ordinary minions: the same template prefab as everything the
+/// Workers are ordinary minions: the same template prefab as everything the
 /// portal summons, configured from the faction's Worker MinionDefinition
 /// (FactionDefinition.worker, filled in by Sunder > Import Minion Data from
 /// the W row) — token, movement, stats — and running WorkerBehaviour. Only
 /// how they arrive differs: placed by a click, for gold. A faction with no
 /// Worker data spawns the template as authored, still as a worker.
 /// </summary>
-public class ImpSpawner : MonoBehaviour
+public class WorkerSpawner : MonoBehaviour
 {
     // ── Per-faction registry ───────────────────────────────────────────
-    // One spawner per faction, so a dying AI imp decrements the AI count
+    // One spawner per faction, so a dying AI worker decrements the AI count
     // rather than the player's.
-    private static readonly System.Collections.Generic.Dictionary<FactionID, ImpSpawner>
+    private static readonly System.Collections.Generic.Dictionary<FactionID, WorkerSpawner>
         _registry = new();
 
-    public static ImpSpawner GetForFaction(FactionID faction) =>
+    public static WorkerSpawner GetForFaction(FactionID faction) =>
         _registry.TryGetValue(faction, out var s) ? s : null;
 
     /// <summary>
@@ -66,7 +67,8 @@ public class ImpSpawner : MonoBehaviour
     [Header("References")]
     [Tooltip("Optional. Empty = MinionSummoner's shared minion template, which " +
              "is what you want. The Worker definition's own prefab overrides both.")]
-    [SerializeField] private GameObject    impPrefab;
+    [FormerlySerializedAs("impPrefab")]
+    [SerializeField] private GameObject    workerPrefab;
     [SerializeField] private GridManager2D gridManager;
     [SerializeField] private Camera        mainCamera;
 
@@ -75,7 +77,7 @@ public class ImpSpawner : MonoBehaviour
              + "in world units.")]
     [SerializeField] private float spawnEdgeGap = 0.02f;
 
-    [Header("Cost Formula: cost = baseCost + activeImps * costIncrement")]
+    [Header("Cost Formula: cost = baseCost + activeWorkers * costIncrement")]
     [SerializeField] private int baseCost      = 25;
     [SerializeField] private int costIncrement = 25;
 
@@ -83,10 +85,10 @@ public class ImpSpawner : MonoBehaviour
     private bool _summonModeActive;
     private TraversalCapability? _prefabCapability;
     private bool _warnedNoWorkerData;
-    private int  _activeImpCount;
+    private int  _activeWorkerCount;
 
     public bool IsSummonModeActive => _summonModeActive;
-    public int  CurrentSummonCost  => baseCost + _activeImpCount * costIncrement;
+    public int  CurrentSummonCost  => baseCost + _activeWorkerCount * costIncrement;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -117,15 +119,15 @@ public class ImpSpawner : MonoBehaviour
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            // Mode stays open — the player can place several imps in a row and
+            // Mode stays open — the player can place several workers in a row and
             // leaves deliberately via right-click, Escape, or the button.
-            TrySpawnImp();
+            TrySpawnWorker();
         }
     }
 
     // ── Public API ─────────────────────────────────────────────────────
 
-    /// <summary>Toggles summon mode on/off. Wire to the Summon Imp HUD button.</summary>
+    /// <summary>Toggles summon mode on/off. Wire to the Summon Worker HUD button.</summary>
     public void ToggleSummonMode() => SetSummonMode(!_summonModeActive);
 
     /// <summary>Exits summon mode on every faction's spawner.</summary>
@@ -154,7 +156,7 @@ public class ImpSpawner : MonoBehaviour
 
     // ── Spawning ───────────────────────────────────────────────────────
 
-    private void TrySpawnImp()
+    private void TrySpawnWorker()
     {
         // Check funds before attempting placement.
         var wallet = GameManager2D.Instance?.GetWallet(faction);
@@ -163,7 +165,7 @@ public class ImpSpawner : MonoBehaviour
         int cost = CurrentSummonCost;
         if (!wallet.TrySpend(cost))
         {
-            Debug.Log($"[ImpSpawner] Not enough gold. Need {cost}, have {wallet.Gold}.");
+            Debug.Log($"[WorkerSpawner] Not enough gold. Need {cost}, have {wallet.Gold}.");
             return;
         }
 
@@ -179,40 +181,40 @@ public class ImpSpawner : MonoBehaviour
         if (cell == null || !IsValidSpawnCell(cell))
         {
             wallet.Earn(cost);
-            Debug.Log("[ImpSpawner] Invalid spawn location — must be an owned tile " +
-                      "or unclaimed Cave that the imp can stand on.");
+            Debug.Log("[WorkerSpawner] Invalid spawn location — must be an owned tile " +
+                      "or unclaimed Cave that the worker can stand on.");
             return;
         }
 
-        if (!SpawnImp(cell, clickPoint)) wallet.Earn(cost);
+        if (!SpawnWorker(cell, clickPoint)) wallet.Earn(cost);
     }
 
-    private bool SpawnImp(GridCell cell, Vector3 clickPoint)
+    private bool SpawnWorker(GridCell cell, Vector3 clickPoint)
     {
         Vector3 centre = gridManager.CellToWorld(cell.X, cell.Y);
 
-        var worker = WorkerDefinition;
-        if (worker == null && !_warnedNoWorkerData)
+        var workerData = WorkerDefinition;
+        if (workerData == null && !_warnedNoWorkerData)
         {
             _warnedNoWorkerData = true;
-            Debug.LogWarning($"[ImpSpawner] {faction} has no Worker data (no FactionDefinition, " +
-                             "or no Worker row imported) — imps use the template's own token and values.");
+            Debug.LogWarning($"[WorkerSpawner] {faction} has no Worker data (no FactionDefinition, " +
+                             "or no Worker row imported) — workers use the template's own token and values.");
         }
 
         if (Template == null)
         {
-            Debug.LogError("[ImpSpawner] No minion template — assign MinionSummoner's Minion " +
+            Debug.LogError("[WorkerSpawner] No minion template — assign MinionSummoner's Minion " +
                            "Template (Sunder > Create Minion Template Prefab does this).");
             return false;
         }
 
         var go  = Instantiate(Template, centre, Quaternion.identity);
-        go.name = $"Imp_{faction}_{_activeImpCount}";
+        go.name = $"Worker_{faction}_{_activeWorkerCount}";
 
-        var imp = go.GetComponent<MinionController>();
-        if (imp == null)
+        var worker = go.GetComponent<MinionController>();
+        if (worker == null)
         {
-            Debug.LogError($"[ImpSpawner] {Template.name} is missing MinionController — " +
+            Debug.LogError($"[WorkerSpawner] {Template.name} is missing MinionController — " +
                            "rebuild it with Sunder > Create Minion Template Prefab.");
             Destroy(go);
             return false;
@@ -220,29 +222,29 @@ public class ImpSpawner : MonoBehaviour
 
         // Initialise first: it swaps in the faction's token and re-measures the
         // GridAgent radius, so the clamp below uses the real token size. The
-        // worker registers itself with the faction's ImpTaskManager.
-        imp.Initialise(faction, worker, 1, MinionController.SpawnSource.WorkerSpawner);
+        // worker registers itself with the faction's WorkerTaskManager.
+        worker.Initialise(faction, workerData, 1, MinionController.SpawnSource.WorkerSpawner);
         go.transform.position = ClampInsideCell(clickPoint, cell, centre,
                                                 go.GetComponent<GridAgent>());
 
-        _activeImpCount++;
+        _activeWorkerCount++;
 
-        Debug.Log($"[ImpSpawner] Spawned imp {_activeImpCount} for {faction}. " +
+        Debug.Log($"[WorkerSpawner] Spawned worker {_activeWorkerCount} for {faction}. " +
                   $"Next cost: {CurrentSummonCost}g.");
         return true;
     }
 
     /// <summary>
-    /// The prefab imps spawn from: the Worker definition's own override, else
-    /// this spawner's impPrefab, else MinionSummoner's shared template.
+    /// The prefab workers spawn from: the Worker definition's own override, else
+    /// this spawner's workerPrefab, else MinionSummoner's shared template.
     /// </summary>
     private GameObject Template
     {
         get
         {
-            var worker = WorkerDefinition;
-            if (worker != null && worker.prefab != null) return worker.prefab;
-            if (impPrefab != null) return impPrefab;
+            var workerData = WorkerDefinition;
+            if (workerData != null && workerData.prefab != null) return workerData.prefab;
+            if (workerPrefab != null) return workerPrefab;
             return MinionSummoner.Instance != null ? MinionSummoner.Instance.Template : null;
         }
     }
@@ -250,14 +252,14 @@ public class ImpSpawner : MonoBehaviour
     /// <summary>
     /// Valid spawn tiles are either:
     ///   - a tile this faction owns, or
-    ///   - unclaimed Cave, so imps can be seeded into open cavern before it
+    ///   - unclaimed Cave, so workers can be seeded into open cavern before it
     ///     has been claimed.
     ///
-    /// In both cases the imp must actually be able to stand there. Ownership
-    /// alone is not enough — Wall is owned but impassable, and an imp placed
+    /// In both cases the worker must actually be able to stand there. Ownership
+    /// alone is not enough — Wall is owned but impassable, and a worker placed
     /// inside it would be stuck in solid rock. Passability comes from the
     /// Worker data's (or prefab's) own capability rather than being assumed, so
-    /// this stays correct for factions whose imps are amphibious or flying.
+    /// this stays correct for factions whose workers are amphibious or flying.
     /// </summary>
     private bool IsValidSpawnCell(GridCell cell)
     {
@@ -305,7 +307,7 @@ public class ImpSpawner : MonoBehaviour
 
     /// <summary>
     /// Resolves the click to a grid cell AND keeps the exact world point that
-    /// was hit, so the imp can be placed where the player actually clicked
+    /// was hit, so the worker can be placed where the player actually clicked
     /// rather than snapped to the middle of the tile.
     /// </summary>
     private bool TryGetGridCell(out int x, out int y, out Vector3 hitPoint)
@@ -363,8 +365,8 @@ public class ImpSpawner : MonoBehaviour
         return centre + offset;
     }
 
-    // ── Imp death notification ─────────────────────────────────────────
+    // ── Worker death notification ─────────────────────────────────────────
 
-    /// <summary>Called by MinionController when one of this spawner's imps dies or converts.</summary>
-    public void NotifyImpDied() => _activeImpCount = Mathf.Max(0, _activeImpCount - 1);
+    /// <summary>Called by MinionController when one of this spawner's workers dies or converts.</summary>
+    public void NotifyWorkerDied() => _activeWorkerCount = Mathf.Max(0, _activeWorkerCount - 1);
 }

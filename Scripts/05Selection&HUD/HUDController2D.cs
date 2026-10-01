@@ -31,7 +31,7 @@ public class HUDController2D : MonoBehaviour
     [SerializeField] private Button sellButton;
 
     [Header("Summon Button")]
-    [Tooltip("Summon Imp button. Managed here so it highlights with the same "
+    [Tooltip("Summon Worker button. Managed here so it highlights with the same "
              + "system as the buy/sell buttons and is mutually exclusive with them.")]
     [SerializeField] private Button summonButton;
 
@@ -116,7 +116,7 @@ public class HUDController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by ImpSpawner when summon mode is exited from its own input
+    /// Called by WorkerSpawner when summon mode is exited from its own input
     /// (right-click or Escape) rather than from the button, so the highlight
     /// does not get left on.
     /// </summary>
@@ -159,7 +159,7 @@ public class HUDController2D : MonoBehaviour
     {
         if (_syncingSummon) return;
 
-        var spawner = ImpSpawner.GetForFaction(localPlayer);
+        var spawner = WorkerSpawner.GetForFaction(localPlayer);
         if (spawner == null) return;
 
         _syncingSummon = true;

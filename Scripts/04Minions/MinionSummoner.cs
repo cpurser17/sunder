@@ -19,7 +19,7 @@ using UnityEngine;
 /// On each faction's tick, eligibility is narrowed by four independent gates
 /// — population headroom, mission design (GameManager2D.AllowedMinionIds),
 /// rooms built, and research completed — then one survivor is picked by
-/// weighted random, the same pattern ImpTaskManager uses for job selection.
+/// weighted random, the same pattern WorkerTaskManager uses for job selection.
 ///
 /// The interval between summons is base +/- random jitter, then scaled by
 /// the faction's research multiplier, so different factions — and a single
@@ -29,13 +29,13 @@ using UnityEngine;
 /// Every minion spawns from the one minionTemplate prefab (unless its
 /// definition sets its own prefab override); MinionController.Initialise
 /// then applies the definition's token, movement, stats and behaviour to it.
-/// ImpSpawner spawns workers from the same template (see Template).
+/// WorkerSpawner spawns workers from the same template (see Template).
 /// </summary>
 public class MinionSummoner : MonoBehaviour
 {
     public static MinionSummoner Instance { get; private set; }
 
-    /// <summary>The shared minion prefab. ImpSpawner uses it for workers too.</summary>
+    /// <summary>The shared minion prefab. WorkerSpawner uses it for workers too.</summary>
     public GameObject Template => minionTemplate;
 
     // ── Inspector ──────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ public class MinionSummoner : MonoBehaviour
 
     [Header("Template")]
     [Tooltip("Shared prefab every minion spawns from — portal creatures and " +
-             "ImpSpawner's workers alike: GridAgent, MinionController, the " +
+             "WorkerSpawner's workers alike: GridAgent, MinionController, the " +
              "behaviours and a SpriteRenderer child for the token. Build it with " +
              "Sunder > Create Minion Template Prefab. A MinionDefinition's own " +
              "prefab, if set, overrides this.")]

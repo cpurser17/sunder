@@ -11,7 +11,7 @@ using UnityEngine.Serialization;
 /// edit the workbook and re-import rather than editing generated assets, as
 /// the import overwrites them. Hand-made assets still work for tests.
 ///
-/// There is no prefab per minion. MinionSummoner (portal) and ImpSpawner
+/// There is no prefab per minion. MinionSummoner (portal) and WorkerSpawner
 /// (workers) instantiate one shared template and MinionController.Initialise
 /// applies this definition to it (token, movement, stats, behaviour).
 /// <see cref="prefab"/> is only an optional override for a minion whose
@@ -139,7 +139,7 @@ public class MinionDefinition : ScriptableObject
 
     /// <summary>
     /// Like GetStat, but false when the stat has no row on the _Levels sheet
-    /// yet — so callers with their own tuning (e.g. the imp prefab) can keep
+    /// yet — so callers with their own tuning (e.g. the worker prefab) can keep
     /// it until the data is filled in, instead of dropping to a 0 default.
     /// </summary>
     public bool TryGetAuthoredStat(MinionStat stat, int level, out float value)
@@ -185,7 +185,7 @@ public class MinionDefinition : ScriptableObject
     }
 
     /// <summary>
-    /// Configures a spawned template (summoned creature or imp) as this
+    /// Configures a spawned template (summoned creature or worker) as this
     /// minion: token on its SpriteRenderer, movement on its GridAgent, and the
     /// agent's radius re-measured for the new token. A 3D model and animator
     /// override will hang off here the same way.

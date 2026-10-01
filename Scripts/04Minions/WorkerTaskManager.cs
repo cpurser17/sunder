@@ -1,24 +1,25 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// Job registry and dispatcher for one faction.
 ///
-/// "Imps" here means any minion running WorkerBehaviour — the faction's
+/// "Workers" here means any minion running WorkerBehaviour — the faction's
 /// Worker-stance minions, plus any creature whose data sets canDoWorkerJobs.
 ///
 /// Pull, not push
 /// --------------
-/// Imps ask for work when they go idle; jobs are never pushed onto a specific
-/// imp. That is what makes an imp take the job nearest to itself rather than
+/// Workers ask for work when they go idle; jobs are never pushed onto a specific
+/// worker. That is what makes a worker take the job nearest to itself rather than
 /// whichever job happened to be registered first — the previous push model
-/// walked the job dictionary in insertion order, so every imp serviced the map
+/// walked the job dictionary in insertion order, so every worker serviced the map
 /// in the same fixed sequence regardless of where it stood.
 ///
 /// Job sources
 /// -----------
 ///   Dig       Stone / Wall / Gold / Gem marked by the player, one job per
-///             accessible side, several imps per side
+///             accessible side, several workers per side
 ///   Claim     unclaimed Cave adjacent to owned territory, or an enemy-owned
 ///             tile adjacent to owned territory
 ///   Reinforce Stone adjacent to owned territory
@@ -30,12 +31,12 @@ using UnityEngine;
 /// a neighbour eligible or ineligible. Dig selection changes re-evaluate the
 /// marked cell. A full sweep runs once at startup.
 /// </summary>
-public class ImpTaskManager : MonoBehaviour
+public class WorkerTaskManager : MonoBehaviour
 {
     // ── Per-faction registry ───────────────────────────────────────────
-    private static readonly Dictionary<FactionID, ImpTaskManager> _registry = new();
+    private static readonly Dictionary<FactionID, WorkerTaskManager> _registry = new();
 
-    public static ImpTaskManager GetForFaction(FactionID faction) =>
+    public static WorkerTaskManager GetForFaction(FactionID faction) =>
         _registry.TryGetValue(faction, out var mgr) ? mgr : null;
 
     // ── Inspector ──────────────────────────────────────────────────────
@@ -46,16 +47,19 @@ public class ImpTaskManager : MonoBehaviour
     [SerializeField] private GridManager2D gridManager;
 
     [Header("Capacity")]
-    [Tooltip("Imps that can work one side of a dig target at the same time.")]
-    [SerializeField] private int impsPerDigSide   = 3;
-    [Tooltip("Imps on a single claim job. Claiming converts one tile, so 1 is normal.")]
-    [SerializeField] private int impsPerClaim     = 1;
-    [Tooltip("Imps on a single reinforce job.")]
-    [SerializeField] private int impsPerReinforce = 1;
+    [Tooltip("Workers that can work one side of a dig target at the same time.")]
+    [FormerlySerializedAs("impsPerDigSide")]
+    [SerializeField] private int workersPerDigSide   = 3;
+    [Tooltip("Workers on a single claim job. Claiming converts one tile, so 1 is normal.")]
+    [FormerlySerializedAs("impsPerClaim")]
+    [SerializeField] private int workersPerClaim     = 1;
+    [Tooltip("Workers on a single reinforce job.")]
+    [FormerlySerializedAs("impsPerReinforce")]
+    [SerializeField] private int workersPerReinforce = 1;
 
     [Header("Job selection")]
-    [Tooltip("How many of the nearest jobs an imp chooses between. 1 = always " +
-             "strictly nearest and fully predictable; higher spreads imps out.")]
+    [Tooltip("How many of the nearest jobs a worker chooses between. 1 = always " +
+             "strictly nearest and fully predictable; higher spreads workers out.")]
     [SerializeField] private int considerNearest = 4;
 
     [Tooltip("How sharply distance dominates. Higher = stronger preference for " +
@@ -71,7 +75,7 @@ public class ImpTaskManager : MonoBehaviour
 
     // ── Runtime ────────────────────────────────────────────────────────
     private readonly Dictionary<JobKey, DungeonJob> _jobs = new();
-    private readonly List<WorkerBehaviour>          _imps = new();
+    private readonly List<WorkerBehaviour>          _workers = new();
     private System.Random _rng;
 
     // Scratch buffers, reused to keep per-request allocation down.
@@ -79,7 +83,7 @@ public class ImpTaskManager : MonoBehaviour
     private readonly List<float>      _weights    = new();
 
     public FactionID                      Faction  => faction;
-    public IReadOnlyList<WorkerBehaviour> Imps     => _imps;
+    public IReadOnlyList<WorkerBehaviour> Workers  => _workers;
     public int                            JobCount => _jobs.Count;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
@@ -102,37 +106,37 @@ public class ImpTaskManager : MonoBehaviour
         if (gridManager != null) gridManager.OnTileChanged -= OnTileChanged;
     }
 
-    // ── Imp registration ───────────────────────────────────────────────
+    // ── Worker registration ───────────────────────────────────────────────
 
-    public void RegisterImp(WorkerBehaviour imp)
+    public void RegisterWorker(WorkerBehaviour worker)
     {
-        if (!_imps.Contains(imp)) _imps.Add(imp);
+        if (!_workers.Contains(worker)) _workers.Add(worker);
     }
 
-    public void UnregisterImp(WorkerBehaviour imp)
+    public void UnregisterWorker(WorkerBehaviour worker)
     {
-        _imps.Remove(imp);
-        foreach (var job in _jobs.Values) job.RemoveWorker(imp);
+        _workers.Remove(worker);
+        foreach (var job in _jobs.Values) job.RemoveWorker(worker);
     }
 
-    // ── Job requests (imps pull) ───────────────────────────────────────
+    // ── Job requests (workers pull) ───────────────────────────────────────
 
     /// <summary>
-    /// Returns the job this imp should take, or null if none is available or
-    /// reachable. The imp is registered as a worker before returning, so two
-    /// imps cannot over-fill a slot.
+    /// Returns the job this worker should take, or null if none is available or
+    /// reachable. The worker is added to the job before returning, so two
+    /// workers cannot over-fill a slot.
     ///
     /// Selection is weighted-random among the nearest few reachable jobs rather
-    /// than strictly nearest, so a cluster of imps does not all converge on the
+    /// than strictly nearest, so a cluster of workers does not all converge on the
     /// same tile.
     /// </summary>
-    public DungeonJob RequestJob(WorkerBehaviour imp)
+    public DungeonJob RequestJob(WorkerBehaviour worker)
     {
-        var agent = imp.GetComponent<GridAgent>();
+        var agent = worker.GetComponent<GridAgent>();
         if (agent == null) return null;
 
-        GridCell impCell = agent.CurrentCell;
-        if (impCell == null) return null;
+        GridCell workerCell = agent.CurrentCell;
+        if (workerCell == null) return null;
 
         var connectivity = gridManager.Connectivity;
         if (connectivity == null) return null;
@@ -142,7 +146,7 @@ public class ImpTaskManager : MonoBehaviour
         foreach (var job in _jobs.Values)
         {
             if (!job.HasRoom) continue;
-            if (!connectivity.AreConnected(impCell, job.WorkCell,
+            if (!connectivity.AreConnected(workerCell, job.WorkCell,
                                            agent.Capability, agent.Radius))
                 continue;
 
@@ -151,11 +155,11 @@ public class ImpTaskManager : MonoBehaviour
 
         if (_candidates.Count == 0) return null;
 
-        Vector3 impPos = imp.transform.position;
+        Vector3 workerPos = worker.transform.position;
 
         // Nearest-first, then weighted choice among the leading few.
         _candidates.Sort((a, b) =>
-            SqrDistTo(impPos, a.WorkCell).CompareTo(SqrDistTo(impPos, b.WorkCell)));
+            SqrDistTo(workerPos, a.WorkCell).CompareTo(SqrDistTo(workerPos, b.WorkCell)));
 
         int pool = Mathf.Min(_candidates.Count, Mathf.Max(1, considerNearest));
 
@@ -163,7 +167,7 @@ public class ImpTaskManager : MonoBehaviour
         float total = 0f;
         for (int i = 0; i < pool; i++)
         {
-            float dist = Mathf.Sqrt(SqrDistTo(impPos, _candidates[i].WorkCell));
+            float dist = Mathf.Sqrt(SqrDistTo(workerPos, _candidates[i].WorkCell));
             float w    = TypeWeight(_candidates[i].Type) /
                          Mathf.Pow(dist + 1f, distanceBias);
             _weights.Add(w);
@@ -181,20 +185,20 @@ public class ImpTaskManager : MonoBehaviour
         }
 
         var chosen = _candidates[pick];
-        return chosen.AddWorker(imp) ? chosen : null;
+        return chosen.AddWorker(worker) ? chosen : null;
     }
 
     /// <summary>
-    /// Shared deterministic random source. Imps use this rather than
+    /// Shared deterministic random source. Workers use this rather than
     /// UnityEngine.Random so behaviour stays reproducible for a given seed —
     /// the same reason job selection uses it.
     /// </summary>
     public float NextRandom01() => (float)_rng.NextDouble();
 
-    /// <summary>Releases an imp from a job it is no longer working.</summary>
-    public void ReleaseJob(DungeonJob job, WorkerBehaviour imp)
+    /// <summary>Releases a worker from a job it is no longer working.</summary>
+    public void ReleaseJob(DungeonJob job, WorkerBehaviour worker)
     {
-        job?.RemoveWorker(imp);
+        job?.RemoveWorker(worker);
     }
 
     private float TypeWeight(JobType type) => type switch
@@ -235,7 +239,7 @@ public class ImpTaskManager : MonoBehaviour
         // resolved MasterSeed yet at Awake time — Unity runs every component's
         // Awake before any Start, and MasterSeed is only set partway through
         // GameManager2D's own Start.
-        _rng = new System.Random(GameManager2D.Instance.DeriveFactionSeed(faction, "ImpTaskManager"));
+        _rng = new System.Random(GameManager2D.Instance.DeriveFactionSeed(faction, "WorkerTaskManager"));
 
         // Drop everything first rather than reconciling. Loading a save calls
         // GridManager2D.Initialise, which replaces every GridCell object, so
@@ -255,7 +259,7 @@ public class ImpTaskManager : MonoBehaviour
     /// <summary>
     /// Recomputes every job this cell should generate and reconciles it against
     /// what is registered, so a cell that stops qualifying has its jobs dropped.
-    /// Imps working a removed job are told to stand down.
+    /// Workers working a removed job are told to stand down.
     /// </summary>
     private void RefreshCell(GridCell cell)
     {
@@ -278,8 +282,8 @@ public class ImpTaskManager : MonoBehaviour
         foreach (var key in stale)
         {
             var job = _jobs[key];
-            foreach (var imp in new List<WorkerBehaviour>(job.Workers))
-                imp.OnJobCancelled(job);
+            foreach (var worker in new List<WorkerBehaviour>(job.Workers))
+                worker.OnJobCancelled(job);
             _jobs.Remove(key);
         }
 
@@ -304,7 +308,7 @@ public class ImpTaskManager : MonoBehaviour
                                               TraversalCapability.LandOnly, faction))
                     continue;
 
-                into.Add(new DungeonJob(JobType.Dig, cell, side, impsPerDigSide));
+                into.Add(new DungeonJob(JobType.Dig, cell, side, workersPerDigSide));
             }
             return; // a dig-marked tile is not also a claim or reinforce target
         }
@@ -312,7 +316,7 @@ public class ImpTaskManager : MonoBehaviour
         // ── Claim: unclaimed Cave, or an enemy tile, touching our territory ──
         if (IsClaimable(cell))
         {
-            into.Add(new DungeonJob(JobType.Claim, cell, cell, impsPerClaim));
+            into.Add(new DungeonJob(JobType.Claim, cell, cell, workersPerClaim));
             return;
         }
 
@@ -328,10 +332,10 @@ public class ImpTaskManager : MonoBehaviour
                                               TraversalCapability.LandOnly, faction))
                     continue;
 
-                // One job per valid side, same as digging, so an imp works
+                // One job per valid side, same as digging, so a worker works
                 // from whichever face it happens to approach rather than
                 // walking around to a single designated side.
-                into.Add(new DungeonJob(JobType.Reinforce, cell, side, impsPerReinforce));
+                into.Add(new DungeonJob(JobType.Reinforce, cell, side, workersPerReinforce));
             }
         }
     }
@@ -381,7 +385,7 @@ public class ImpTaskManager : MonoBehaviour
     ///
     /// Ownership alone is not enough: Wall is owned but impassable, so a tile
     /// backing onto nothing but our own walls is not reachable frontier — no
-    /// imp can stand there to claim or reinforce from. Testing passability
+    /// worker can stand there to claim or reinforce from. Testing passability
     /// rather than excluding Wall by name keeps this correct if further
     /// impassable owned tile types are added later.
     /// </summary>
@@ -394,12 +398,12 @@ public class ImpTaskManager : MonoBehaviour
 
     // ── Housekeeping ───────────────────────────────────────────────────
 
-    /// <summary>Cancels and clears every job, standing down any imps working them.</summary>
+    /// <summary>Cancels and clears every job, standing down any workers working them.</summary>
     private void CancelAllJobs()
     {
         foreach (var job in _jobs.Values)
-            foreach (var imp in new List<WorkerBehaviour>(job.Workers))
-                imp.OnJobCancelled(job);
+            foreach (var worker in new List<WorkerBehaviour>(job.Workers))
+                worker.OnJobCancelled(job);
 
         _jobs.Clear();
     }
