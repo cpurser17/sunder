@@ -1,0 +1,173 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ebbde61542283746a8c1cd32758856b, type: 3}
+  m_Name: 01U_T2R
+  m_EditorClassIdentifier: Assembly-CSharp::MinionDefinition
+  factionId: 01U
+  minionId: T2R
+  displayName: Centaur Archer
+  token: {fileID: 21300000, guid: 2aaa2e0af8ab6944a95c5bbb3b43b22d, type: 3}
+  prefab: {fileID: 0}
+  stance: 2
+  tier: 2
+  movement: 0
+  canDoWorkerJobs: 0
+  damageTaken: []
+  researchPreference: 0
+  trainPreference: 0
+  buildPreference: 0
+  prayPreference: 0
+  torturePreference: 0
+  abilities: []
+  relations:
+  - other: {fileID: 11400000, guid: 3d4d2574109244744b8c0c6531114a5b, type: 2}
+    feeling: 2
+  summonable: 1
+  summonWeight: 1
+  populationCost: 1
+  requiredRooms: []
+  requiredResearchIds: []
+  maxLevel: 10
+  stats:
+  - stat: 0
+    min: 0
+    max: 10000
+    curve: 1
+    skew: 0
+    wholeNumber: 1
+    authored: 1
+  - stat: 1
+    min: 25
+    max: 150
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 1
+  - stat: 2
+    min: 300
+    max: 1200
+    curve: 0
+    skew: -0.1
+    wholeNumber: 1
+    authored: 1
+  - stat: 3
+    min: 25
+    max: 110
+    curve: 0.5
+    skew: 0
+    wholeNumber: 1
+    authored: 1
+  - stat: 4
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 5
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 6
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 7
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 8
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 9
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 10
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 11
+    min: 300
+    max: 320
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 1
+  - stat: 12
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 13
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 14
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 15
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 16
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 17
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 18
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0

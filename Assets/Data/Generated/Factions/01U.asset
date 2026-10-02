@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdeb50a9098f2fd4d9ba51e9919b0991, type: 3}
+  m_Name: 01U
+  m_EditorClassIdentifier: Assembly-CSharp::FactionDefinition
+  factionContentId: 01U
+  displayName: 01U
+  description: 
+  pantheon: {fileID: 0}
+  roster:
+  - {fileID: 11400000, guid: e7cdcc7dfd8fb47458e4f709b60e617f, type: 2}
+  - {fileID: 11400000, guid: c1969003f18e2a1418c89695a10abc52, type: 2}
+  - {fileID: 11400000, guid: f30004650ecb00a4682b56001f96f45e, type: 2}
+  - {fileID: 11400000, guid: bea845f475b280947a3be792117495b8, type: 2}
+  - {fileID: 11400000, guid: 4ac342cb4df31f248bb40da64e678692, type: 2}
+  - {fileID: 11400000, guid: d6a494672aa7655468e42a904b22a7c3, type: 2}
+  - {fileID: 11400000, guid: 8275ef1c69f02a14bbe6c91dd882230b, type: 2}
+  - {fileID: 11400000, guid: 225567264a01c104f960ff3ae7da038c, type: 2}
+  - {fileID: 11400000, guid: 8a1014ee373b5284095bd113c64bbb78, type: 2}
+  - {fileID: 11400000, guid: f35b1c8ec251585458d5f531646d53c8, type: 2}
+  - {fileID: 11400000, guid: e4fb85adbdde37942b5d6d5dfea3700a, type: 2}
+  - {fileID: 11400000, guid: 351c365d88bac424587de0d26d24089c, type: 2}
+  - {fileID: 11400000, guid: 3d4d2574109244744b8c0c6531114a5b, type: 2}
+  - {fileID: 11400000, guid: edbee133e8c68284fa18f59279b9991b, type: 2}
+  - {fileID: 11400000, guid: 8043101779d2a9548992ca84bb2aa662, type: 2}
+  - {fileID: 11400000, guid: 4107e7b88bf979a4a944297dd235f029, type: 2}
+  - {fileID: 11400000, guid: 2b6bbef15ed2a1342a1ba900a60b1c59, type: 2}
+  - {fileID: 11400000, guid: f54056dc5545c0243bc3f905d32460a4, type: 2}
+  worker: {fileID: 11400000, guid: c8dcaae614088284e978c8f512240bbb, type: 2}
+  populationLimit: 10
+  baseSummonInterval: 6
+  summonIntervalJitter: {x: -5, y: 5}
+  maxHeartHitPoints: 0
+  crystalPrefab: {fileID: 2069081368136572123, guid: 7d171c93b58331742b99963e997ae827, type: 3}

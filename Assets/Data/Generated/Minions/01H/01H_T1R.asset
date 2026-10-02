@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ebbde61542283746a8c1cd32758856b, type: 3}
+  m_Name: 01H_T1R
+  m_EditorClassIdentifier: Assembly-CSharp::MinionDefinition
+  factionId: 01H
+  minionId: T1R
+  displayName: Toxotes
+  token: {fileID: 21300000, guid: 1cdb766bf4dbb5a469ff8ebe6042b6ff, type: 3}
+  prefab: {fileID: 0}
+  stance: 2
+  tier: 1
+  movement: 4
+  canDoWorkerJobs: 0
+  damageTaken:
+  - type: 1
+    multiplier: 2
+  - type: 3
+    multiplier: 0.5
+  - type: 5
+    multiplier: 2
+  researchPreference: 0.6
+  trainPreference: 0.2
+  buildPreference: 0
+  prayPreference: 0.1
+  torturePreference: 0.1
+  abilities:
+  - gainLevel: 1
+    ability: {fileID: 11400000, guid: c02d8910b36cd21449fbb741f46cfcdf, type: 2}
+  - gainLevel: 5
+    ability: {fileID: 11400000, guid: cf029e2b83062244eb1cd1ab906d71d7, type: 2}
+  relations: []
+  summonable: 1
+  summonWeight: 1
+  populationCost: 1
+  requiredRooms:
+  - roomType: 7
+    minTiles: 9
+  requiredResearchIds: []
+  maxLevel: 10
+  stats:
+  - stat: 0
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 1
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 2
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 3
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 4
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 5
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 6
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 7
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 8
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 9
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 10
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 11
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 12
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 1
+    authored: 0
+  - stat: 13
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 14
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 15
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 16
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 17
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 18
+    min: 0
+    max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 117f0ba6bc426a14d8bf06c364399c0b, type: 3}
+  m_Name: FactionRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::FactionRegistry
+  definitions:
+  - {fileID: 11400000, guid: 4fa131e8c3d89be43a0a238f57d4a310, type: 2}
+  - {fileID: 11400000, guid: cb697a7b1ae19e54095e662866bc21c5, type: 2}
+  - {fileID: 0}
+  - {fileID: 11400000, guid: 9ca0d0b2d73d35748b0b2879f4047f32, type: 2}
