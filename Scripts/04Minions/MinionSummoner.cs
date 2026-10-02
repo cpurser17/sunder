@@ -20,6 +20,8 @@ using UnityEngine;
 /// — population headroom, mission design (GameManager2D.AllowedMinionIds),
 /// rooms built, and research completed — then one survivor is picked by
 /// weighted random, the same pattern WorkerTaskManager uses for job selection.
+/// When nothing qualifies, the reason is logged (see ReportNothingEligible)
+/// — once per change of reason, not every tick.
 ///
 /// The interval between summons is base +/- random jitter, then scaled by
 /// the faction's research multiplier, so different factions — and a single
@@ -74,6 +76,8 @@ public class MinionSummoner : MonoBehaviour
         public Vector2 Jitter;
         public float NextSummonTime;
         public int   Population;
+        /// <summary>Why the last tick found nobody eligible; null after a successful pick.</summary>
+        public string LastBlockReason;
     }
 
     private readonly Dictionary<FactionID, FactionState> _states = new();
@@ -167,7 +171,11 @@ public class MinionSummoner : MonoBehaviour
         foreach (var def in state.Roster)
             if (def != null && IsEligible(faction, state, def)) _candidates.Add(def);
 
-        if (_candidates.Count == 0) return null;
+        if (_candidates.Count == 0)
+        {
+            ReportNothingEligible(faction, state);
+            return null;
+        }
 
         _weights.Clear();
         float total = 0f;
@@ -177,7 +185,12 @@ public class MinionSummoner : MonoBehaviour
             _weights.Add(w);
             total += w;
         }
-        if (total <= 0f) return null;
+        if (total <= 0f)
+        {
+            ReportBlocked(faction, state, $"all {_candidates.Count} eligible minion(s) have SummonWeight 0", true);
+            return null;
+        }
+        state.LastBlockReason = null;
 
         float roll = (float)state.Rng.NextDouble() * total;
         for (int i = 0; i < _candidates.Count; i++)
@@ -204,9 +217,16 @@ public class MinionSummoner : MonoBehaviour
         return allowed == null || allowed.Count == 0 || allowed.Contains(def.minionId);
     }
 
-    private bool HasRequiredRooms(FactionID faction, MinionDefinition def)
+    private bool HasRequiredRooms(FactionID faction, MinionDefinition def) =>
+        FirstMissingRoom(faction, def) == null;
+
+    private bool HasRequiredResearch(FactionID faction, MinionDefinition def) =>
+        FirstMissingResearch(faction, def) == null;
+
+    /// <summary>The first required room the faction lacks, or null if it has them all.</summary>
+    private MinionDefinition.RoomRequirement? FirstMissingRoom(FactionID faction, MinionDefinition def)
     {
-        if (def.requiredRooms.Count == 0) return true;
+        if (def.requiredRooms.Count == 0) return null;
 
         var rooms = gridManager.GetRoomsForFaction(faction);
         foreach (var required in def.requiredRooms)
@@ -215,21 +235,82 @@ public class MinionSummoner : MonoBehaviour
             foreach (var room in rooms)
                 if (room.TileType == required.roomType && room.Cells.Count >= required.minTiles)
                 { found = true; break; }
-            if (!found) return false;
+            if (!found) return required;
         }
-        return true;
+        return null;
     }
 
-    private bool HasRequiredResearch(FactionID faction, MinionDefinition def)
+    /// <summary>The first required research the faction hasn't completed, or null.</summary>
+    private string FirstMissingResearch(FactionID faction, MinionDefinition def)
     {
-        if (def.requiredResearchIds.Count == 0) return true;
+        if (def.requiredResearchIds.Count == 0) return null;
 
         var research = GameManager2D.Instance?.GetResearch(faction);
-        if (research == null) return false;
-
         foreach (var id in def.requiredResearchIds)
-            if (!research.HasResearch(id)) return false;
-        return true;
+            if (research == null || !research.HasResearch(id)) return id;
+        return null;
+    }
+
+    // ── Diagnostics ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Explains a tick where no roster minion qualified, by the first gate
+    /// each one failed, e.g. "AI1 couldn't summon: 0 of 19 eligible — 15
+    /// need rooms (RoomA, RoomB of 9+ tiles), 4 need research (Labyrinths)".
+    /// A full population on its own is normal and isn't logged.
+    /// </summary>
+    private void ReportNothingEligible(FactionID faction, FactionState state)
+    {
+        int summonable = 0, population = 0, level = 0, rooms = 0, research = 0;
+        var missingRooms    = new SortedSet<string>();
+        var missingResearch = new SortedSet<string>();
+
+        foreach (var def in state.Roster)
+        {
+            if (def == null || !def.summonable) continue;
+            summonable++;
+
+            if (state.Population + def.populationCost > state.PopulationLimit) { population++; continue; }
+            if (!LevelAllows(def)) { level++; continue; }
+
+            var room = FirstMissingRoom(faction, def);
+            if (room.HasValue)
+            {
+                rooms++;
+                missingRooms.Add(room.Value.minTiles > 0
+                    ? $"{room.Value.roomType} of {room.Value.minTiles}+ tiles"
+                    : room.Value.roomType.ToString());
+                continue;
+            }
+
+            string id = FirstMissingResearch(faction, def);
+            if (id != null) { research++; missingResearch.Add(id); }
+        }
+
+        if (summonable == 0)
+        {
+            ReportBlocked(faction, state, state.Roster.Count == 0
+                ? "the roster is empty"
+                : $"none of the {state.Roster.Count} roster minion(s) are summonable", true);
+            return;
+        }
+
+        var parts = new List<string>();
+        if (population > 0) parts.Add($"{population} won't fit the population limit");
+        if (level      > 0) parts.Add($"{level} not allowed by this level's allowedMinionIds");
+        if (rooms      > 0) parts.Add($"{rooms} need rooms ({string.Join(", ", missingRooms)})");
+        if (research   > 0) parts.Add($"{research} need research ({string.Join(", ", missingResearch)})");
+
+        bool onlyPopulation = population == summonable;
+        ReportBlocked(faction, state, $"0 of {summonable} eligible — {string.Join(", ", parts)}", !onlyPopulation);
+    }
+
+    /// <summary>Logs a reason only when it differs from the last one for this faction.</summary>
+    private static void ReportBlocked(FactionID faction, FactionState state, string reason, bool log)
+    {
+        if (reason == state.LastBlockReason) return;
+        state.LastBlockReason = reason;
+        if (log) Debug.LogWarning($"[MinionSummoner] {faction} couldn't summon: {reason}.");
     }
 
     private void Spawn(FactionID faction, FactionState state, MinionDefinition def, Portal portal)
