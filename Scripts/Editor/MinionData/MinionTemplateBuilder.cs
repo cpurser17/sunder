@@ -119,7 +119,7 @@ public static class MinionTemplateBuilder
         }
         else changes.Add("MinionSummoner already uses the template.");
 
-        foreach (var spawner in Object.FindObjectsByType<WorkerSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var spawner in Object.FindObjectsByType<WorkerSpawner>(FindObjectsInactive.Include))
         {
             var sso  = new SerializedObject(spawner);
             var worker = sso.FindProperty("workerPrefab");
