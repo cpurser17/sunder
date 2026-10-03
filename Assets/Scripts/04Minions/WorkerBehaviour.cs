@@ -57,7 +57,7 @@ public class WorkerBehaviour : MinionBehaviour
     [Header("Carrying")]
     [SerializeField] private int   maxCarryCapacity = 30;
     [SerializeField] private float depositDuration  = 1f;
-    [SerializeField] private TileType treasuryRoomType = TileType.RoomA;
+    [SerializeField] private TileType treasuryRoomType = TileType.Treasury;
 
     [Tooltip("Chance per second of banking a part load while mining. Stops "
              + "workers carrying residual gold around after a vein runs out.")]

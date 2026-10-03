@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
-  m_Name: TileRoomC
+  m_Name: TileHatchery
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 9
-  tileName: RoomC
+  tileName: Hatchery
   category: 2
   traversalType: 1
   gridColour: {r: 0.53333336, g: 0, b: 0.8666667, a: 1}
@@ -24,3 +24,11 @@ MonoBehaviour:
   placesOnLiquid: 0
   placesOnTunnel: 1
   prefab3D: {fileID: 6044288507240274825, guid: 0666a0b2cfb48c246a484f10b63f3182, type: 3}
+  description: 'Chickens roam here; hungry minions come to eat them.'
+  isRoom: 1
+  playerBuildable: 1
+  capacityPerTile: 0.25
+  capacityScalesWithEfficiency: 1
+  baseEfficiency: 0.5
+  shapeWeight: 0.3
+  wallWeight: 0.2

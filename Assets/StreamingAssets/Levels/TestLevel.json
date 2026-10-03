@@ -309,13 +309,13 @@
         "owner": "AI1"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "AI1"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "AI1"
       },
       {
@@ -354,18 +354,18 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
@@ -399,8 +399,8 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -409,13 +409,13 @@
         "owner": "AI1"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "AI1"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "AI1"
       },
       {
@@ -454,18 +454,18 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
@@ -499,8 +499,8 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -509,8 +509,8 @@
         "owner": "AI1"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -554,18 +554,18 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
@@ -599,8 +599,8 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -609,8 +609,8 @@
         "owner": "AI1"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -874,23 +874,23 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -974,23 +974,23 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -1074,23 +1074,23 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -1174,23 +1174,23 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
-        "tileType": "RoomB",
-        "underlyingType": "RoomB",
+        "tileType": "Lair",
+        "underlyingType": "Lair",
         "owner": "Player"
       },
       {
@@ -1454,18 +1454,18 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
@@ -1499,18 +1499,18 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
@@ -1554,18 +1554,18 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
@@ -1599,18 +1599,18 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
@@ -1654,18 +1654,18 @@
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
-        "tileType": "RoomC",
-        "underlyingType": "RoomC",
+        "tileType": "Hatchery",
+        "underlyingType": "Hatchery",
         "owner": "Player"
       },
       {
@@ -1699,18 +1699,18 @@
         "owner": "Unaligned"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {
-        "tileType": "RoomA",
-        "underlyingType": "RoomA",
+        "tileType": "Treasury",
+        "underlyingType": "Treasury",
         "owner": "Player"
       },
       {

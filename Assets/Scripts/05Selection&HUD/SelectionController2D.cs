@@ -7,7 +7,7 @@ using TMPro;
 /// Handles all mouse interaction with the 2D logical grid.
 ///
 /// Buy modes (set by HUDController2D via ActiveTileType):
-///   Rooms  (RoomA/B/C) — source must be player-owned Tunnel.
+///   Rooms  (Treasury, Lair, …) — source must be player-owned Tunnel.
 ///   Bridge             — source must be Liquid; selection must have at
 ///                        least one cell adjacent to a player-owned tile.
 ///
@@ -59,7 +59,7 @@ public class SelectionController2D : MonoBehaviour
     public enum InteractionMode { None, Buy, Sell }
 
     public InteractionMode ActiveMode     { get; set; } = InteractionMode.None;
-    public TileType        ActiveTileType { get; set; } = TileType.RoomA;
+    public TileType        ActiveTileType { get; set; } = TileType.Treasury;
 
     // ── Drag state ─────────────────────────────────────────────────────
     private bool _dragging;
@@ -260,11 +260,8 @@ public class SelectionController2D : MonoBehaviour
     private bool IsSellable(GridCell c)
     {
         if (c.Owner != localPlayer) return false;
-        // Only named rooms and bridges can be sold via the UI.
-        return c.TileType == TileType.RoomA   ||
-               c.TileType == TileType.RoomB   ||
-               c.TileType == TileType.RoomC   ||
-               c.TileType == TileType.Bridge;
+        // Only rooms (isRoom — which includes Bridge) can be sold via the UI.
+        return gridManager.GetDefinition(c.TileType)?.isRoom ?? false;
     }
 
     // ── Alt-sell preview ───────────────────────────────────────────────
@@ -460,13 +457,9 @@ public class SelectionController2D : MonoBehaviour
     /// <summary>
     /// Returns true for tile types that count as valid anchors for
     /// adjacency-required placements (Bridge, future Wall).
-    /// Tunnel, all Room types, and existing Bridges all qualify.
+    /// Tunnel and every room type (isRoom, which includes Bridge) qualify.
     /// Wall is excluded — it is a perimeter tile, not a traversable floor.
     /// </summary>
-    private static bool IsOwnedDungeonTile(TileType t) =>
-        t == TileType.Tunnel  ||
-        t == TileType.RoomA   ||
-        t == TileType.RoomB   ||
-        t == TileType.RoomC   ||
-        t == TileType.Bridge;
+    private bool IsOwnedDungeonTile(TileType t) =>
+        t == TileType.Tunnel || (gridManager.GetDefinition(t)?.isRoom ?? false);
 }

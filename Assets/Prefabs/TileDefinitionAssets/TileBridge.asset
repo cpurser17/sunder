@@ -24,3 +24,11 @@ MonoBehaviour:
   placesOnLiquid: 1
   placesOnTunnel: 0
   prefab3D: {fileID: 1020238450276224549, guid: 28b282c22ce81f940b6ccac4e9c4295e, type: 3}
+  description: 'Built over water or lava to make it walkable.'
+  isRoom: 1
+  playerBuildable: 1
+  capacityPerTile: 0
+  capacityScalesWithEfficiency: 1
+  baseEfficiency: 1
+  shapeWeight: 0
+  wallWeight: 0

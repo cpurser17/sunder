@@ -372,6 +372,7 @@ public class GridManager2D : MonoBehaviour
     public TerritoryRegistry    Territory    => _roomRegistry.Territory;
     public ClearanceMap         Clearance    => _roomRegistry.Clearance;
     public TileDefinition GetDefinition(TileType type) => tileRegistry.GetDefinition(type);
+    public TileRegistry   Tiles => tileRegistry;
 
     // ── Debounced rebake ───────────────────────────────────────────────
 

@@ -6,7 +6,7 @@ public enum TileCategory
 {
     Environmental,  // Bedrock, Stone, Cave, Gold, Gem — never owned, no buy/sell UI
     Liquid,         // Water, Lava                     — never owned, bridge placement target
-    Owned,          // Tunnel, Wall, Rooms, Bridge      — faction ownership, full UI
+    Owned,          // Tunnel, Wall, rooms, Bridge, Heart, Portal — faction ownership
 }
 
 // ── Traversal types (used by NavMesh baking and grid pathfinding) ──────────
@@ -19,6 +19,12 @@ public enum TraversalType
 }
 
 // ── Tile types ─────────────────────────────────────────────────────────────
+// Stored as numbers in Unity assets and as names in level/save JSON, so:
+// append new types at the end, never reorder, and when renaming one add the
+// old name to TileTypeNames.Legacy so existing JSON still loads.
+//
+// What a type IS (room or not, buildable, efficiency weights) lives on its
+// TileDefinition, filled from the RoomData workbook — never in code lists.
 public enum TileType
 {
     // Environmental
@@ -33,9 +39,9 @@ public enum TileType
     // Owned
     Tunnel  = 5,   // base claimed floor; buy target for rooms
     Wall    = 6,   // worker-reinforced perimeter; faction-owned, not buy/sellable via UI
-    RoomA   = 7,
-    RoomB   = 8,
-    RoomC   = 9,
+    Treasury = 7,  // gold storage; where minions collect pay        (was RoomA)
+    Lair     = 8,  // minions claim a bed here and sleep              (was RoomB)
+    Hatchery = 9,  // chickens for hungry minions                     (was RoomC)
     Bridge  = 10,  // built over Water/Lava; owned; sells back to underlying liquid
 
     // Environmental (resource)
@@ -45,6 +51,49 @@ public enum TileType
     // Owned (structures)
     Heart   = 13,  // 3x3 win/lose structure; impassable, not buy/sellable via UI
     Portal  = 14,  // 1x1 minion spawn point; passable, not buy/sellable via UI
+
+    // Rooms (functionality arrives in phases — see the RoomData workbook)
+    TrainingRoom   = 15,  // minions train to gain experience, at a cost
+    Library        = 16,  // research
+    GuardPost      = 17,  // minions dropped here defend and patrol it
+    Workshop       = 18,  // traps and doors are built here
+    Prison         = 19,  // captured enemy minions are held here
+    TortureChamber = 20,  // converts enemy minions by repeated injury
+    Barracks       = 21,  // groups minions into squads
+    Shrine         = 22,  // prayer and sacrifice
+    Graveyard      = 23,  // bodies are brought here
+    ScavengerRoom  = 24,  // steals research or minions from enemies
+    HeroGate       = 25,  // non-player structure that summons heroes
+}
+
+/// <summary>
+/// Name lookups for TileType that also accept names a type used to have,
+/// so level files, saves and workbooks written before a rename still load.
+/// </summary>
+public static class TileTypeNames
+{
+    /// <summary>Old name → current type. Add an entry whenever a TileType is renamed.</summary>
+    public static readonly System.Collections.Generic.IReadOnlyDictionary<string, TileType> Legacy =
+        new System.Collections.Generic.Dictionary<string, TileType>(System.StringComparer.OrdinalIgnoreCase)
+        {
+            ["RoomA"] = TileType.Treasury,
+            ["RoomB"] = TileType.Lair,
+            ["RoomC"] = TileType.Hatchery,
+        };
+
+    /// <summary>Current or legacy name (case-insensitive) → type. Numbers are rejected.</summary>
+    public static bool TryParse(string text, out TileType type)
+    {
+        type = default;
+        if (string.IsNullOrWhiteSpace(text)) return false;
+        string name = text.Trim();
+
+        foreach (TileType t in System.Enum.GetValues(typeof(TileType)))
+            if (string.Equals(t.ToString(), name, System.StringComparison.OrdinalIgnoreCase))
+            { type = t; return true; }
+
+        return Legacy.TryGetValue(name, out type);
+    }
 }
 
 // ── TileDefinition ScriptableObject ───────────────────────────────────────
@@ -54,6 +103,7 @@ public class TileDefinition : ScriptableObject
     [Header("Identity")]
     public TileType      tileType;
     public string        tileName;
+    [TextArea] public string description;
     public TileCategory  category;
     public TraversalType traversalType;
 
@@ -87,6 +137,28 @@ public class TileDefinition : ScriptableObject
     [Tooltip("Damage per second dealt to a minion standing here that cannot "
              + "safely path on this tile. Water low, Lava high. 0 for safe tiles.")]
     public float hazardDamagePerSecond = 0f;
+
+    [Header("Room")]
+    [Tooltip("Forms rooms: contiguous same-type, same-owner cells are tracked as one " +
+             "DungeonRoom (with an efficiency score), sellable via the UI, and count " +
+             "as dungeon floor. Set from the RoomData workbook.")]
+    public bool isRoom = false;
+    [Tooltip("Gets a build button in the HUD. False for Heart, Portal and Hero Gate.")]
+    public bool playerBuildable = false;
+    [Tooltip("What one tile holds at 100% efficiency — gold for a Treasury, beds for a " +
+             "Lair, chickens for a Hatchery. 0 = no capacity. See DungeonRoom.Capacity.")]
+    public float capacityPerTile = 0f;
+    [Tooltip("True: capacity grows with efficiency (Treasury gold). False: capacity is " +
+             "physical (one bed per Lair tile) and efficiency only speeds up the effect.")]
+    public bool capacityScalesWithEfficiency = true;
+
+    [Header("Room efficiency (see RoomEfficiency)")]
+    [Tooltip("Efficiency of the worst possible layout: a sprawling, unwalled room.")]
+    public float baseEfficiency = 1f;
+    [Tooltip("Added at a perfectly compact rectangle (3x3, 4x4…), scaled down for sprawl.")]
+    public float shapeWeight = 0f;
+    [Tooltip("Added when every edge of the room is your own reinforced wall.")]
+    public float wallWeight = 0f;
 
     [Header("Placement Rules")]
     [Tooltip("True for Bridge: placement requires adjacency to an owned tile.")]

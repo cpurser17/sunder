@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Flood-fills contiguous blocks of owned tiles, grouped by faction only —
-/// tile type is ignored, so a Tunnel adjacent to a RoomA adjacent to a Bridge
+/// tile type is ignored, so a Tunnel adjacent to a Treasury adjacent to a Bridge
 /// is one territory as long as the owner matches.
 ///
 /// This is distinct from the other two registries:

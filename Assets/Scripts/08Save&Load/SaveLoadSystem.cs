@@ -46,7 +46,7 @@ public static class SaveLoadSystem
         Formatting           = Formatting.Indented,
         NullValueHandling    = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Include,
-        Converters           = { new Newtonsoft.Json.Converters.StringEnumConverter() },
+        Converters           = { new TileTypeJsonConverter(), new Newtonsoft.Json.Converters.StringEnumConverter() },
     };
 
     private static readonly JsonSerializerSettings SaveSettings = new()
@@ -54,7 +54,7 @@ public static class SaveLoadSystem
         Formatting           = Formatting.None,
         NullValueHandling    = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Include,
-        Converters           = { new Newtonsoft.Json.Converters.StringEnumConverter() },
+        Converters           = { new TileTypeJsonConverter(), new Newtonsoft.Json.Converters.StringEnumConverter() },
     };
 
     // ── Path helpers ───────────────────────────────────────────────────

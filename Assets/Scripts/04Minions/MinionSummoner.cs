@@ -256,7 +256,7 @@ public class MinionSummoner : MonoBehaviour
     /// <summary>
     /// Explains a tick where no roster minion qualified, by the first gate
     /// each one failed, e.g. "AI1 couldn't summon: 0 of 19 eligible — 15
-    /// need rooms (RoomA, RoomB of 9+ tiles), 4 need research (Labyrinths)".
+    /// need rooms (Library, Lair of 9+ tiles), 4 need research (Labyrinths)".
     /// A full population on its own is normal and isn't logged.
     /// </summary>
     private void ReportNothingEligible(FactionID faction, FactionState state)

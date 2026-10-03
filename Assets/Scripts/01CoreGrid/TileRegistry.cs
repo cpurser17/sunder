@@ -39,6 +39,12 @@ public class TileRegistry : ScriptableObject
 
     // ── Definition lookups ─────────────────────────────────────────────
 
+    /// <summary>Every definition, in the order listed on the asset.</summary>
+    public IReadOnlyList<TileDefinition> Definitions => definitions;
+
+    /// <summary>True for tile types that form rooms (TileDefinition.isRoom).</summary>
+    public bool IsRoom(TileType type) => GetDefinition(type)?.isRoom ?? false;
+
     public TileDefinition GetDefinition(TileType type) =>
         _defMap.TryGetValue(type, out var def) ? def : null;
 

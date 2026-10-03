@@ -10,28 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
-  m_Name: TilePortal
+  m_Name: TileHeroGate
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
-  tileType: 14
-  tileName: Portal
+  tileType: 25
+  tileName: Hero Gate
+  description: 'Non-player structure that summons heroes into the dungeon.'
   category: 2
   traversalType: 1
-  gridColour: {r: 0.504717, g: 0.85283315, b: 1, a: 1}
+  gridColour: {r: 0.9333333, g: 0.8666667, b: 0.3333333, a: 1}
   buyCost: 0
   sellValue: 0
   isIndestructible: 1
   maxHitPoints: 0
   wealthCapacity: 0
-  impDamagePerSecond: 20
+  workerDamagePerSecond: 20
   hazardDamagePerSecond: 0
-  requiresAdjacency: 0
-  placesOnLiquid: 0
-  placesOnTunnel: 0
-  prefab3D: {fileID: 4307324028023537488, guid: cd77dfcaa7041074181a56e2ac70170f, type: 3}
-  positionOffset: {x: 0, y: 0, z: 0}
-  rotationOffset: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
-  description: 'Summons minions to the dungeon.'
   isRoom: 0
   playerBuildable: 0
   capacityPerTile: 0
@@ -39,3 +32,10 @@ MonoBehaviour:
   baseEfficiency: 1
   shapeWeight: 0
   wallWeight: 0
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 0
+  prefab3D: {fileID: 4307324028023537488, guid: cd77dfcaa7041074181a56e2ac70170f, type: 3}
+  positionOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 0, y: 0, z: 0}
+  scaleMultiplier: 1

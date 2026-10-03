@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3518209759531879586}
   - component: {fileID: 2818648022425976219}
   m_Layer: 0
-  m_Name: RoomB
+  m_Name: Lair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

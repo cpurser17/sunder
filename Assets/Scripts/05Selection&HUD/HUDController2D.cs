@@ -9,6 +9,11 @@ using TMPro;
 /// Each BuyButtonEntry2D maps a UI Button to a TileType.
 /// The TileDefinition for that type drives all placement rules —
 /// HUDController2D just sets ActiveTileType on SelectionController2D.
+///
+/// Room buttons can also be generated: assign roomButtonTemplate and every
+/// player-buildable room (TileDefinition.playerBuildable, from the RoomData
+/// workbook) without a hand-made entry gets a clone of it. New rooms then
+/// appear in the HUD after an import, with no scene wiring.
 /// </summary>
 public class HUDController2D : MonoBehaviour
 {
@@ -26,6 +31,15 @@ public class HUDController2D : MonoBehaviour
 
     [Header("Buy Buttons")]
     [SerializeField] private List<BuyButtonEntry2D> buyButtonEntries;
+
+    [Header("Room Buttons (generated)")]
+    [Tooltip("Optional. Cloned once per player-buildable room that has no Buy Button " +
+             "entry above; its TextMeshProUGUI child shows the room's name and cost. " +
+             "Usually an inactive button inside the panel the clones should go in.")]
+    [SerializeField] private Button roomButtonTemplate;
+    [Tooltip("Parent for generated buttons, e.g. a panel with a Layout Group. " +
+             "Empty = the template's own parent.")]
+    [SerializeField] private Transform roomButtonContainer;
 
     [Header("Sell Button")]
     [SerializeField] private Button sellButton;
@@ -52,6 +66,9 @@ public class HUDController2D : MonoBehaviour
 
     private void Start()
     {
+        buyButtonEntries ??= new List<BuyButtonEntry2D>();
+        AddGeneratedRoomButtons();
+
         foreach (var entry in buyButtonEntries)
         {
             var captured = entry;
@@ -180,6 +197,45 @@ public class HUDController2D : MonoBehaviour
         if (btn == null) return;
         var img = btn.GetComponent<Image>();
         if (img) img.color = on ? activeColour : normalColour;
+    }
+
+    /// <summary>Clones roomButtonTemplate for each buildable room that has no button yet.</summary>
+    private void AddGeneratedRoomButtons()
+    {
+        if (roomButtonTemplate == null) return;
+
+        var grid  = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
+        var tiles = grid != null ? grid.Tiles : null;
+        if (tiles == null)
+        {
+            Debug.LogWarning("[HUDController2D] No TileRegistry to generate room buttons from.");
+            return;
+        }
+
+        var parent = roomButtonContainer != null ? roomButtonContainer : roomButtonTemplate.transform.parent;
+        var rooms  = new List<TileDefinition>();
+        foreach (var def in tiles.Definitions)
+            if (def != null && def.playerBuildable && !HasEntryFor(def.tileType)) rooms.Add(def);
+        rooms.Sort((a, b) => a.tileType.CompareTo(b.tileType));
+
+        foreach (var def in rooms)
+        {
+            var button = Instantiate(roomButtonTemplate, parent);
+            button.name = $"Build_{def.tileType}";
+            button.gameObject.SetActive(true);
+
+            var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = def.buyCost > 0 ? $"{def.tileName} ({def.buyCost}g)" : def.tileName;
+
+            buyButtonEntries.Add(new BuyButtonEntry2D { button = button, tileType = def.tileType });
+        }
+    }
+
+    private bool HasEntryFor(TileType type)
+    {
+        foreach (var entry in buyButtonEntries)
+            if (entry != null && entry.tileType == type) return true;
+        return false;
     }
 
     private void UpdateGoldLabel(int gold)

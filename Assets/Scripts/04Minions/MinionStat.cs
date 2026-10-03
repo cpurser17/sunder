@@ -33,4 +33,6 @@ public enum MinionStat
     SkillPray,
     SkillTorture,
     Anger,
+    HungerRate,     // how fast hunger builds; eating at a Hatchery resets it
+    TirednessRate,  // how fast tiredness builds; sleeping in its Lair bed resets it
 }

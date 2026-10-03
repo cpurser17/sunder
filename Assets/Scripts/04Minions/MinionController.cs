@@ -370,8 +370,12 @@ public class MinionController : MonoBehaviour, IHandTarget
         TakeDamage(slap.DamageFor(_health, MaxHealth));
     }
 
-    private static bool IsRoom(TileType type) =>
-        type == TileType.RoomA || type == TileType.RoomB || type == TileType.RoomC;
+    /// <summary>A room worth remembering a drop on — any room except Bridge.</summary>
+    private bool IsRoom(TileType type)
+    {
+        var def = gridManager != null ? gridManager.GetDefinition(type) : null;
+        return def != null && def.isRoom && !def.placesOnLiquid;
+    }
 
     // ── Damage and death ───────────────────────────────────────────────
 

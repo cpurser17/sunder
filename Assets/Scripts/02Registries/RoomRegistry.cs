@@ -4,26 +4,21 @@ using System.Collections.Generic;
 /// <summary>
 /// Flood-fill room detection for functional owned rooms only.
 ///
-/// Registered tile types: RoomA, RoomB, RoomC, Bridge.
-/// Skipped tile types:    Bedrock, Stone, Cave, Water, Lava, Tunnel, Wall.
+/// A tile type is registered if its TileDefinition has isRoom set (every
+/// room in the RoomData workbook, plus Bridge). Tunnel, Wall, Heart, Portal,
+/// environmental and liquid tiles are skipped.
 ///
 /// Two adjacent cells form the same room only if they share both
-/// TileType AND Owner (FactionID). This means Player-RoomA and AI1-RoomA
-/// are tracked as separate rooms even if adjacent.
+/// TileType AND Owner (FactionID). This means a Player Treasury and an AI1
+/// Treasury are tracked as separate rooms even if adjacent.
+///
+/// Each room's efficiency (see RoomEfficiency) is measured here, so it is
+/// always current: any tile change — building a wall included — rebakes.
 ///
 /// Call Rebake() after grid changes (GridManager2D debounces this).
 /// </summary>
 public class RoomRegistry
 {
-    // Tile types that are registered as functional rooms.
-    private static readonly HashSet<TileType> TrackedTypes = new()
-    {
-        TileType.RoomA,
-        TileType.RoomB,
-        TileType.RoomC,
-        TileType.Bridge,
-    };
-
     public IReadOnlyList<DungeonRoom> Rooms => _rooms;
     public event Action<IReadOnlyList<DungeonRoom>> OnRebakeComplete;
 
@@ -67,17 +62,23 @@ public class RoomRegistry
         bool[,] visited = new bool[_width, _height];
         int nextId = 0;
 
+        // Clear every cell first. (Clearing inside the loop below would wipe
+        // the ids flood-fill had already given cells further along.)
+        for (int x = 0; x < _width;  x++)
+        for (int y = 0; y < _height; y++)
+            _grid[x, y].RoomId = -1;
+
         for (int x = 0; x < _width;  x++)
         for (int y = 0; y < _height; y++)
         {
-            _grid[x, y].RoomId = -1;
-
             if (visited[x, y]) continue;
-            if (!TrackedTypes.Contains(_grid[x, y].TileType)) continue;
+            var def = _tileRegistry.GetDefinition(_grid[x, y].TileType);
+            if (def == null || !def.isRoom) continue;
 
             var cell = _grid[x, y];
-            var room = new DungeonRoom(nextId++, cell.TileType, cell.Owner);
+            var room = new DungeonRoom(nextId++, cell.TileType, cell.Owner, def);
             FloodFill(x, y, cell.TileType, cell.Owner, visited, room);
+            room.SetMeasurement(Measure(room));
             _rooms.Add(room);
         }
 
@@ -119,6 +120,19 @@ public class RoomRegistry
             }
         }
     }
+
+    private RoomEfficiency.Measurement Measure(DungeonRoom room)
+    {
+        var tiles = new List<(int x, int y)>(room.Cells.Count);
+        foreach (var c in room.Cells) tiles.Add((c.X, c.Y));
+
+        return RoomEfficiency.Measure(tiles,
+            (x, y) => InBounds(x, y) && _grid[x, y].RoomId == room.RoomId,
+            (x, y) => InBounds(x, y) && _grid[x, y].TileType == TileType.Wall
+                                     && _grid[x, y].Owner    == room.Owner);
+    }
+
+    private bool InBounds(int x, int y) => x >= 0 && x < _width && y >= 0 && y < _height;
 
     // ── Query helpers ──────────────────────────────────────────────────
 

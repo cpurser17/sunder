@@ -10,32 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a62c85fa38bd90c44bf8408a8216f4a6, type: 3}
-  m_Name: TilePortal
+  m_Name: TileScavengerRoom
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
-  tileType: 14
-  tileName: Portal
+  tileType: 24
+  tileName: Scavenger Room
+  description: 'Steals research or minions from enemy factions.'
   category: 2
   traversalType: 1
-  gridColour: {r: 0.504717, g: 0.85283315, b: 1, a: 1}
-  buyCost: 0
-  sellValue: 0
-  isIndestructible: 1
+  gridColour: {r: 0.1803922, g: 0.545098, b: 0.545098, a: 1}
+  buyCost: 100
+  sellValue: 50
+  isIndestructible: 0
   maxHitPoints: 0
   wealthCapacity: 0
-  impDamagePerSecond: 20
+  workerDamagePerSecond: 20
   hazardDamagePerSecond: 0
+  isRoom: 1
+  playerBuildable: 1
+  capacityPerTile: 0
+  capacityScalesWithEfficiency: 1
+  baseEfficiency: 0.5
+  shapeWeight: 0.3
+  wallWeight: 0.2
   requiresAdjacency: 0
   placesOnLiquid: 0
-  placesOnTunnel: 0
-  prefab3D: {fileID: 4307324028023537488, guid: cd77dfcaa7041074181a56e2ac70170f, type: 3}
+  placesOnTunnel: 1
+  prefab3D: {fileID: 4307324028023537488, guid: a1f69fa45f2230a4eb322715c876fc6b, type: 3}
   positionOffset: {x: 0, y: 0, z: 0}
   rotationOffset: {x: 0, y: 0, z: 0}
   scaleMultiplier: 1
-  description: 'Summons minions to the dungeon.'
-  isRoom: 0
-  playerBuildable: 0
-  capacityPerTile: 0
-  capacityScalesWithEfficiency: 1
-  baseEfficiency: 1
-  shapeWeight: 0
-  wallWeight: 0

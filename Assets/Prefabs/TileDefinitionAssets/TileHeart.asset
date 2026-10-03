@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TileHeart
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 13
-  tileName: Heart
+  tileName: Dungeon Heart
   category: 2
   traversalType: 1
   gridColour: {r: 0.735849, g: 0.2950338, b: 0.560112, a: 1}
@@ -31,3 +31,11 @@ MonoBehaviour:
   positionOffset: {x: 0, y: 0, z: 0}
   rotationOffset: {x: 0, y: 0, z: 0}
   scaleMultiplier: 1
+  description: 'The heart of the dungeon. Lose it and you lose.'
+  isRoom: 0
+  playerBuildable: 0
+  capacityPerTile: 0
+  capacityScalesWithEfficiency: 1
+  baseEfficiency: 1
+  shapeWeight: 0
+  wallWeight: 0

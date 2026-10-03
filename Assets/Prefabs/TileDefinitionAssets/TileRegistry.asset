@@ -28,6 +28,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d5bc8bdc348eb52498b9546d7fb8d6cc, type: 2}
   - {fileID: 11400000, guid: cb0db99fb5a13c54289b82e1aa5f8170, type: 2}
   - {fileID: 11400000, guid: 84654bda04fc9c04f84e5c52838956a2, type: 2}
+  - {fileID: 11400000, guid: ce43166f804f4ae3b771ce372610740d, type: 2}
+  - {fileID: 11400000, guid: 0f2f633ff9b04401b6f3b91856031a01, type: 2}
+  - {fileID: 11400000, guid: 14ade906eb214d259358c4972c2d687d, type: 2}
+  - {fileID: 11400000, guid: f5b871357b8844e9abf7c5b57e64e7f5, type: 2}
+  - {fileID: 11400000, guid: b291c874c07c4524ba5e55042d0c939c, type: 2}
+  - {fileID: 11400000, guid: 2648a874e6744c6dbac28978a31de22d, type: 2}
+  - {fileID: 11400000, guid: 77c100523647446cb1ae5ae85f571ebc, type: 2}
+  - {fileID: 11400000, guid: ead5df5e3a9c43cea0bb3957b5450377, type: 2}
+  - {fileID: 11400000, guid: 7b6eb4c385f64bc594c1c16b2d6b9717, type: 2}
+  - {fileID: 11400000, guid: 38c5d904c0414231862011dd9ae2d2c5, type: 2}
+  - {fileID: 11400000, guid: 573973fd9d8b42b2b88cab34219993d2, type: 2}
   factionColours:
   - faction: 0
     colour: {r: 0.53333336, g: 0.53333336, b: 0.53333336, a: 0}
