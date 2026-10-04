@@ -145,6 +145,10 @@ public class TileDefinition : ScriptableObject
     public bool isRoom = false;
     [Tooltip("Gets a build button in the HUD. False for Heart, Portal and Hero Gate.")]
     public bool playerBuildable = false;
+    [Tooltip("Slot in the HUD footer's Rooms grid, 1-9 — also the hotkey: Tab, then row, " +
+             "then column. 0 = no fixed slot (placed after the others, no hotkey).")]
+    [Range(0, 9)] public int buttonRow    = 0;
+    [Range(0, 9)] public int buttonColumn = 0;
     [Tooltip("What one tile holds at 100% efficiency — gold for a Treasury, beds for a " +
              "Lair, chickens for a Hatchery. 0 = no capacity. See DungeonRoom.Capacity.")]
     public float capacityPerTile = 0f;

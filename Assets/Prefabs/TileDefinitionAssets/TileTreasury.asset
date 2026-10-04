@@ -32,3 +32,5 @@ MonoBehaviour:
   baseEfficiency: 0.5
   shapeWeight: 0.3
   wallWeight: 0.2
+  buttonRow: 1
+  buttonColumn: 1

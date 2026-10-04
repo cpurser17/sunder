@@ -167,6 +167,11 @@ public static class RoomDataImporter
         def.wallWeight        = room.WallWeight;
         if (room.Colour != null)
             def.gridColour = new Color(room.Colour[0], room.Colour[1], room.Colour[2], 1f);
+        if (room.ButtonRow.HasValue)
+        {
+            def.buttonRow    = room.ButtonRow.Value;
+            def.buttonColumn = room.ButtonColumn ?? 0;
+        }
     }
 
     /// <summary>Adds the definition to the registry's list if missing. Returns true if added.</summary>

@@ -14,6 +14,10 @@ using TMPro;
 /// player-buildable room (TileDefinition.playerBuildable, from the RoomData
 /// workbook) without a hand-made entry gets a clone of it. New rooms then
 /// appear in the HUD after an import, with no scene wiring.
+///
+/// With roomsTab set (the HUD footer's Rooms tab), the buttons go into that
+/// tab's grid at each room's ButtonRow/ButtonColumn slot, which is also its
+/// hotkey (Tab, row, column — see HudFooter).
 /// </summary>
 public class HUDController2D : MonoBehaviour
 {
@@ -38,8 +42,11 @@ public class HUDController2D : MonoBehaviour
              "Usually an inactive button inside the panel the clones should go in.")]
     [SerializeField] private Button roomButtonTemplate;
     [Tooltip("Parent for generated buttons, e.g. a panel with a Layout Group. " +
-             "Empty = the template's own parent.")]
+             "Empty = the template's own parent. Ignored when Rooms Tab is set.")]
     [SerializeField] private Transform roomButtonContainer;
+    [Tooltip("The HUD footer's Rooms tab. Buttons go into its grid at each room's " +
+             "row/column slot, which doubles as the hotkey.")]
+    [SerializeField] private FooterTab roomsTab;
 
     [Header("Sell Button")]
     [SerializeField] private Button sellButton;
@@ -68,6 +75,7 @@ public class HUDController2D : MonoBehaviour
     {
         buyButtonEntries ??= new List<BuyButtonEntry2D>();
         AddGeneratedRoomButtons();
+        RegisterRoomsWithFooter();
 
         foreach (var entry in buyButtonEntries)
         {
@@ -212,7 +220,8 @@ public class HUDController2D : MonoBehaviour
             return;
         }
 
-        var parent = roomButtonContainer != null ? roomButtonContainer : roomButtonTemplate.transform.parent;
+        var parent = roomsTab != null ? roomsTab.Content
+                   : roomButtonContainer != null ? roomButtonContainer : roomButtonTemplate.transform.parent;
         var rooms  = new List<TileDefinition>();
         foreach (var def in tiles.Definitions)
             if (def != null && def.playerBuildable && !HasEntryFor(def.tileType)) rooms.Add(def);
@@ -225,10 +234,48 @@ public class HUDController2D : MonoBehaviour
             button.gameObject.SetActive(true);
 
             var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null) label.text = def.buyCost > 0 ? $"{def.tileName} ({def.buyCost}g)" : def.tileName;
+            if (label != null) label.text = ButtonLabel(def);
 
             buyButtonEntries.Add(new BuyButtonEntry2D { button = button, tileType = def.tileType });
         }
+    }
+
+    /// <summary>"Library (60g)", plus the hotkey slot in small print when it has one.</summary>
+    private static string ButtonLabel(TileDefinition def)
+    {
+        string text = def.buyCost > 0 ? $"{def.tileName} ({def.buyCost}g)" : def.tileName;
+        if (def.buttonRow > 0 && def.buttonColumn > 0)
+            text += $"  <size=70%><alpha=#99>{def.buttonRow}·{def.buttonColumn}</size>";
+        return text;
+    }
+
+    /// <summary>
+    /// Gives the footer's Rooms tab every room button — generated or hand-made —
+    /// at its slot, so hotkeys reach all of them, then lays the grid out.
+    /// </summary>
+    private void RegisterRoomsWithFooter()
+    {
+        if (roomsTab == null) return;
+
+        var grid  = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
+        var tiles = grid != null ? grid.Tiles : null;
+        if (tiles == null) return;
+
+        foreach (var entry in buyButtonEntries)
+        {
+            if (entry?.button == null) continue;
+            var def = tiles.GetDefinition(entry.tileType);
+            if (def == null || !def.isRoom) continue;
+
+            roomsTab.Add(new FooterTab.Entry
+            {
+                Row    = def.buttonRow,
+                Column = def.buttonColumn,
+                Label  = def.tileName,
+                Button = entry.button,
+            });
+        }
+        roomsTab.RebuildLayout();
     }
 
     private bool HasEntryFor(TileType type)
