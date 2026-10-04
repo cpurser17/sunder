@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 19
   tileName: Prison
-  description: 'Captured enemy minions are held here.'
+  description: Captured enemy minions are held here.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.2666667, g: 0.3333333, b: 0.4, a: 1}
+  gridColour: {r: 0.26666668, g: 0.33333334, b: 0.4, a: 1}
   buyCost: 60
   sellValue: 30
   isIndestructible: 0

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 16
   tileName: Library
-  description: 'Minions research here, unlocking rooms, spells and minions.'
+  description: Minions research here, unlocking rooms, spells and minions.
   category: 2
   traversalType: 1
   gridColour: {r: 0.2, g: 0.4, b: 0.8, a: 1}

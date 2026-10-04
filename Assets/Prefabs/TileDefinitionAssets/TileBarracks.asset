@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 21
   tileName: Barracks
-  description: 'Groups minions into squads.'
+  description: Groups minions into squads.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.3333333, g: 0.4196078, b: 0.1843137, a: 1}
+  gridColour: {r: 0.33333334, g: 0.41960785, b: 0.18431373, a: 1}
   buyCost: 50
   sellValue: 25
   isIndestructible: 0

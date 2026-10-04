@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 18
   tileName: Workshop
-  description: 'Traps and doors are built here.'
+  description: Traps and doors are built here.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.4666667, g: 0.4666667, b: 0.4666667, a: 1}
+  gridColour: {r: 0.46666667, g: 0.46666667, b: 0.46666667, a: 1}
   buyCost: 80
   sellValue: 40
   isIndestructible: 0

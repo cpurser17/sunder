@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 25
   tileName: Hero Gate
-  description: 'Non-player structure that summons heroes into the dungeon.'
+  description: Non-player structure that summons heroes into the dungeon.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.9333333, g: 0.8666667, b: 0.3333333, a: 1}
+  gridColour: {r: 0.93333334, g: 0.8666667, b: 0.33333334, a: 1}
   buyCost: 0
   sellValue: 0
   isIndestructible: 1

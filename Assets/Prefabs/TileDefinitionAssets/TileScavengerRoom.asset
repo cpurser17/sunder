@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 24
   tileName: Scavenger Room
-  description: 'Steals research or minions from enemy factions.'
+  description: Steals research or minions from enemy factions.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.1803922, g: 0.545098, b: 0.545098, a: 1}
+  gridColour: {r: 0.18039216, g: 0.54509807, b: 0.54509807, a: 1}
   buyCost: 100
   sellValue: 50
   isIndestructible: 0

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 22
   tileName: Shrine
-  description: 'Minions pray, or are sacrificed, for gains still to be decided.'
+  description: Minions pray, or are sacrificed, for gains still to be decided.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.9019608, g: 0.7843137, b: 0.2901961, a: 1}
+  gridColour: {r: 0.9019608, g: 0.78431374, b: 0.2901961, a: 1}
   buyCost: 80
   sellValue: 40
   isIndestructible: 0

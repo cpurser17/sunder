@@ -3261,6 +3261,7 @@ GameObject:
   - component: {fileID: 632404336}
   - component: {fileID: 632404335}
   - component: {fileID: 632404339}
+  - component: {fileID: 632404340}
   m_Layer: 5
   m_Name: HUDCanvas
   m_TagString: Untagged
@@ -3372,6 +3373,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MinimapRenderer
   gridManager: {fileID: 766907797}
   tileRegistry: {fileID: 11400000, guid: 973c7c14985d4764eb7955c5f7734fa5, type: 2}
+--- !u!114 &632404340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632404334}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3f931a8b05afb94aa82fdab6f17459b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HUDController2D
+  selectionController: {fileID: 766907796}
+  localPlayer: 1
+  goldLabel: {fileID: 1499601}
+  buyButtonEntries:
+  - button: {fileID: 405002558}
+    tileType: 7
+  - button: {fileID: 1090802934}
+    tileType: 8
+  - button: {fileID: 1118015887}
+    tileType: 9
+  - button: {fileID: 600135461}
+    tileType: 10
+  - button: {fileID: 1622334128}
+    tileType: 5
+  - button: {fileID: 1047500570}
+    tileType: 6
+  roomButtonTemplate: {fileID: 0}
+  roomButtonContainer: {fileID: 0}
+  sellButton: {fileID: 1618233560}
+  summonButton: {fileID: 1911835920}
+  activeColour: {r: 1, g: 0.85, b: 0.1, a: 1}
+  normalColour: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &687877572
 GameObject:
   m_ObjectHideFlags: 0
@@ -3804,6 +3839,8 @@ MonoBehaviour:
     tileType: 5
   - button: {fileID: 1047500570}
     tileType: 6
+  roomButtonTemplate: {fileID: 0}
+  roomButtonContainer: {fileID: 0}
   sellButton: {fileID: 1618233560}
   summonButton: {fileID: 1911835920}
   activeColour: {r: 1, g: 0.85, b: 0.1, a: 1}

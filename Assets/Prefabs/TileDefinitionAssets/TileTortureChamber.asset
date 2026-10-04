@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 20
   tileName: Torture Chamber
-  description: 'Converts enemy minions to your side by repeatedly injuring them.'
+  description: Converts enemy minions to your side by repeatedly injuring them.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.5333333, g: 0, b: 0.1333333, a: 1}
+  gridColour: {r: 0.53333336, g: 0, b: 0.13333334, a: 1}
   buyCost: 100
   sellValue: 50
   isIndestructible: 0

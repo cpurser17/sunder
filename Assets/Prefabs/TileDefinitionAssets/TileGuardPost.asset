@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 17
   tileName: Guard Post
-  description: 'Minions dropped here defend the area and patrol within it.'
+  description: Minions dropped here defend the area and patrol within it.
   category: 2
   traversalType: 1
-  gridColour: {r: 0.6666667, g: 0.5333333, b: 0.3333333, a: 1}
+  gridColour: {r: 0.6666667, g: 0.53333336, b: 0.33333334, a: 1}
   buyCost: 40
   sellValue: 20
   isIndestructible: 0
