@@ -23,6 +23,8 @@ public class RoomWorkbookParser : WorkbookParser
         public float[]  Colour;
         public Placement PlacesOn;
         public float    CapacityPerTile, BaseEfficiency, ShapeWeight, WallWeight;
+        /// <summary>HUD grid slot (1-9), 0 = none. Null when the sheet has no ButtonRow/ButtonColumn columns.</summary>
+        public int?     ButtonRow, ButtonColumn;
     }
 
     public readonly List<RoomRecord> Rooms = new();
@@ -38,11 +40,14 @@ public class RoomWorkbookParser : WorkbookParser
             return p;
         }
 
-        foreach (var row in table.Rows) p.ReadRow(row);
+        bool hasSlots = table.Headers.Contains("ButtonRow", StringComparer.OrdinalIgnoreCase) &&
+                        table.Headers.Contains("ButtonColumn", StringComparer.OrdinalIgnoreCase);
+        foreach (var row in table.Rows) p.ReadRow(row, hasSlots);
+        p.CheckButtonSlots(hasSlots);
         return p;
     }
 
-    private void ReadRow(XlsxReader.Row row)
+    private void ReadRow(XlsxReader.Row row, bool hasSlots)
     {
         string id = row["RoomID"];
         if (id == null) { Warn(row, "No RoomID — skipped."); return; }
@@ -88,7 +93,52 @@ public class RoomWorkbookParser : WorkbookParser
             Warn(row, $"{type} sells for more ({r.SellValue}) than it costs ({r.BuyCost}).");
         if (r.CapacityPerTile < 0) { Warn(row, "CapacityPerTile is negative — using 0."); r.CapacityPerTile = 0; }
 
+        if (hasSlots)
+        {
+            r.ButtonRow    = Slot(row, "ButtonRow");
+            r.ButtonColumn = Slot(row, "ButtonColumn");
+            if ((r.ButtonRow == 0) != (r.ButtonColumn == 0))
+            {
+                Warn(row, $"{type} has only one of ButtonRow/ButtonColumn — needs both; given no slot.");
+                r.ButtonRow = r.ButtonColumn = 0;
+            }
+        }
+
         Rooms.Add(r);
+    }
+
+    /// <summary>A grid slot 1-9; blank = 0 (no slot).</summary>
+    private int Slot(XlsxReader.Row row, string header)
+    {
+        int value = Int(row, header, 0);
+        if (value >= 0 && value <= 9) return value;
+        Warn(row, $"{header} {value} is outside 1-9 (one digit per hotkey) — given no slot.");
+        return 0;
+    }
+
+    /// <summary>Every buildable room should have its own slot.</summary>
+    private void CheckButtonSlots(bool hasSlots)
+    {
+        if (!hasSlots)
+        {
+            Warnings.Add("Rooms sheet has no ButtonRow/ButtonColumn columns — HUD slots on the tile definitions left as they are.");
+            return;
+        }
+
+        var taken = new Dictionary<(int, int), TileType>();
+        foreach (var r in Rooms)
+        {
+            if (!r.PlayerBuildable) continue;
+            if (r.ButtonRow == 0)
+            {
+                Warnings.Add($"{r.Location}: {r.Type} is buildable but has no ButtonRow/ButtonColumn — it goes after the others, with no hotkey.");
+                continue;
+            }
+            var slot = (r.ButtonRow.Value, r.ButtonColumn.Value);
+            if (taken.TryGetValue(slot, out var other))
+                Warnings.Add($"{r.Location}: {r.Type} and {other} both use row {slot.Item1}, column {slot.Item2} — the hotkey picks {other}.");
+            else taken[slot] = r.Type;
+        }
     }
 
     /// <summary>"DD8800" or "#DD8800" → 0–1 RGB.</summary>
