@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 10
   tileName: Bridge
-  description: Built over water or lava to make it walkable.
   category: 2
   traversalType: 1
   gridColour: {r: 0.53333336, g: 0.4, b: 0.2, a: 1}
   buyCost: 25
   sellValue: 12
   isIndestructible: 0
-  maxHitPoints: 0
-  wealthCapacity: 0
-  workerDamagePerSecond: 20
-  hazardDamagePerSecond: 0
+  requiresAdjacency: 1
+  placesOnLiquid: 1
+  placesOnTunnel: 0
+  prefab3D: {fileID: 1020238450276224549, guid: 28b282c22ce81f940b6ccac4e9c4295e, type: 3}
+  description: 'Built over water or lava to make it walkable.'
   isRoom: 1
   playerBuildable: 1
   capacityPerTile: 0
@@ -32,10 +32,5 @@ MonoBehaviour:
   baseEfficiency: 1
   shapeWeight: 0
   wallWeight: 0
-  requiresAdjacency: 1
-  placesOnLiquid: 1
-  placesOnTunnel: 0
-  prefab3D: {fileID: 1020238450276224549, guid: 28b282c22ce81f940b6ccac4e9c4295e, type: 3}
-  positionOffset: {x: 0, y: 0, z: 0}
-  rotationOffset: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
+  buttonRow: 1
+  buttonColumn: 4

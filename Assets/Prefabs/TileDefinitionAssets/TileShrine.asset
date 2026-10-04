@@ -39,3 +39,5 @@ MonoBehaviour:
   positionOffset: {x: 0, y: 0, z: 0}
   rotationOffset: {x: 0, y: 0, z: 0}
   scaleMultiplier: 1
+  buttonRow: 2
+  buttonColumn: 4

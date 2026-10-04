@@ -14,17 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 9
   tileName: Hatchery
-  description: Chickens roam here; hungry minions come to eat them.
   category: 2
   traversalType: 1
   gridColour: {r: 0.53333336, g: 0, b: 0.8666667, a: 1}
   buyCost: 40
   sellValue: 20
   isIndestructible: 0
-  maxHitPoints: 0
-  wealthCapacity: 0
-  workerDamagePerSecond: 20
-  hazardDamagePerSecond: 0
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 1
+  prefab3D: {fileID: 6044288507240274825, guid: 0666a0b2cfb48c246a484f10b63f3182, type: 3}
+  description: 'Chickens roam here; hungry minions come to eat them.'
   isRoom: 1
   playerBuildable: 1
   capacityPerTile: 0.25
@@ -32,10 +32,5 @@ MonoBehaviour:
   baseEfficiency: 0.5
   shapeWeight: 0.3
   wallWeight: 0.2
-  requiresAdjacency: 0
-  placesOnLiquid: 0
-  placesOnTunnel: 1
-  prefab3D: {fileID: 6044288507240274825, guid: 0666a0b2cfb48c246a484f10b63f3182, type: 3}
-  positionOffset: {x: 0, y: 0, z: 0}
-  rotationOffset: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
+  buttonRow: 1
+  buttonColumn: 3

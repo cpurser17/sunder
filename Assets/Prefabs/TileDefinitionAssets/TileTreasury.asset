@@ -14,18 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 7
   tileName: Treasury
-  description: Workers bring mined gold here. Its size and layout set how much gold
-    it can hold. Minions walk here on payday to collect their salary.
   category: 2
   traversalType: 1
   gridColour: {r: 0.8666667, g: 0.53333336, b: 0, a: 1}
   buyCost: 20
   sellValue: 10
   isIndestructible: 0
-  maxHitPoints: 0
-  wealthCapacity: 0
-  workerDamagePerSecond: 20
-  hazardDamagePerSecond: 0
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 1
+  prefab3D: {fileID: 6291189146854802981, guid: 6a4f6440d4617a446b1a52aacaec66ae, type: 3}
+  description: 'Workers bring mined gold here. Its size and layout set how much gold it can hold. Minions walk here on payday to collect their salary.'
   isRoom: 1
   playerBuildable: 1
   capacityPerTile: 500
@@ -33,10 +32,5 @@ MonoBehaviour:
   baseEfficiency: 0.5
   shapeWeight: 0.3
   wallWeight: 0.2
-  requiresAdjacency: 0
-  placesOnLiquid: 0
-  placesOnTunnel: 1
-  prefab3D: {fileID: 6291189146854802981, guid: 6a4f6440d4617a446b1a52aacaec66ae, type: 3}
-  positionOffset: {x: 0, y: 0, z: 0}
-  rotationOffset: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
+  buttonRow: 1
+  buttonColumn: 1
