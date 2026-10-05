@@ -15,8 +15,9 @@ using UnityEngine;
 /// (GameManager2D.DeriveFactionSeed), so a given match always pays out at
 /// the same moments.
 ///
-/// Times are gameplay seconds — they stop while the game is paused.
-/// Payday clocks aren't saved yet: loading a save starts them afresh.
+/// Times are gameplay seconds — they stop while the game is paused. A save
+/// keeps each faction's time to its next payday and how many it has had, so
+/// a resumed game pays out exactly when the original would have.
 ///
 /// Scene setup: none — GameManager2D adds one if the scene has none. Add it
 /// yourself to tune the numbers.
@@ -38,13 +39,15 @@ public class PaydaySystem : MonoBehaviour
     [SerializeField, Min(0f)] private float firstPaydayMax = 480f;
 
     [Header("Unpaid wages")]
-    [Tooltip("Lasting anger (0-1 scale) for each payday in a row a minion isn't paid in full.")]
-    [SerializeField, Range(0f, 1f)] private float angerPerMissedPayday = 0.25f;
+    [Tooltip("Lasting anger (0-1 scale) per payday's worth of wages a minion is owed after " +
+             "collecting: a fully missed payday adds this, half-paid adds half, two missed adds double.")]
+    [SerializeField, Range(0f, 1f)] private float angerPerUnpaidSalary = 0.25f;
 
     private class Schedule
     {
         public float         NextAt;
         public System.Random Random;
+        public int           Paydays;   // so far — replayed on load to resume the random stream
     }
 
     private readonly Dictionary<FactionID, Schedule> _schedules = new();
@@ -76,7 +79,8 @@ public class PaydaySystem : MonoBehaviour
             var schedule = pair.Value;
             if (_clock < schedule.NextAt) continue;
 
-            schedule.NextAt += Mathf.Max(1f, interval + Between(schedule.Random, -variance, variance));
+            schedule.NextAt += NextInterval(schedule.Random);
+            schedule.Paydays++;
             Pay(pair.Key);
         }
     }
@@ -99,10 +103,58 @@ public class PaydaySystem : MonoBehaviour
         foreach (var faction in factions)
         {
             if (_schedules.ContainsKey(faction)) continue;
-            var random = new System.Random(gm.DeriveFactionSeed(faction, "payday"));
-            float min  = Mathf.Min(firstPaydayMin, firstPaydayMax);
-            float max  = Mathf.Max(firstPaydayMin, firstPaydayMax);
-            _schedules[faction] = new Schedule { Random = random, NextAt = Between(random, min, max) };
+            var random = NewRandom(faction);
+            _schedules[faction] = new Schedule { Random = random, NextAt = FirstPayday(random) };
+        }
+    }
+
+    private System.Random NewRandom(FactionID faction) =>
+        new(GameManager2D.Instance.DeriveFactionSeed(faction, "payday"));
+
+    private float FirstPayday(System.Random random) =>
+        Between(random, Mathf.Min(firstPaydayMin, firstPaydayMax), Mathf.Max(firstPaydayMin, firstPaydayMax));
+
+    private float NextInterval(System.Random random) =>
+        Mathf.Max(1f, interval + Between(random, -variance, variance));
+
+    // ── Save / load ────────────────────────────────────────────────────
+
+    public Dictionary<FactionID, PaydaySaveData> Capture()
+    {
+        var data = new Dictionary<FactionID, PaydaySaveData>();
+        foreach (var pair in _schedules)
+            data[pair.Key] = new PaydaySaveData
+            {
+                secondsUntilPayday = Mathf.Max(0f, pair.Value.NextAt - _clock),
+                paydays            = pair.Value.Paydays,
+            };
+        return data;
+    }
+
+    /// <summary>
+    /// Puts each saved faction's clock back where it was. The random stream
+    /// is re-seeded and wound on past the draws already made, so later
+    /// intervals match the original game too. Factions missing from the save
+    /// keep the fresh clock StartClocks gave them.
+    /// </summary>
+    public void Restore(Dictionary<FactionID, PaydaySaveData> saved)
+    {
+        if (saved == null || GameManager2D.Instance == null) return;
+
+        foreach (var pair in saved)
+        {
+            if (!_schedules.ContainsKey(pair.Key) || pair.Value == null) continue;
+
+            var random = NewRandom(pair.Key);
+            FirstPayday(random);
+            for (int i = 0; i < pair.Value.paydays; i++) NextInterval(random);
+
+            _schedules[pair.Key] = new Schedule
+            {
+                Random  = random,
+                Paydays = pair.Value.paydays,
+                NextAt  = _clock + Mathf.Max(0f, pair.Value.secondsUntilPayday),
+            };
         }
     }
 
@@ -120,7 +172,7 @@ public class PaydaySystem : MonoBehaviour
             if (minion == null || !minion.IsAlive || minion.Faction != faction || minion.Salary <= 0) continue;
             minions++;
             wages += minion.Salary;
-            minion.OnPayday(angerPerMissedPayday);
+            minion.OnPayday(angerPerUnpaidSalary);
         }
 
         Debug.Log($"[Payday] {faction}: {minions} minion(s) due {wages} gold in wages.");
@@ -129,4 +181,12 @@ public class PaydaySystem : MonoBehaviour
 
     private static float Between(System.Random random, float min, float max) =>
         min + (float)random.NextDouble() * (max - min);
+}
+
+/// <summary>One faction's payday clock in a save.</summary>
+[Serializable]
+public class PaydaySaveData
+{
+    public float secondsUntilPayday;
+    public int   paydays;
 }

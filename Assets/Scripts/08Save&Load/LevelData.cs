@@ -111,6 +111,10 @@ public class GameStateSaveData
     public System.Collections.Generic.List<CellGoldSaveData> treasuryGold;
     public System.Collections.Generic.List<CellGoldSaveData> goldPiles;
 
+    // Per-faction payday clocks. Null in older saves — clocks start afresh.
+    // (Enum keys are written as names by default; no item converter — the values are objects.)
+    public System.Collections.Generic.Dictionary<FactionID, PaydaySaveData> paydays;
+
     // Per-faction Dungeon Heart HP, keyed by FactionID.
     // Null in saves predating DungeonHeart — hearts simply start at full HP.
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

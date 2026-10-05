@@ -62,6 +62,15 @@ public class HudFooter : MonoBehaviour
     private float     _deadline;
 
     public FooterTab ActiveTab   => _activeTab;
+
+    /// <summary>The tab with this name (e.g. "Spells"), ignoring case, or null.</summary>
+    public FooterTab FindTab(string tabName)
+    {
+        foreach (var t in tabs)
+            if (t != null && string.Equals(t.TabName, tabName, System.StringComparison.OrdinalIgnoreCase))
+                return t;
+        return null;
+    }
     public bool      IsMinimised => _minimised;
 
     // ── Unity lifecycle ────────────────────────────────────────────────

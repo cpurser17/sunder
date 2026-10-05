@@ -177,6 +177,10 @@ public class DungeonHeart : MonoBehaviour
     public bool IsReady(FactionID faction) =>
         _ready && _hearts.TryGetValue(faction, out var s) && s.Footprint.Count > 0;
 
+    /// <summary>The cell the faction's heart crystal stands on, or null if it has no heart.</summary>
+    public GridCell CentreCell(FactionID faction) =>
+        _hearts.TryGetValue(faction, out var s) ? s.CrystalCell : null;
+
     public int CurrentHP(FactionID faction) =>
         _hearts.TryGetValue(faction, out var s) ? s.CurrentHP : 0;
 

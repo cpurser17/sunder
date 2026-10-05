@@ -14,7 +14,7 @@ public class FactionWallet : MonoBehaviour
 {
     public FactionID Faction { get; private set; }
 
-    /// <summary>Starting gold not yet spent. Spent first; never refilled.</summary>
+    /// <summary>Starting gold not yet spent. Spent first on building and summoning; never refilled, never used for wages.</summary>
     public int Reserve { get; private set; }
 
     /// <summary>Gold banked on this faction's Treasury tiles.</summary>
@@ -65,19 +65,6 @@ public class FactionWallet : MonoBehaviour
 
         Report();
         return true;
-    }
-
-    /// <summary>
-    /// Takes up to amount from the reserve alone — wages collected at the
-    /// Dungeon Heart, where the reserve is kept. Returns how much was taken.
-    /// </summary>
-    public int TakeFromReserve(int amount)
-    {
-        int taken = Mathf.Clamp(amount, 0, Reserve);
-        if (taken <= 0) return 0;
-        Reserve -= taken;
-        Report();
-        return taken;
     }
 
     /// <summary>

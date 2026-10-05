@@ -134,7 +134,7 @@ public static class HudFooterBuilder
         pso.FindProperty("text").objectReferenceValue = popupText;
         pso.ApplyModifiedPropertiesWithoutUndo();
 
-        string hudNote = HookUpHud(tabs[0], template);
+        string hudNote = HookUpHud(tabs[0], tabs[1], template);
 
         Undo.RegisterCreatedObjectUndo(footer,  "Create HUD Footer");
         Undo.RegisterCreatedObjectUndo(popupGo, "Create HUD Footer");
@@ -239,17 +239,18 @@ public static class HudFooterBuilder
         return canvases.Length > 0 ? canvases[0].rootCanvas : null;
     }
 
-    /// <summary>Points the scene's HUDController2D at the Rooms tab and template, if it has none yet.</summary>
-    private static string HookUpHud(FooterTab roomsTab, Button template)
+    /// <summary>Points the scene's HUDController2D at the Rooms and Spells tabs, and the template if it has none yet.</summary>
+    private static string HookUpHud(FooterTab roomsTab, FooterTab spellsTab, Button template)
     {
         var hud = Object.FindAnyObjectByType<HUDController2D>(FindObjectsInactive.Include);
         if (hud == null) return "No HUDController2D in the scene — set its Rooms Tab and Room Button Template by hand.";
 
         var so = new SerializedObject(hud);
-        so.FindProperty("roomsTab").objectReferenceValue = roomsTab;
+        so.FindProperty("roomsTab").objectReferenceValue  = roomsTab;
+        so.FindProperty("spellsTab").objectReferenceValue = spellsTab;
 
         var templateProp = so.FindProperty("roomButtonTemplate");
-        string note = "HUDController2D now fills the Rooms tab.";
+        string note = "HUDController2D now fills the Rooms tab, and puts Summon Worker in the Spells tab.";
         if (templateProp.objectReferenceValue == null)
             templateProp.objectReferenceValue = template;
         else

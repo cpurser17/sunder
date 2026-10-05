@@ -22,6 +22,10 @@ using TMPro;
 /// rooms are hidden and replaced by generated ones, and Sell is generated
 /// too, at sellRow/sellColumn. Entries for non-room tiles (e.g. Tunnel) are
 /// left as they are.
+///
+/// Likewise, with a Spells tab (spellsTab, or the footer's tab named
+/// "Spells"), Summon Worker is generated there at summonRow/summonColumn —
+/// the first spell — and any hand-made summon button is hidden.
 /// </summary>
 public class HUDController2D : MonoBehaviour
 {
@@ -62,8 +66,14 @@ public class HUDController2D : MonoBehaviour
 
     [Header("Summon Button")]
     [Tooltip("Summon Worker button. Managed here so it highlights with the same "
-             + "system as the buy/sell buttons and is mutually exclusive with them.")]
+             + "system as the buy/sell buttons and is mutually exclusive with them. "
+             + "Ignored (and hidden) when there's a Spells tab — one is generated there.")]
     [SerializeField] private Button summonButton;
+    [Tooltip("The HUD footer's Spells tab. Empty = the footer's tab named \"Spells\", if any.")]
+    [SerializeField] private FooterTab spellsTab;
+    [Tooltip("Slot of the generated Summon Worker button in the Spells tab (also its hotkey).")]
+    [SerializeField, Range(0, 9)] private int summonRow    = 1;
+    [SerializeField, Range(0, 9)] private int summonColumn = 1;
 
     [Header("Highlight Colours")]
     [SerializeField] private Color activeColour = new(1f, 0.85f, 0.1f, 1f);
@@ -71,6 +81,9 @@ public class HUDController2D : MonoBehaviour
 
     private Button _activeButton;
     private bool   _syncingSummon;   // re-entrancy guard
+
+    private TextMeshProUGUI _summonLabel;   // generated button's label, kept showing the current cost
+    private int             _summonLabelCost = -1;
 
     /// <summary>
     /// True while any buy or sell button is active.
@@ -98,6 +111,13 @@ public class HUDController2D : MonoBehaviour
         AddGeneratedRoomButtons();
         RegisterRoomsWithFooter();
 
+        if (spellsTab == null && HudFooter.Instance != null) spellsTab = HudFooter.Instance.FindTab("Spells");
+        if (spellsTab != null)
+        {
+            AddGeneratedSummonButton();
+            spellsTab.RebuildLayout();
+        }
+
         foreach (var entry in buyButtonEntries)
         {
             if (entry?.button == null) continue;
@@ -123,6 +143,8 @@ public class HUDController2D : MonoBehaviour
     {
         GameManager2D.OnWalletsReady -= ConnectWallet;
     }
+
+    private void Update() => RefreshSummonLabel();
 
     private void ConnectWallet()
     {
@@ -286,6 +308,42 @@ public class HUDController2D : MonoBehaviour
 
         sellButton = button;
         roomsTab.Add(new FooterTab.Entry { Row = sellRow, Column = sellColumn, Label = "Sell", Button = button });
+    }
+
+    /// <summary>Puts a generated Summon Worker button in the Spells tab, hiding any hand-made one.</summary>
+    private void AddGeneratedSummonButton()
+    {
+        if (roomButtonTemplate == null) return;
+
+        if (summonButton != null && summonButton != roomButtonTemplate)
+            summonButton.gameObject.SetActive(false);
+
+        var button = Instantiate(roomButtonTemplate, spellsTab.Content);
+        button.name = "SummonWorker";
+        button.gameObject.SetActive(true);
+
+        _summonLabel = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        summonButton = button;
+        RefreshSummonLabel();
+
+        spellsTab.Add(new FooterTab.Entry
+        {
+            Row = summonRow, Column = summonColumn, Label = "Summon Worker", Button = button,
+        });
+    }
+
+    /// <summary>Keeps the generated button's cost current — it rises with each worker.</summary>
+    private void RefreshSummonLabel()
+    {
+        if (_summonLabel == null) return;
+
+        var spawner = WorkerSpawner.GetForFaction(localPlayer);
+        int cost    = spawner != null ? spawner.CurrentSummonCost : 0;
+        if (cost == _summonLabelCost) return;
+
+        _summonLabelCost  = cost;
+        _summonLabel.text = (cost > 0 ? $"Summon Worker ({cost}g)" : "Summon Worker")
+                          + SlotSuffix(summonRow, summonColumn);
     }
 
     /// <summary>Clones roomButtonTemplate for each buildable room that has no button yet.</summary>

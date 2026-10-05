@@ -3,9 +3,8 @@ using UnityEngine;
 /// <summary>
 /// The payday errand: walk to the nearest Treasury tile of its faction that
 /// holds gold, take what it's owed (or as much as the tile has), and move on
-/// to the next tile until paid. While the faction still has starting gold
-/// (its reserve, kept at the Dungeon Heart) and no Treasury tile has any, it
-/// collects from the heart instead.
+/// to the next tile until paid. Wages only ever come out of Treasury tiles
+/// — never the faction's starting gold (FactionWallet.Reserve).
 ///
 /// Started by MinionController.OnPayday as an errand — the minion's usual
 /// behaviour is paused, not ended, and picks up again afterwards. If there's
@@ -25,7 +24,6 @@ public class WageBehaviour : MinionBehaviour
     private GridPathfinder _pathfinder;
     private Step     _step;
     private GridCell _target;
-    private bool     _atHeart;
     private float    _collectUntil;
     private float    _deadline;
 
@@ -85,21 +83,10 @@ public class WageBehaviour : MinionBehaviour
         var from     = Agent.CurrentCell;
         if (from == null) return;   // not placed yet; try next frame
 
-        _atHeart = false;
-        _target  = treasury != null && _pathfinder != null
+        _target = treasury != null && _pathfinder != null
             ? _pathfinder.FindNearestMatching(from, c => treasury.HasGold(c, faction),
                                               Agent.Capability, faction, Agent.Radius)
             : null;
-
-        if (_target == null && Reserve > 0)
-        {
-            var heart = DungeonHeart.Instance;
-            if (heart != null && heart.IsReady(faction))
-            {
-                _target  = heart.FindApproachCell(faction, from, Agent.Capability, Agent.Radius);
-                _atHeart = _target != null;
-            }
-        }
 
         // Nothing to collect, or no way there: stays owed.
         if (_target == null || !Agent.SetDestination(_target)) { Minion.FinishWageTrip(); return; }
@@ -110,9 +97,7 @@ public class WageBehaviour : MinionBehaviour
     {
         var faction = Minion.Faction;
         int owed    = Minion.OwedWages;
-        int got     = _atHeart
-            ? GameManager2D.Instance?.GetWallet(faction)?.TakeFromReserve(owed) ?? 0
-            : TreasuryManager.Instance?.Withdraw(_target, faction, owed) ?? 0;
+        int got     = TreasuryManager.Instance?.Withdraw(_target, faction, owed) ?? 0;
 
         Minion.ReceiveWages(got);
         if (Minion.OwedWages > 0) _step = Step.Choosing;
@@ -120,8 +105,5 @@ public class WageBehaviour : MinionBehaviour
     }
 
     private bool StillHasGold() =>
-        _atHeart ? Reserve > 0
-                 : TreasuryManager.Instance != null && TreasuryManager.Instance.HasGold(_target, Minion.Faction);
-
-    private int Reserve => GameManager2D.Instance?.GetWallet(Minion.Faction)?.Reserve ?? 0;
+        TreasuryManager.Instance != null && TreasuryManager.Instance.HasGold(_target, Minion.Faction);
 }

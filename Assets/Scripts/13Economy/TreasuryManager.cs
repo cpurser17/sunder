@@ -22,7 +22,9 @@ using UnityEngine;
 /// changes hands with it.
 ///
 /// A Treasury tile that stops being one (sold, destroyed) spills its gold as
-/// a pile on the spot; a Treasury built under a pile banks it automatically.
+/// a pile on the spot, and so does any gold over a tile's capacity when its
+/// room is re-measured less efficient — more work for the workers. A
+/// Treasury built under a pile banks it automatically.
 ///
 /// Scene setup: none — GameManager2D adds one if the scene has none. Add it
 /// yourself to set a gold-pile prefab or tune the placeholder.
@@ -165,14 +167,24 @@ public class TreasuryManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Banks gold on whichever of the faction's tiles have room, fullest
-    /// first so gold gathers into full tiles. Returns how much went in.
+    /// Banks gold on whichever of the faction's tiles have room, nearest
+    /// the faction's Dungeon Heart first (fullest first without one).
+    /// Returns how much went in.
     /// </summary>
     public int DepositAnywhere(FactionID faction, int amount)
     {
         if (amount <= 0) return 0;
         var cells = TreasuryCells(faction, c => FreeSpace(c) > 0);
-        cells.Sort((a, b) => b.StoredGold.CompareTo(a.StoredGold));
+        var heart = DungeonHeart.Instance != null ? DungeonHeart.Instance.CentreCell(faction) : null;
+        cells.Sort((a, b) =>
+        {
+            if (heart != null)
+            {
+                int byDistance = DistanceSq(a, heart).CompareTo(DistanceSq(b, heart));
+                if (byDistance != 0) return byDistance;
+            }
+            return b.StoredGold.CompareTo(a.StoredGold);
+        });
 
         int banked = 0;
         foreach (var c in cells)
@@ -206,6 +218,12 @@ public class TreasuryManager : MonoBehaviour
         }
         if (taken > 0) Changed();
         return taken;
+    }
+
+    private static int DistanceSq(GridCell a, GridCell b)
+    {
+        int dx = a.X - b.X, dy = a.Y - b.Y;
+        return dx * dx + dy * dy;
     }
 
     private List<GridCell> TreasuryCells(FactionID faction, Func<GridCell, bool> filter)
@@ -364,9 +382,25 @@ public class TreasuryManager : MonoBehaviour
         Changed();
     }
 
-    /// <summary>Room shapes (so capacities) are settled: bank any pile sitting on a Treasury tile.</summary>
+    /// <summary>
+    /// Room shapes (so capacities) are settled: gold over a tile's capacity
+    /// spills as a pile on it, then any pile on a Treasury tile with room is banked.
+    /// </summary>
     private void HandleRebake(IReadOnlyList<DungeonRoom> rooms)
     {
+        var grid = Grid;
+        if (grid != null)
+            for (int x = 0; x < grid.Width;  x++)
+            for (int y = 0; y < grid.Height; y++)
+            {
+                var c = grid.GetCell(x, y);
+                if (!IsTreasury(c)) continue;
+                int excess = c.StoredGold - CapacityOf(c);
+                if (excess <= 0) continue;
+                c.SetStoredGoldInternal(c.StoredGold - excess);
+                DropGold(c, excess);
+            }
+
         foreach (var pile in new List<GoldPile>(_piles.Values))
         {
             if (pile == null || !IsTreasury(pile.Cell)) continue;

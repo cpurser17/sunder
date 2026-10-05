@@ -430,6 +430,7 @@ public class GameManager2D : MonoBehaviour
             GetWallet(FactionID.Player)?.SetReserve(gs.currentGold);
         }
 
+        PaydaySystem.Instance?.Restore(gs.paydays);
         DungeonHeart.Instance?.RestoreAll(save.gameState.factionHeartHP);
     }
 
@@ -553,6 +554,7 @@ public class GameManager2D : MonoBehaviour
         }
         data.treasuryGold = TreasuryManager.Instance?.CaptureTreasuryGold();
         data.goldPiles    = TreasuryManager.Instance?.CapturePiles();
+        data.paydays      = PaydaySystem.Instance?.Capture();
 
         // Populate per-faction Dungeon Heart HP.
         data.factionHeartHP = DungeonHeart.Instance != null

@@ -42,8 +42,10 @@ using UnityEngine;
 /// -----
 /// On payday (PaydaySystem) the minion is owed its Salary at its current
 /// level, on top of anything still owed, and goes to collect it. Whatever it
-/// can't collect stays owed for the next payday, and every payday missed in
-/// a row adds lasting anger (MinionTemper.Grievance) until it's paid in full.
+/// can't collect it remembers, and is owed on top at the next payday. The
+/// debt makes it angry in proportion (MinionTemper.Grievance): a whole
+/// payday's wages owed adds the full angerPerUnpaidSalary, half adds half,
+/// two paydays' worth adds double. Paid in full, the grievance clears.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
@@ -101,7 +103,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private int   _owedWages;
     private int   _missedPaydays;
-    private float _angerPerMissedPayday;
+    private float _angerPerUnpaidSalary;
     private readonly List<MinionBehaviour> _behaviours = new();
 
     public FactionID        Faction    => faction;
@@ -328,12 +330,12 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// Payday for this minion's faction: adds its Salary to what it's owed
     /// and sends it to collect. A minion with no Salary is skipped.
     /// </summary>
-    public void OnPayday(float angerPerMissedPayday)
+    public void OnPayday(float angerPerUnpaidSalary)
     {
         if (_dead || Salary <= 0) return;
 
         _owedWages           += Salary;
-        _angerPerMissedPayday = angerPerMissedPayday;
+        _angerPerUnpaidSalary = angerPerUnpaidSalary;
         StartErrand(_wages);
     }
 
@@ -344,15 +346,17 @@ public class MinionController : MonoBehaviour, IHandTarget
     }
 
     /// <summary>
-    /// The wage trip is over. Paid in full clears any grievance; anything
-    /// still owed is carried to the next payday and counts as a missed one.
+    /// The wage trip is over. Anything still owed is remembered for the next
+    /// payday, and sets the grievance in proportion to the debt; paid in full
+    /// clears it.
     /// </summary>
     public void FinishWageTrip()
     {
         if (_owedWages > 0)
         {
             _missedPaydays++;
-            _temper.Grievance = _missedPaydays * _angerPerMissedPayday;
+            int salary = Mathf.Max(1, Salary);
+            _temper.Grievance = _angerPerUnpaidSalary * _owedWages / salary;
         }
         else
         {
