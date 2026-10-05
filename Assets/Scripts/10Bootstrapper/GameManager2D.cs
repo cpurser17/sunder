@@ -131,6 +131,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<LairManager>();
         if (FindAnyObjectByType<Announcer>() == null)
             gameObject.AddComponent<Announcer>();
+        if (FindAnyObjectByType<HatcheryManager>() == null)
+            gameObject.AddComponent<HatcheryManager>();
     }
 
     private void Start()
@@ -160,8 +162,10 @@ public class GameManager2D : MonoBehaviour
             if (r != null) Destroy(r.gameObject);
         _research.Clear();
 
-        // A freshly loaded grid has no gold piles yet (a save restores them after).
+        // A freshly loaded grid has no gold piles yet (a save restores them after),
+        // and no chickens.
         TreasuryManager.Instance?.ResetState();
+        HatcheryManager.Instance?.ResetState();
 
         if (factions == null || factions.Count == 0)
         {

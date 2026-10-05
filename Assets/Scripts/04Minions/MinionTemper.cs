@@ -18,7 +18,7 @@ using UnityEngine;
 public class MinionTemper
 {
     /// <summary>Causes of lasting anger.</summary>
-    public enum Grievance { UnpaidWages, Exhaustion, NoBed }
+    public enum Grievance { UnpaidWages, Exhaustion, NoBed, Starving }
 
     private readonly float _angerDecayPerSecond;
     private readonly float[] _grievances = new float[System.Enum.GetValues(typeof(Grievance)).Length];

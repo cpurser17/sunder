@@ -11,6 +11,9 @@ using UnityEngine.EventSystems;
 ///   LMB on a gold pile      — pick it up too (one slot per pile). Dropped on
 ///                             your Treasury it's banked; elsewhere on your
 ///                             floor it's a pile again (see TreasuryManager).
+///   LMB on a chicken        — pick it up. Dropped on one of your minions it
+///                             force-feeds it; elsewhere it wanders off.
+///   RMB on a chicken        — the slap kills it.
 ///   RMB while holding       — drop the most recently picked-up minion.
 ///   Shift + RMB             — drop every held minion at once.
 ///   Dropping onto your portal — a summoned creature abandons the dungeon
@@ -348,6 +351,12 @@ public class KeeperHand : MonoBehaviour
 
     private bool TryDrop(IHandTarget target, Vector3 point)
     {
+        if (target is IHandFeed food)
+        {
+            var minion = MinionAt(point);
+            if (minion != null && food.TryFeed(minion)) return true;
+        }
+
         var cell = CellAt(point);
         if (!CanDropOn(target, cell)) return false;
 
@@ -374,6 +383,25 @@ public class KeeperHand : MonoBehaviour
 
         var clearance = gridManager.Clearance;
         return clearance == null || clearance.Fits(cell, agent.Capability, agent.Radius);
+    }
+
+    /// <summary>The local player's minion standing under a point, nearest first, or null.</summary>
+    private MinionController MinionAt(Vector3 point)
+    {
+        MinionController best = null;
+        float bestSq = float.MaxValue;
+        foreach (var target in _targets)
+        {
+            if (target is not MinionController minion || IsGone(target)) continue;
+            if (!minion.IsAlive || minion.IsHeld || minion.Faction != localPlayer) continue;
+
+            Vector3 d = minion.transform.position - point;
+            float sq = d.x * d.x + d.z * d.z;
+            float reach = minion.HandRadius + hoverPadding;
+            if (sq > reach * reach || sq >= bestSq) continue;
+            best = minion; bestSq = sq;
+        }
+        return best;
     }
 
     /// <summary>Gold and other carried things go on open floor — not on the portal or heart.</summary>

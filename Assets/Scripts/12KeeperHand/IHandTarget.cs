@@ -56,6 +56,16 @@ public interface IHandTarget
     void OnSlapped(in HandSlap slap);
 }
 
+/// <summary>
+/// Something the hand can drop onto one of its minions to feed it (a
+/// chicken). The hand tries this before setting it down on the floor.
+/// </summary>
+public interface IHandFeed
+{
+    /// <summary>Feeds it to the minion. True if eaten (it's gone from the hand).</summary>
+    bool TryFeed(MinionController minion);
+}
+
 /// <summary>Tuning for one slap, passed from KeeperHand to the minion slapped.</summary>
 public readonly struct HandSlap
 {

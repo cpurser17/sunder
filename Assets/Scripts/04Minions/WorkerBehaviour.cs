@@ -18,6 +18,14 @@ using UnityEngine;
 /// Idle          asking for work each jobRequestInterval
 /// MovingToJob   pathing to the job's work cell
 /// Working       damaging a dig target, or progressing a claim / reinforce
+///
+/// Capturing rooms
+/// ---------------
+/// An enemy room tile isn't captured on its own: the worker works on the
+/// whole room, which takes roomClaimSecondsPerTile × the room's tiles, and
+/// then every tile changes hands at once — a Treasury's gold with it. Work
+/// is stored on the tiles, so several workers at different edges of the
+/// room add up, and nothing is lost if a worker is called away.
 /// MovingToVault hauling gold to the nearest Treasury tile with room, by
 ///               travel distance; the mining slot is released when this run begins
 /// Depositing    brief pause at the treasury, then back to Idle for new work
@@ -54,6 +62,9 @@ public class WorkerBehaviour : MinionBehaviour
     [Tooltip("Seconds to convert Cave to Tunnel, or to capture an enemy tile, " +
              "at SkillBuild 1.")]
     [SerializeField] private float claimDuration     = 2f;
+    [Tooltip("Seconds per tile of an enemy room to capture the whole room, at SkillBuild 1. " +
+             "Several workers on the same room add up.")]
+    [SerializeField] private float roomClaimSecondsPerTile = 4f;
     [Tooltip("Seconds to convert Stone into Wall, at SkillBuild 1.")]
     [SerializeField] private float reinforceDuration = 3f;
     [Tooltip("Seconds between work ticks. Damage and progress scale by this.")]
@@ -269,6 +280,9 @@ public class WorkerBehaviour : MinionBehaviour
     /// <summary>Returns true when the job finished and the routine should stop.</summary>
     private bool TickClaim()
     {
+        var room = EnemyRoomOf(_job.Target);
+        if (room != null) return TickRoomClaim(room);
+
         _workProgress += workTickInterval * Minion.WorkSpeedMultiplier;
         if (_workProgress < claimDuration / BuildSpeed) return false;
 
@@ -285,6 +299,37 @@ public class WorkerBehaviour : MinionBehaviour
             // Captured from another faction: keep the room, change the flag.
             Grid.SetOwner(cell, Faction);
         }
+        _completing = false;
+
+        CompleteJob();
+        return true;
+    }
+
+    /// <summary>
+    /// The whole enemy room the target tile belongs to, or null if it isn't
+    /// one (or the room hasn't been measured since it changed).
+    /// </summary>
+    private DungeonRoom EnemyRoomOf(GridCell cell)
+    {
+        if (cell.Owner == Faction || cell.Owner == FactionID.Unaligned) return null;
+        var room = Grid.GetRoomForCell(cell);
+        return room != null && room.TileType == cell.TileType && room.Owner == cell.Owner && room.Cells.Contains(cell)
+            ? room : null;
+    }
+
+    /// <summary>Adds this tick's work to the room; captures every tile once the room's total is reached.</summary>
+    private bool TickRoomClaim(DungeonRoom room)
+    {
+        _job.Target.AddClaimProgressInternal(Faction, workTickInterval * Minion.WorkSpeedMultiplier * BuildSpeed);
+
+        float total = 0f;
+        foreach (var c in room.Cells)
+            if (c.ClaimingFaction == Faction) total += c.ClaimProgress;
+        if (total < roomClaimSecondsPerTile * room.Cells.Count) return false;
+
+        _completing = true;
+        foreach (var c in new System.Collections.Generic.List<GridCell>(room.Cells))
+            if (c.Owner == room.Owner && c.TileType == room.TileType) Grid.SetOwner(c, Faction);
         _completing = false;
 
         CompleteJob();

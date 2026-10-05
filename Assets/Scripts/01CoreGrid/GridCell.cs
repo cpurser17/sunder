@@ -37,6 +37,29 @@ public class GridCell
 
     public void SetStoredGoldInternal(int amount) => StoredGold = System.Math.Max(0, amount);
 
+    // ── Room capture ───────────────────────────────────────────────────
+    /// <summary>
+    /// Work another faction has put into capturing the room this tile is in
+    /// (see WorkerBehaviour). Stored per tile so it survives room rebakes;
+    /// the room's total is the sum over its tiles. Cleared when the tile
+    /// changes hands or type.
+    /// </summary>
+    public float     ClaimProgress   { get; private set; }
+    public FactionID ClaimingFaction { get; private set; } = FactionID.Unaligned;
+
+    /// <summary>Adds capture work for a faction; another faction's earlier work on this tile is discarded.</summary>
+    public void AddClaimProgressInternal(FactionID faction, float amount)
+    {
+        if (ClaimingFaction != faction) { ClaimingFaction = faction; ClaimProgress = 0f; }
+        ClaimProgress += amount;
+    }
+
+    private void ResetClaimProgress()
+    {
+        ClaimProgress   = 0f;
+        ClaimingFaction = FactionID.Unaligned;
+    }
+
     public GridCell(int x, int y)
     {
         X = x;
@@ -51,6 +74,7 @@ public class GridCell
         TileType       = type;
         UnderlyingType = type;
         Owner          = owner;
+        ResetClaimProgress();
     }
 
     /// <summary>Bridge placement — UnderlyingType retains the liquid type.</summary>
@@ -85,7 +109,11 @@ public class GridCell
     }
 
     /// <summary>Transfer ownership without changing tile type.</summary>
-    public void SetOwnerInternal(FactionID owner) => Owner = owner;
+    public void SetOwnerInternal(FactionID owner)
+    {
+        Owner = owner;
+        ResetClaimProgress();
+    }
 
     // ── HP management ──────────────────────────────────────────────────
 

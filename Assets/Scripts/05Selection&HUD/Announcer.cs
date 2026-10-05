@@ -48,9 +48,17 @@ public class Announcer : MonoBehaviour
     /// <summary>Raised whenever an announcement is given (player, id, text).</summary>
     public static event System.Action<FactionID, string, string> OnAnnounced;
 
-    [SerializeField] private List<Entry> catalogue = new()
+    [SerializeField] private List<Entry> catalogue = DefaultCatalogue();
+
+    /// <summary>
+    /// Every announcement the code uses, with placeholder text. Any missing
+    /// from a catalogue saved in the scene are added at startup, so new ones
+    /// work before anyone has edited them.
+    /// </summary>
+    private static List<Entry> DefaultCatalogue() => new()
     {
-        new Entry { id = "LairTooSmall", text = "Your lair is too small.", priority = Priority.Normal, cooldown = 30f },
+        new Entry { id = "LairTooSmall",     text = "Your lair is too small.",     priority = Priority.Normal, cooldown = 30f },
+        new Entry { id = "HatcheryTooSmall", text = "Your hatchery is too small.", priority = Priority.Normal, cooldown = 30f },
     };
 
     [Header("Delivery")]
@@ -90,6 +98,8 @@ public class Announcer : MonoBehaviour
         Instance = this;
         foreach (var e in catalogue)
             if (e != null && !string.IsNullOrEmpty(e.id)) _byId[e.id] = e;
+        foreach (var e in DefaultCatalogue())
+            if (!_byId.ContainsKey(e.id)) { _byId[e.id] = e; catalogue.Add(e); }
     }
 
     private void OnDestroy()
