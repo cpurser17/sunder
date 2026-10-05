@@ -8,8 +8,9 @@ using UnityEngine;
 /// Anger has two parts:
 ///   slaps      decays on its own, computed lazily from the time of the
 ///              last change, so nothing has to tick it
-///   grievance  lasting anger from missed paydays; it doesn't fade, and is
-///              cleared once the minion is paid in full
+///   grievance  lasting anger from unpaid wages; it doesn't fade, and is
+///              cleared once the minion is paid in full. A placeholder until
+///              the anger/mood behaviour is designed properly.
 /// Anger is groundwork for the mood system — nothing acts on it yet (later:
 /// fighting other minions, deserting).
 /// </summary>
