@@ -46,6 +46,18 @@ using UnityEngine;
 /// debt makes it angry in proportion (MinionTemper.Grievance): a whole
 /// payday's wages owed adds the full angerPerUnpaidSalary, half adds half,
 /// two paydays' worth adds double. Paid in full, the grievance clears.
+///
+/// Tiredness
+/// ---------
+/// Every minion except workers grows tired over time — TirednessRate per
+/// minute on a 0-1 scale, faster while doing worker jobs. At sleepThreshold
+/// it goes to its Lair bed to sleep (SleepBehaviour; see LairManager).
+/// Fully tired (1) it is exhausted: anger grows the longer it lasts, its
+/// performance stats drop (exhaustedStatMultiplier), and it can't recover
+/// health from food (CanRecoverFromFood, for the Hatchery).
+///
+/// Errands wait their turn: one at a time, wages before sleep. Payday
+/// doesn't wake a sleeping minion; it collects when it gets up.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
@@ -73,6 +85,18 @@ public class MinionController : MonoBehaviour, IHandTarget
     [Tooltip("Anger lost per second after a slap, on a 0-1 scale.")]
     [SerializeField] private float angerDecayPerSecond = 0.02f;
 
+    [Header("Tiredness")]
+    [Tooltip("Tiredness (0-1) at which it goes to bed.")]
+    [SerializeField, Range(0f, 1f)] private float sleepThreshold = 0.7f;
+    [Tooltip("Tiredness gained per minute when the data has no TirednessRate row.")]
+    [SerializeField, Min(0f)] private float fallbackTirednessPerMinute = 0.1f;
+    [Tooltip("Tiredness builds this many times faster while doing worker jobs.")]
+    [SerializeField, Min(0f)] private float workingTirednessMultiplier = 1.5f;
+    [Tooltip("Lasting anger (0-1) gained per minute while exhausted. Placeholder.")]
+    [SerializeField, Range(0f, 1f)] private float exhaustedAngerPerMinute = 0.1f;
+    [Tooltip("Performance stats (strength, skills, speed…) are multiplied by this while exhausted.")]
+    [SerializeField, Range(0f, 1f)] private float exhaustedStatMultiplier = 0.75f;
+
     [Header("Keeper's hand")]
     [Tooltip("Seconds a minion dropped on a room favours working in that room type.")]
     [SerializeField] private float dropAffinityDuration = 30f;
@@ -98,12 +122,15 @@ public class MinionController : MonoBehaviour, IHandTarget
     private WorkerBehaviour   _worker;
     private CreatureBehaviour _creature;
     private WageBehaviour     _wages;
+    private SleepBehaviour    _sleep;
     private MinionBehaviour   _active;
     private MinionBehaviour   _errand;
 
     private int   _owedWages;
     private int   _missedPaydays;
     private float _angerPerUnpaidSalary;
+    private bool  _wageTripPending;
+    private float _tiredness;
     private readonly List<MinionBehaviour> _behaviours = new();
 
     public FactionID        Faction    => faction;
@@ -127,6 +154,17 @@ public class MinionController : MonoBehaviour, IHandTarget
     public int OwedWages     => _owedWages;
     /// <summary>Paydays in a row it wasn't paid in full.</summary>
     public int MissedPaydays => _missedPaydays;
+
+    /// <summary>0 (rested) to 1 (exhausted).</summary>
+    public float Tiredness   => _tiredness;
+    /// <summary>Fully tired: angrier, weaker, and can't heal from food.</summary>
+    public bool  IsExhausted => _tiredness >= 1f;
+    /// <summary>False while exhausted — the Hatchery checks this before food heals.</summary>
+    public bool  CanRecoverFromFood => !IsExhausted;
+    /// <summary>Workers never sleep; nor does anything whose TirednessRate is 0.</summary>
+    public bool  NeedsSleep  => !IsWorkerFirst && TirednessPerMinute > 0f;
+    public float TirednessPerMinute => Mathf.Max(0f, GetStatOr(MinionStat.TirednessRate, fallbackTirednessPerMinute));
+    public float SleepThreshold     => sleepThreshold;
 
     /// <summary>The behaviour actually running: the errand if there is one, else the active behaviour.</summary>
     private MinionBehaviour Running => _errand != null ? _errand : _active;
@@ -182,6 +220,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (!TryGetComponent(out _worker))   _worker   = gameObject.AddComponent<WorkerBehaviour>();
         if (!TryGetComponent(out _creature)) _creature = gameObject.AddComponent<CreatureBehaviour>();
         if (!TryGetComponent(out _wages))    _wages    = gameObject.AddComponent<WageBehaviour>();
+        if (!TryGetComponent(out _sleep))    _sleep    = gameObject.AddComponent<SleepBehaviour>();
         GetComponents(_behaviours);
         foreach (var b in _behaviours) b.enabled = false;
 
@@ -233,10 +272,44 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private void Update()
     {
-        if (!_fleeing || _held || _dead) return;
+        if (_dead) return;
+        TickTiredness();
 
-        if (!_agent.IsInHazard)     EndFlee();
-        else if (_agent.HasArrived) _agent.FleeToSafety();
+        if (_fleeing && !_held)
+        {
+            if (!_agent.IsInHazard)     EndFlee();
+            else if (_agent.HasArrived) _agent.FleeToSafety();
+        }
+
+        StartDueErrand();
+    }
+
+    /// <summary>Starts the most pressing errand that's waiting, if the minion is free for one.</summary>
+    private void StartDueErrand()
+    {
+        if (_errand != null || _held || _fleeing) return;
+
+        if (_wageTripPending)
+        {
+            _wageTripPending = false;
+            if (_owedWages > 0) StartErrand(_wages);
+            return;
+        }
+
+        bool onDuty = _active != _creature || _creature.HasReported;
+        if (onDuty && NeedsSleep && _tiredness >= sleepThreshold) StartErrand(_sleep);
+    }
+
+    private void TickTiredness()
+    {
+        if (!NeedsSleep || _errand == _sleep) return;
+
+        bool working = _active == _worker && _worker.enabled && _worker.State == WorkerBehaviour.WorkerState.Working;
+        float perSecond = TirednessPerMinute / 60f * (working ? workingTirednessMultiplier : 1f);
+        _tiredness = Mathf.Min(1f, _tiredness + perSecond * Time.deltaTime);
+
+        if (IsExhausted)
+            _temper.AddGrievance(MinionTemper.Grievance.Exhaustion, exhaustedAngerPerMinute / 60f * Time.deltaTime);
     }
 
     // ── Behaviours ─────────────────────────────────────────────────────
@@ -336,7 +409,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
         _owedWages           += Salary;
         _angerPerUnpaidSalary = angerPerUnpaidSalary;
-        StartErrand(_wages);
+        _wageTripPending      = true;   // starts once it's free (e.g. after waking)
     }
 
     /// <summary>Gold handed over towards what it's owed.</summary>
@@ -356,21 +429,57 @@ public class MinionController : MonoBehaviour, IHandTarget
         {
             _missedPaydays++;
             int salary = Mathf.Max(1, Salary);
-            _temper.Grievance = _angerPerUnpaidSalary * _owedWages / salary;
+            _temper.SetGrievance(MinionTemper.Grievance.UnpaidWages, _angerPerUnpaidSalary * _owedWages / salary);
         }
         else
         {
             _missedPaydays    = 0;
-            _temper.Grievance = 0f;
+            _temper.SetGrievance(MinionTemper.Grievance.UnpaidWages, 0f);
         }
         EndErrand(_wages);
+    }
+
+    // ── Sleep ──────────────────────────────────────────────────────────
+
+    /// <summary>Sleep takes tiredness off (never below 0).</summary>
+    public void Rest(float amount)
+    {
+        if (amount > 0f) _tiredness = Mathf.Max(0f, _tiredness - amount);
+    }
+
+    /// <summary>
+    /// Woken fully rested. In its own bed, the anger of exhaustion and of
+    /// having had no bed is slept off.
+    /// </summary>
+    public void FinishSleep(bool sleptInBed)
+    {
+        _temper.SetGrievance(MinionTemper.Grievance.Exhaustion, 0f);
+        if (sleptInBed) _temper.SetGrievance(MinionTemper.Grievance.NoBed, 0f);
+        EndErrand(_sleep);
+    }
+
+    /// <summary>Had to sleep on the floor: lasting anger of at least this much until it sleeps in a bed.</summary>
+    public void OnNoBed(float anger)
+    {
+        var cause = MinionTemper.Grievance.NoBed;
+        _temper.SetGrievance(cause, Mathf.Max(_temper.GetGrievance(cause), anger));
+    }
+
+    /// <summary>Its bed was sold or captured. It looks for a new one when it next sleeps.</summary>
+    public void OnBedLost(float anger) => _temper.AddGrievance(MinionTemper.Grievance.NoBed, anger);
+
+    /// <summary>Restores health, up to its maximum.</summary>
+    public void Heal(float amount)
+    {
+        if (_dead || amount <= 0f) return;
+        _health = Mathf.Min(MaxHealth, _health + amount);
     }
 
     // ── Stats & levelling ──────────────────────────────────────────────
 
     /// <summary>This minion's value for a stat at its current level (0 with no data).</summary>
     public float GetStat(MinionStat stat) =>
-        _definition != null ? _definition.GetStat(stat, _level) : 0f;
+        (_definition != null ? _definition.GetStat(stat, _level) : 0f) * Exhaustion(stat);
 
     /// <summary>
     /// A stat at the current level if the data has a row for it, otherwise
@@ -378,7 +487,18 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// the workbook is filled in.
     /// </summary>
     public float GetStatOr(MinionStat stat, float fallback) =>
-        _definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback;
+        (_definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback) * Exhaustion(stat);
+
+    /// <summary>The exhaustion penalty on a stat: exhaustedStatMultiplier on performance stats while exhausted, else 1.</summary>
+    private float Exhaustion(MinionStat stat) => IsExhausted && IsPerformanceStat(stat) ? exhaustedStatMultiplier : 1f;
+
+    private static bool IsPerformanceStat(MinionStat stat) => stat switch
+    {
+        MinionStat.Strength or MinionStat.Accuracy or MinionStat.Dexterity or MinionStat.Speed or
+        MinionStat.Magic or MinionStat.SkillResearch or MinionStat.SkillTrain or MinionStat.SkillBuild or
+        MinionStat.SkillPray or MinionStat.SkillTorture => true,
+        _ => false,
+    };
 
     /// <summary>
     /// Adds experience (from fighting or training) and levels up as far as
@@ -519,6 +639,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; }
         _dead = true;
+        LairManager.Instance?.Release(this);
 
         NotifyLeftFaction();
         Destroy(gameObject, 0.1f);
@@ -556,10 +677,13 @@ public class MinionController : MonoBehaviour, IHandTarget
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; _active = null; }
 
-        // Its new masters owe it nothing yet, and it holds no grudge against them.
-        _owedWages        = 0;
-        _missedPaydays    = 0;
-        _temper.Grievance = 0f;
+        // Its new masters owe it nothing yet, it holds no grudge against them,
+        // and its old bed isn't theirs.
+        _owedWages       = 0;
+        _missedPaydays   = 0;
+        _wageTripPending = false;
+        _temper.ClearGrievances();
+        LairManager.Instance?.Release(this);
 
         NotifyLeftFaction();
         faction = newFaction;

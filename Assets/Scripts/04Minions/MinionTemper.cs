@@ -5,39 +5,57 @@ using UnityEngine;
 /// speed a slap from the Keeper's hand buys. Shared by workers and creatures so
 /// both respond to the hand the same way.
 ///
-/// Anger has two parts:
-///   slaps      decays on its own, computed lazily from the time of the
-///              last change, so nothing has to tick it
-///   grievance  lasting anger from unpaid wages; it doesn't fade, and is
-///              cleared once the minion is paid in full. A placeholder until
-///              the anger/mood behaviour is designed properly.
+/// Anger has two kinds of part:
+///   slaps        decays on its own, computed lazily from the time of the
+///                last change, so nothing has to tick it
+///   grievances   lasting anger, one value per cause (unpaid wages,
+///                exhaustion, no bed…). Each is set and cleared by whatever
+///                owns that cause; they don't fade on their own.
+/// All placeholders until the anger/mood behaviour is designed properly.
 /// Anger is groundwork for the mood system — nothing acts on it yet (later:
 /// fighting other minions, deserting).
 /// </summary>
 public class MinionTemper
 {
+    /// <summary>Causes of lasting anger.</summary>
+    public enum Grievance { UnpaidWages, Exhaustion, NoBed }
+
     private readonly float _angerDecayPerSecond;
+    private readonly float[] _grievances = new float[System.Enum.GetValues(typeof(Grievance)).Length];
 
     private float _anger;
     private float _angerSetAt;
     private float _boostMultiplier = 1f;
     private float _boostUntil;
-    private float _grievance;
 
     public MinionTemper(float angerDecayPerSecond) =>
         _angerDecayPerSecond = Mathf.Max(0f, angerDecayPerSecond);
 
     /// <summary>Current anger, 0 (calm) to 1 (furious).</summary>
-    public float Anger => Mathf.Clamp01(SlapAnger + _grievance);
+    public float Anger
+    {
+        get
+        {
+            float total = SlapAnger;
+            foreach (float g in _grievances) total += g;
+            return Mathf.Clamp01(total);
+        }
+    }
 
     private float SlapAnger =>
         Mathf.Clamp01(_anger - (Time.time - _angerSetAt) * _angerDecayPerSecond);
 
-    /// <summary>Lasting anger, e.g. from unpaid wages. Doesn't decay.</summary>
-    public float Grievance
+    public float GetGrievance(Grievance cause) => _grievances[(int)cause];
+
+    public void SetGrievance(Grievance cause, float value) =>
+        _grievances[(int)cause] = Mathf.Clamp01(value);
+
+    public void AddGrievance(Grievance cause, float amount) =>
+        SetGrievance(cause, GetGrievance(cause) + amount);
+
+    public void ClearGrievances()
     {
-        get => _grievance;
-        set => _grievance = Mathf.Clamp01(value);
+        for (int i = 0; i < _grievances.Length; i++) _grievances[i] = 0f;
     }
 
     /// <summary>Multiplier on work speed — above 1 while a slap's boost lasts.</summary>

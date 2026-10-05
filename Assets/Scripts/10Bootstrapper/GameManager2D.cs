@@ -125,6 +125,12 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<TreasuryManager>();
         if (FindAnyObjectByType<PaydaySystem>() == null)
             gameObject.AddComponent<PaydaySystem>();
+
+        // Lair beds, and messages to the player ("Your lair is too small").
+        if (FindAnyObjectByType<LairManager>() == null)
+            gameObject.AddComponent<LairManager>();
+        if (FindAnyObjectByType<GameNotifications>() == null)
+            gameObject.AddComponent<GameNotifications>();
     }
 
     private void Start()

@@ -76,6 +76,10 @@ public class MinionDefinition : ScriptableObject
     [Tooltip("Optional. Leave empty to use MinionSummoner's shared template.")]
     public GameObject prefab;
 
+    [Tooltip("3D bed this minion type sleeps in, set on its Lair tile. Assigned by hand " +
+             "(the importer leaves it alone). Empty = a placeholder block.")]
+    public GameObject bedPrefab;
+
     [Header("Classification")]
     [FormerlySerializedAs("role")]
     public MinionStance stance = MinionStance.Fighter;

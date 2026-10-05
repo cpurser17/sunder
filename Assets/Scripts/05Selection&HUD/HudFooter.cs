@@ -62,6 +62,7 @@ public class HudFooter : MonoBehaviour
     private float     _deadline;
 
     public FooterTab ActiveTab   => _activeTab;
+    public HotkeyPopup Popup     => popup;
 
     /// <summary>The tab with this name (e.g. "Spells"), ignoring case, or null.</summary>
     public FooterTab FindTab(string tabName)

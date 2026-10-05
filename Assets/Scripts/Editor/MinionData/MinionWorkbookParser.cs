@@ -15,7 +15,10 @@ using System.Text.RegularExpressions;
 /// Sheets are found by name/suffix, so any number of factions work, split
 /// however is most readable:
 ///   Stats, DamageTypes, Abilities   — shared lookups
-///   *_Data      one row per minion (FactionID + MinionID is the key)
+///   *_Data      one row per minion (FactionID + MinionID is the key). A
+///               column named after a stat (e.g. TirednessRate) gives that
+///               minion a flat value at every level, unless a _Levels row
+///               for the stat overrides it.
 ///   *_Levels    one row per minion per stat: Min, Max, Curve, Skew
 ///   *_Relations minion × minion feelings grid, one per faction
 /// Columns are matched by header text, never position.
@@ -58,6 +61,8 @@ public class MinionWorkbookParser : WorkbookParser
         public List<MinionDefinition.RoomRequirement> RequiredRooms = new();
         public List<string> RequiredResearch = new();
         public List<StatCurve> Stats = new();
+        /// <summary>Stats given as one value in a _Data column — flat across levels unless a _Levels row overrides.</summary>
+        public Dictionary<MinionStat, float> FlatStats = new();
         public List<(string OtherMinionId, float Feeling)> Relations = new();
         /// <summary>Columns not handled above, keyed by header — set onto same-named MinionDefinition fields.</summary>
         public Dictionary<string, string> Extras = new(StringComparer.OrdinalIgnoreCase);
@@ -95,6 +100,7 @@ public class MinionWorkbookParser : WorkbookParser
         p.ReadAbilities(book);
         foreach (var sheet in SheetsEndingWith(book, "_Data"))      p.ReadDataSheet(sheet);
         foreach (var sheet in SheetsEndingWith(book, "_Levels"))    p.ReadLevelsSheet(sheet);
+        p.ApplyFlatStats();
         p.FillMissingStats();
         foreach (var sheet in SheetsEndingWith(book, "_Relations")) p.ReadRelationsSheet(sheet);
         p.CheckAbilityReferences();
@@ -218,6 +224,7 @@ public class MinionWorkbookParser : WorkbookParser
 
         var unusedHeaders = table.Headers.Where(h => !KnownDataHeaders.Contains(h) &&
                                                      !h.StartsWith("Dmg_", StringComparison.OrdinalIgnoreCase) &&
+                                                     !TryEnum(h, out MinionStat _) &&
                                                      FindField(typeof(MinionDefinition), h) == null).ToList();
         if (unusedHeaders.Count > 0)
             Warnings.Add($"{sheet.Name}: column(s) {string.Join(", ", unusedHeaders)} have no matching field on MinionDefinition and are ignored.");
@@ -274,6 +281,10 @@ public class MinionWorkbookParser : WorkbookParser
                     float mult = Float(row, header, 1f);
                     if (!NearlyEqual(mult, 1f))
                         m.DamageTaken.Add(new MinionDefinition.DamageMultiplier { type = type, multiplier = mult });
+                }
+                else if (TryEnum(header, out MinionStat flatStat))
+                {
+                    if (row.Has(header)) m.FlatStats[flatStat] = Float(row, header, 0f);
                 }
                 else if (!KnownDataHeaders.Contains(header) && row.Has(header))
                     m.Extras[header] = row[header];
@@ -342,6 +353,25 @@ public class MinionWorkbookParser : WorkbookParser
             int existing = m.Stats.FindIndex(s => s.stat == stat);
             if (existing >= 0) { Warn(row, $"{faction} {minion} already has a {stat} row — this one wins."); m.Stats[existing] = curve; }
             else m.Stats.Add(curve);
+        }
+    }
+
+    /// <summary>Stats given in a _Data column become flat curves, where no _Levels row set them.</summary>
+    private void ApplyFlatStats()
+    {
+        foreach (var m in Minions)
+        foreach (var pair in m.FlatStats)
+        {
+            if (m.Stats.Any(c => c.stat == pair.Key))
+            {
+                Warnings.Add($"{m.FactionId} {m.MinionId}: {pair.Key} is in both its _Data column and a _Levels row — the _Levels row wins.");
+                continue;
+            }
+            m.Stats.Add(new StatCurve
+            {
+                stat = pair.Key, min = pair.Value, max = pair.Value,
+                wholeNumber = Stats[pair.Key].WholeNumber, authored = true,
+            });
         }
     }
 
