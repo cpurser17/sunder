@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Worker jobs: digging, claiming, reinforcing and hauling gold to the
-/// treasury. The active behaviour for every Worker-stance minion, and
+/// Worker jobs: digging, claiming, reinforcing, hauling gold to the
+/// treasury and collecting loose gold piles. The active behaviour for every Worker-stance minion, and
 /// for any other minion whose definition sets canDoWorkerJobs, once it has
 /// reported for duty.
 ///
@@ -18,9 +18,18 @@ using UnityEngine;
 /// Idle          asking for work each jobRequestInterval
 /// MovingToJob   pathing to the job's work cell
 /// Working       damaging a dig target, or progressing a claim / reinforce
-/// MovingToVault hauling gold to the nearest treasury by travel distance;
-///               the mining slot is released when this run begins
+/// MovingToVault hauling gold to the nearest Treasury tile with room, by
+///               travel distance; the mining slot is released when this run begins
 /// Depositing    brief pause at the treasury, then back to Idle for new work
+/// MovingToPile  fetching a gold pile in its own territory (see below)
+///
+/// Gold
+/// ----
+/// Mined gold is banked on Treasury tiles, each holding a limited amount
+/// (TreasuryManager). With no reachable tile that has room, the worker drops
+/// its load as a gold pile where it stands and carries on working. Idle
+/// workers fetch piles lying in their own territory whenever a Treasury tile
+/// with room can be reached — before asking for other work.
 ///
 /// Being held, fleeing a hazard and dying are MinionController's; it pauses
 /// this behaviour (job dropped, gold kept) and resumes it afterwards, which
@@ -36,7 +45,7 @@ using UnityEngine;
 /// </summary>
 public class WorkerBehaviour : MinionBehaviour
 {
-    public enum WorkerState { Idle, MovingToJob, Working, MovingToVault, Depositing }
+    public enum WorkerState { Idle, MovingToJob, Working, MovingToVault, Depositing, MovingToPile }
 
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Work")]
@@ -63,8 +72,8 @@ public class WorkerBehaviour : MinionBehaviour
              + "workers carrying residual gold around after a vein runs out.")]
     [SerializeField] private float earlyDepositChancePerSecond = 0.08f;
 
-    [Tooltip("Seconds before retrying when no treasury can be reached.")]
-    [SerializeField] private float depositRetryInterval = 3f;
+    [Tooltip("Seconds between an idle worker's searches for gold piles to fetch.")]
+    [SerializeField] private float pileSearchInterval = 1f;
 
     [Header("Job requests")]
     [Tooltip("Seconds between requests while idle. Stops idle workers hammering " +
@@ -81,7 +90,9 @@ public class WorkerBehaviour : MinionBehaviour
     private float     _damageAccumulator;   // fractional damage carry-over
     private float     _workProgress;        // seconds spent on claim / reinforce
     private float     _nextJobRequest;
-    private float     _nextDepositAttempt;
+    private float     _nextPileSearch;
+    private GridCell  _depositCell;
+    private GoldPile  _pile;
     private Coroutine _workCoroutine;
     private Coroutine _depositCoroutine;
     private bool      _completing;          // suppresses re-entrant abandon
@@ -114,6 +125,7 @@ public class WorkerBehaviour : MinionBehaviour
     {
         StopRoutines();
         ReleaseJob();
+        ReleasePile();
         _workProgress = 0f;
         Agent.Stop();
         _state = WorkerState.Idle;
@@ -122,7 +134,6 @@ public class WorkerBehaviour : MinionBehaviour
     /// <summary>Set down or safe again: bank any gold first, then look for work from here.</summary>
     public override void Resume()
     {
-        _nextDepositAttempt = 0f;
         GoIdle();
     }
 
@@ -130,6 +141,7 @@ public class WorkerBehaviour : MinionBehaviour
     {
         StopRoutines();
         ReleaseJob();
+        ReleasePile();
         _taskManager?.UnregisterWorker(this);
         _taskManager = null;
         _state = WorkerState.Idle;
@@ -156,6 +168,11 @@ public class WorkerBehaviour : MinionBehaviour
             case WorkerState.MovingToVault:
                 if (Agent.HasArrived) _depositCoroutine = StartCoroutine(DepositRoutine());
                 break;
+
+            case WorkerState.MovingToPile:
+                if (_pile == null || _pile.IsHeld || _pile.ClaimedBy != (Object)this) GoIdle();
+                else if (Agent.HasArrived) CollectPile();
+                break;
         }
     }
 
@@ -165,6 +182,8 @@ public class WorkerBehaviour : MinionBehaviour
     {
         if (Time.time < _nextJobRequest) return;
         _nextJobRequest = Time.time + jobRequestInterval;
+
+        if (TryFetchPile()) return;
 
         if (_taskManager == null)
         {
@@ -317,9 +336,8 @@ public class WorkerBehaviour : MinionBehaviour
             return true;
         }
 
-        // Full load — bank it. If no treasury can be reached, keep mining
-        // rather than freezing: extraction is already capped at capacity, so
-        // nothing is lost and the deposit is retried on a later tick.
+        // Full load — bank it. If no Treasury tile with room can be reached,
+        // the load is dropped here as a pile and mining carries on.
         if (_carryingGold >= maxCarryCapacity)
             return TryStartDeposit();
 
@@ -341,8 +359,8 @@ public class WorkerBehaviour : MinionBehaviour
         DigSelectionManager.Instance?.GetController(Faction)?.DequeueCell(cell);
         _completing = false;
 
-        // Releasing the slot happens inside TryStartDeposit; if we cannot
-        // reach a treasury just finish the job and carry the gold onward.
+        // Releasing the slot happens inside TryStartDeposit; if no treasury
+        // can take the gold it's dropped here and the job simply finishes.
         if (_carryingGold > 0 && TryStartDeposit()) return;
         CompleteJob();
     }
@@ -350,8 +368,10 @@ public class WorkerBehaviour : MinionBehaviour
     // ── Treasury ───────────────────────────────────────────────────────
 
     /// <summary>
-    /// Starts a deposit run if the worker is carrying gold and a treasury is
-    /// reachable. Returns true if the run began.
+    /// Starts a deposit run if the worker is carrying gold and a Treasury
+    /// tile with room is reachable. Returns true if the run began. If none
+    /// is, the load is dropped here as a gold pile and false is returned, so
+    /// the worker carries straight on.
     ///
     /// Starting a run RELEASES the mining slot, so another worker can take
     /// over the face while this one walks its load back. That is the whole
@@ -360,14 +380,14 @@ public class WorkerBehaviour : MinionBehaviour
     private bool TryStartDeposit()
     {
         if (_carryingGold <= 0) return false;
-        if (Time.time < _nextDepositAttempt) return false;
 
         var treasury = FindNearestTreasuryByPath();
         if (treasury == null || !Agent.SetDestination(treasury))
         {
-            _nextDepositAttempt = Time.time + depositRetryInterval;
+            DropCarriedGold();
             return false;
         }
+        _depositCell = treasury;
 
         if (_job != null)
         {
@@ -385,12 +405,81 @@ public class WorkerBehaviour : MinionBehaviour
         yield return new WaitForSeconds(depositDuration);
         _depositCoroutine = null;
 
-        GameManager2D.Instance?.GetWallet(Faction)?.Earn(_carryingGold);
-        _carryingGold = 0;
+        // The tile may have filled up on the way; GoIdle takes any remainder
+        // on to the next tile with room, or drops it.
+        var treasury = TreasuryManager.Instance;
+        if (treasury != null) _carryingGold -= treasury.Deposit(_depositCell, Faction, _carryingGold);
+        _depositCell = null;
 
         // The slot was given up when the run started, so simply ask for work
         // again — often the same dig job, if a slot has come free.
         GoIdle();
+    }
+
+    /// <summary>Drops whatever gold is carried as a pile on the current cell.</summary>
+    private void DropCarriedGold()
+    {
+        var treasury = TreasuryManager.Instance;
+        var cell     = Agent.CurrentCell;
+        if (treasury == null || cell == null || _carryingGold <= 0) return;
+
+        treasury.DropGold(cell, _carryingGold);
+        _carryingGold = 0;
+    }
+
+    // ── Gold piles ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Heads for the nearest unclaimed gold pile in this faction's territory,
+    /// if there's a reachable Treasury tile with room to take it to.
+    /// Returns true if it set off.
+    /// </summary>
+    private bool TryFetchPile()
+    {
+        if (Time.time < _nextPileSearch) return false;
+        _nextPileSearch = Time.time + pileSearchInterval;
+
+        var treasury = TreasuryManager.Instance;
+        if (treasury == null || _pathfinder == null || _carryingGold >= maxCarryCapacity) return false;
+        if (!AnyPileToFetch(treasury) || treasury.FreeCapacity(Faction) <= 0) return false;
+        if (FindNearestTreasuryByPath() == null) return false;
+
+        var cell = _pathfinder.FindNearestMatching(
+            Agent.CurrentCell,
+            c => c.Owner == Faction && CanFetch(treasury.PileAt(c)),
+            Agent.Capability, Faction, Agent.Radius);
+        var pile = treasury.PileAt(cell);
+        if (pile == null || !pile.TryClaim(this)) return false;
+
+        if (!Agent.SetDestination(cell)) { pile.Release(this); return false; }
+
+        _pile  = pile;
+        _state = WorkerState.MovingToPile;
+        return true;
+    }
+
+    private bool AnyPileToFetch(TreasuryManager treasury)
+    {
+        foreach (var pile in treasury.Piles)
+            if (pile != null && pile.Cell != null && pile.Cell.Owner == Faction && CanFetch(pile)) return true;
+        return false;
+    }
+
+    private bool CanFetch(GoldPile pile) =>
+        pile != null && !pile.IsHeld && (!pile.IsClaimed || pile.ClaimedBy == (Object)this);
+
+    private void CollectPile()
+    {
+        var treasury = TreasuryManager.Instance;
+        if (treasury != null)
+            _carryingGold += treasury.TakeFromPile(_pile, maxCarryCapacity - _carryingGold);
+        GoIdle();   // releases the claim, then banks the load
+    }
+
+    private void ReleasePile()
+    {
+        if (_pile != null) _pile.Release(this);
+        _pile = null;
     }
 
     /// <summary>
@@ -406,9 +495,12 @@ public class WorkerBehaviour : MinionBehaviour
         var from = Agent.CurrentCell;
         if (from == null || _pathfinder == null) return null;
 
+        var treasury = TreasuryManager.Instance;
         return _pathfinder.FindNearestMatching(
             from,
-            c => c.TileType == treasuryRoomType && c.Owner == Faction,
+            treasury != null
+                ? c => c.TileType == treasuryRoomType && treasury.HasSpace(c, Faction)
+                : c => c.TileType == treasuryRoomType && c.Owner == Faction,
             Agent.Capability, Faction, Agent.Radius);
     }
 
@@ -463,14 +555,15 @@ public class WorkerBehaviour : MinionBehaviour
     /// </summary>
     private void GoIdle()
     {
+        ReleasePile();
         _job          = null;
         _workProgress = 0f;
         _state        = WorkerState.Idle;
         _nextJobRequest = 0f;   // ask for new work on the next frame
 
         // Never pick up unrelated work while still holding gold — bank it
-        // first. This is the backstop that guarantees no residual load is
-        // carried around indefinitely.
+        // first, or drop it here if there's nowhere to bank it. This is the
+        // backstop that guarantees no residual load is carried around.
         if (_carryingGold > 0) TryStartDeposit();
     }
 

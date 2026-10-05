@@ -8,6 +8,9 @@ using UnityEngine.EventSystems;
 /// Input
 /// -----
 ///   LMB on a minion         — pick it up. Up to <see cref="capacity"/> held.
+///   LMB on a gold pile      — pick it up too (one slot per pile). Dropped on
+///                             your Treasury it's banked; elsewhere on your
+///                             floor it's a pile again (see TreasuryManager).
 ///   RMB while holding       — drop the most recently picked-up minion.
 ///   Shift + RMB             — drop every held minion at once.
 ///   Dropping onto your portal — a summoned creature abandons the dungeon
@@ -246,7 +249,7 @@ public class KeeperHand : MonoBehaviour
             float   dz  = hit.z - pos.z;
             float   distSq = dx * dx + dz * dz;
 
-            float reach = target.Agent.Radius + hoverPadding;
+            float reach = target.HandRadius + hoverPadding;
             if (distSq > reach * reach || distSq >= bestDist) continue;
 
             best     = target;
@@ -258,7 +261,7 @@ public class KeeperHand : MonoBehaviour
 
     private bool IsGrabbable(IHandTarget target) =>
         !IsGone(target) && target.IsAlive && !target.IsHeld &&
-        target.Faction == localPlayer && target.Agent != null;
+        target.Faction == localPlayer;
 
     /// <summary>
     /// Pauses a minion when the cursor MOVES onto it, once per visit. One
@@ -275,7 +278,7 @@ public class KeeperHand : MonoBehaviour
         if (_hovered == null) { _lastPaused = null; return; }
         if (!mouseMoved || _hovered == _lastPaused) return;
 
-        _hovered.Agent.Pause(hoverPauseDuration);
+        if (_hovered.Agent != null) _hovered.Agent.Pause(hoverPauseDuration);
         _lastPaused = _hovered;
     }
 
@@ -364,11 +367,21 @@ public class KeeperHand : MonoBehaviour
         if (cell == null || cell.Owner != localPlayer) return false;
 
         var agent = target.Agent;
+        if (agent == null) return CanRestItemOn(cell);
+
         if (!TraversalRules.CanOccupy(cell.TileType, agent.Capability, target.Faction)) return false;
         if (TraversalRules.IsHazardousFor(cell.TileType, agent.Capability))              return false;
 
         var clearance = gridManager.Clearance;
         return clearance == null || clearance.Fits(cell, agent.Capability, agent.Radius);
+    }
+
+    /// <summary>Gold and other carried things go on open floor — not on the portal or heart.</summary>
+    private bool CanRestItemOn(GridCell cell)
+    {
+        if (cell.TileType == TileType.Portal || cell.TileType == TileType.Heart) return false;
+        var def = gridManager.GetDefinition(cell.TileType);
+        return def != null && def.traversalType == TraversalType.Normal;
     }
 
     private GridCell CellAt(Vector3 point) =>

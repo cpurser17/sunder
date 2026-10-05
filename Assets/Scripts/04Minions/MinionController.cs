@@ -28,10 +28,30 @@ using UnityEngine;
 ///
 /// Stats are never copied onto the minion: GetStat reads the definition at
 /// the current level, so a re-import rebalances minions already on the map.
+///
+/// Errands
+/// -------
+/// Some things briefly take a minion away from its active behaviour and
+/// then hand it back where it left off — collecting wages on payday
+/// (WageBehaviour) is the first. An errand pauses the active behaviour
+/// exactly as being picked up does, and resumes it when done. Being held or
+/// fleeing pauses the errand in turn. (Combat will break into errands the
+/// same way once it exists.)
+///
+/// Wages
+/// -----
+/// On payday (PaydaySystem) the minion is owed its Salary at its current
+/// level, on top of anything still owed, and goes to collect it. Whatever it
+/// can't collect stays owed for the next payday, and every payday missed in
+/// a row adds lasting anger (MinionTemper.Grievance) until it's paid in full.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
 {
+    /// <summary>Every live minion, all factions.</summary>
+    public static IReadOnlyList<MinionController> All => _all;
+    private static readonly List<MinionController> _all = new();
+
     /// <summary>How the minion arrived — decides who is told when it leaves.</summary>
     public enum SpawnSource { Placed, Portal, WorkerSpawner }
 
@@ -75,7 +95,13 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private WorkerBehaviour   _worker;
     private CreatureBehaviour _creature;
+    private WageBehaviour     _wages;
     private MinionBehaviour   _active;
+    private MinionBehaviour   _errand;
+
+    private int   _owedWages;
+    private int   _missedPaydays;
+    private float _angerPerMissedPayday;
     private readonly List<MinionBehaviour> _behaviours = new();
 
     public FactionID        Faction    => faction;
@@ -90,6 +116,18 @@ public class MinionController : MonoBehaviour, IHandTarget
     public MinionBehaviour  ActiveBehaviour => _active;
     public WorkerBehaviour  Worker     => _worker;
     public CreatureBehaviour Creature  => _creature;
+    /// <summary>The errand interrupting the active behaviour, if any (e.g. collecting wages).</summary>
+    public MinionBehaviour  Errand     => _errand;
+
+    /// <summary>Wages per payday at the current level (the Salary stat; 0 = not paid).</summary>
+    public int Salary        => Mathf.Max(0, Mathf.RoundToInt(GetStatOr(MinionStat.Salary, 0f)));
+    /// <summary>Wages owed and not yet collected.</summary>
+    public int OwedWages     => _owedWages;
+    /// <summary>Paydays in a row it wasn't paid in full.</summary>
+    public int MissedPaydays => _missedPaydays;
+
+    /// <summary>The behaviour actually running: the errand if there is one, else the active behaviour.</summary>
+    private MinionBehaviour Running => _errand != null ? _errand : _active;
 
     /// <summary>Multiplier for any work this minion does — above 1 while a slap's boost lasts.</summary>
     public float WorkSpeedMultiplier => _temper.WorkSpeedMultiplier;
@@ -111,6 +149,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     // IHandTarget
     public GridAgent Agent   => _agent;
+    public float     HandRadius => _agent.Radius;
     public bool      IsAlive => !_dead;
     public bool      IsHeld  => _held;
 
@@ -140,6 +179,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         // component comes back as a fake null that ?? doesn't catch.)
         if (!TryGetComponent(out _worker))   _worker   = gameObject.AddComponent<WorkerBehaviour>();
         if (!TryGetComponent(out _creature)) _creature = gameObject.AddComponent<CreatureBehaviour>();
+        if (!TryGetComponent(out _wages))    _wages    = gameObject.AddComponent<WageBehaviour>();
         GetComponents(_behaviours);
         foreach (var b in _behaviours) b.enabled = false;
 
@@ -156,12 +196,14 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         _agent.OnStandingInHazard += HandleHazard;
         KeeperHand.Register(this);
+        if (!_all.Contains(this)) _all.Add(this);
     }
 
     private void OnDisable()
     {
         _agent.OnStandingInHazard -= HandleHazard;
         KeeperHand.Unregister(this);
+        _all.Remove(this);
     }
 
     /// <summary>
@@ -211,10 +253,47 @@ public class MinionController : MonoBehaviour, IHandTarget
         _active = next;
         if (_active == null || _dead) return;
 
-        bool interrupted = _held || _fleeing;
+        bool interrupted = _held || _fleeing || _errand != null;
         _active.enabled = !interrupted;
         _active.Activate();
         if (interrupted) _active.Pause();
+    }
+
+    /// <summary>
+    /// Sends the minion on an errand: the active behaviour is paused (as if
+    /// picked up) until the errand calls EndErrand. Ignored if already on one.
+    /// </summary>
+    public void StartErrand(MinionBehaviour errand)
+    {
+        if (_dead || errand == null || _errand != null) return;
+
+        PauseActive();
+        _errand = errand;
+
+        bool interrupted = _held || _fleeing;
+        _errand.enabled = !interrupted;
+        _errand.Activate();
+        if (interrupted && _errand == errand) _errand.Pause();
+    }
+
+    /// <summary>Ends the errand and hands the minion back to its active behaviour.</summary>
+    public void EndErrand(MinionBehaviour errand)
+    {
+        if (errand == null || _errand != errand) return;
+
+        _errand.Deactivate();
+        _errand.enabled = false;
+        _errand = null;
+
+        if (!_held && !_fleeing) ResumeActive();
+    }
+
+    private void DropErrand()
+    {
+        if (_errand == null) return;
+        _errand.Deactivate();
+        _errand.enabled = false;
+        _errand = null;
     }
 
     /// <summary>
@@ -229,16 +308,58 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private void PauseActive()
     {
-        if (_active == null || !_active.enabled) return;
-        _active.Pause();
-        _active.enabled = false;
+        var running = Running;
+        if (running == null || !running.enabled) return;
+        running.Pause();
+        running.enabled = false;
     }
 
     private void ResumeActive()
     {
-        if (_active == null || _active.enabled || _dead) return;
-        _active.enabled = true;
-        _active.Resume();
+        var running = Running;
+        if (running == null || running.enabled || _dead) return;
+        running.enabled = true;
+        running.Resume();
+    }
+
+    // ── Wages ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Payday for this minion's faction: adds its Salary to what it's owed
+    /// and sends it to collect. A minion with no Salary is skipped.
+    /// </summary>
+    public void OnPayday(float angerPerMissedPayday)
+    {
+        if (_dead || Salary <= 0) return;
+
+        _owedWages           += Salary;
+        _angerPerMissedPayday = angerPerMissedPayday;
+        StartErrand(_wages);
+    }
+
+    /// <summary>Gold handed over towards what it's owed.</summary>
+    public void ReceiveWages(int amount)
+    {
+        if (amount > 0) _owedWages = Mathf.Max(0, _owedWages - amount);
+    }
+
+    /// <summary>
+    /// The wage trip is over. Paid in full clears any grievance; anything
+    /// still owed is carried to the next payday and counts as a missed one.
+    /// </summary>
+    public void FinishWageTrip()
+    {
+        if (_owedWages > 0)
+        {
+            _missedPaydays++;
+            _temper.Grievance = _missedPaydays * _angerPerMissedPayday;
+        }
+        else
+        {
+            _missedPaydays    = 0;
+            _temper.Grievance = 0f;
+        }
+        EndErrand(_wages);
     }
 
     // ── Stats & levelling ──────────────────────────────────────────────
@@ -391,6 +512,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead) return;
 
+        DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; }
         _dead = true;
 
@@ -427,7 +549,13 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead || newFaction == faction) return;
 
+        DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; _active = null; }
+
+        // Its new masters owe it nothing yet, and it holds no grudge against them.
+        _owedWages        = 0;
+        _missedPaydays    = 0;
+        _temper.Grievance = 0f;
 
         NotifyLeftFaction();
         faction = newFaction;

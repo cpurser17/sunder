@@ -10,6 +10,9 @@
 ///
 /// CurrentHP      — -1 when not being worked. Set by WorkerBehaviour when work begins.
 /// WealthRemaining — remaining harvestable wealth for Gold/Gem tiles.
+/// StoredGold     — gold banked on a Treasury tile (see TreasuryManager).
+///                  Stays with the cell, so a captured Treasury tile's gold
+///                  changes hands with it.
 /// </summary>
 public class GridCell
 {
@@ -27,6 +30,12 @@ public class GridCell
     // ── Wealth (Gold/Gem tiles only) ───────────────────────────────────
     /// <summary>Remaining harvestable wealth. Set from TileDefinition.wealthCapacity.</summary>
     public int WealthRemaining  { get; private set; } = 0;
+
+    // ── Treasury ───────────────────────────────────────────────────────
+    /// <summary>Gold banked on this tile. Only TreasuryManager writes it.</summary>
+    public int StoredGold { get; private set; } = 0;
+
+    public void SetStoredGoldInternal(int amount) => StoredGold = System.Math.Max(0, amount);
 
     public GridCell(int x, int y)
     {

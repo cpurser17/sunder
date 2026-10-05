@@ -158,35 +158,31 @@ public class WorkerSpawner : MonoBehaviour
 
     private void TrySpawnWorker()
     {
-        // Check funds before attempting placement.
+        // Check funds before attempting placement; pay after.
         var wallet = GameManager2D.Instance?.GetWallet(faction);
         if (wallet == null) return;
 
         int cost = CurrentSummonCost;
-        if (!wallet.TrySpend(cost))
+        if (cost <= 0 || wallet.Gold < cost)
         {
             Debug.Log($"[WorkerSpawner] Not enough gold. Need {cost}, have {wallet.Gold}.");
             return;
         }
 
         // Raycast to find click position.
-        if (!TryGetGridCell(out int x, out int y, out Vector3 clickPoint))
-        {
-            // Refund if click missed the grid.
-            wallet.Earn(cost);
-            return;
-        }
+        if (!TryGetGridCell(out int x, out int y, out Vector3 clickPoint)) return;
 
         var cell = gridManager.GetCell(x, y);
         if (cell == null || !IsValidSpawnCell(cell))
         {
-            wallet.Earn(cost);
             Debug.Log("[WorkerSpawner] Invalid spawn location — must be an owned tile " +
                       "or unclaimed Cave that the worker can stand on.");
             return;
         }
 
-        if (!SpawnWorker(cell, clickPoint)) wallet.Earn(cost);
+        // Paid only once the worker exists, so a failed spawn costs nothing
+        // (gold can't simply be handed back — it may have come from the reserve).
+        if (SpawnWorker(cell, clickPoint)) wallet.TrySpend(cost);
     }
 
     private bool SpawnWorker(GridCell cell, Vector3 clickPoint)

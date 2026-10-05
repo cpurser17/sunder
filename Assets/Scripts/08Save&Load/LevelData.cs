@@ -102,6 +102,15 @@ public class GameStateSaveData
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public System.Collections.Generic.Dictionary<FactionID, int> factionGold;
 
+    // Per-faction unspent starting gold (FactionWallet.Reserve). Null in saves
+    // predating Treasury storage — their factionGold total becomes the reserve.
+    [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public System.Collections.Generic.Dictionary<FactionID, int> factionReserve;
+
+    // Gold banked on Treasury tiles, and loose gold piles — only cells with gold.
+    public System.Collections.Generic.List<CellGoldSaveData> treasuryGold;
+    public System.Collections.Generic.List<CellGoldSaveData> goldPiles;
+
     // Per-faction Dungeon Heart HP, keyed by FactionID.
     // Null in saves predating DungeonHeart — hearts simply start at full HP.
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

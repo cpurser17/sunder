@@ -2,8 +2,10 @@ using UnityEngine;
 
 /// <summary>
 /// Anything the Keeper's hand can pick up, drop and slap. Implemented by
-/// MinionController (every worker and creature), which registers itself with
-/// KeeperHand while enabled.
+/// MinionController (every worker and creature) and GoldPile, which register
+/// themselves with KeeperHand while enabled. Things without a GridAgent (gold)
+/// return a null Agent: the hand doesn't pause them on hover, and drops them
+/// on any floor its owner holds.
 ///
 /// The hand owns only the mechanics — what's under the cursor, the held
 /// stack, where a drop is legal. What being picked up, dropped or slapped
@@ -13,8 +15,12 @@ using UnityEngine;
 public interface IHandTarget
 {
     FactionID Faction { get; }
+    /// <summary>Null for things that don't walk (gold piles).</summary>
     GridAgent Agent   { get; }
     Transform transform { get; }
+
+    /// <summary>How far from its centre, in world units, the cursor counts as over it.</summary>
+    float HandRadius { get; }
 
     /// <summary>False once dead; the hand forgets it and never offers it again.</summary>
     bool IsAlive { get; }

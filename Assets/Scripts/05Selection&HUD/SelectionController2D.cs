@@ -332,26 +332,34 @@ public class SelectionController2D : MonoBehaviour
     private void CommitAltSell()
     {
         int earned = 0;
+        GridCell dropAt = null;
         foreach (var c in _currentSelection)
         {
             if (c.TileType != ActiveTileType || c.Owner != localPlayer) continue;
             earned += gridManager.GetSellValue(c.TileType);
             ExecuteSell(c);
+            if (c.TileType != TileType.Water && c.TileType != TileType.Lava) dropAt = c;
         }
-        Wallet.Earn(earned);
+        Wallet.Refund(earned, dropAt);
     }
 
     private void CommitSell()
     {
         int earned = 0;
+        GridCell dropAt = null;
         foreach (var c in _currentSelection)
         {
             if (!IsSellable(c)) continue;
             earned += gridManager.GetSellValue(c.TileType);
             ExecuteSell(c);
+            if (c.TileType != TileType.Water && c.TileType != TileType.Lava) dropAt = c;
         }
-        Wallet.Earn(earned);
+        Wallet.Refund(earned, dropAt);
     }
+
+    // Sale proceeds are banked on Treasury tiles with room (FactionWallet.Refund);
+    // what doesn't fit is dropped as a gold pile on the last floor tile sold.
+    // A sold Treasury tile's own gold spills there too (TreasuryManager).
 
     /// <summary>Executes the correct sell revert for a single cell.</summary>
     private void ExecuteSell(GridCell c)

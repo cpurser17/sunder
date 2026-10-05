@@ -119,6 +119,12 @@ public class GameManager2D : MonoBehaviour
         // rather than relying on it being placed by hand.
         if (FindAnyObjectByType<KeeperHand>() == null)
             gameObject.AddComponent<KeeperHand>();
+
+        // Likewise the gold economy: Treasury storage and gold piles, and payday.
+        if (FindAnyObjectByType<TreasuryManager>() == null)
+            gameObject.AddComponent<TreasuryManager>();
+        if (FindAnyObjectByType<PaydaySystem>() == null)
+            gameObject.AddComponent<PaydaySystem>();
     }
 
     private void Start()
@@ -147,6 +153,9 @@ public class GameManager2D : MonoBehaviour
         foreach (var r in _research.Values)
             if (r != null) Destroy(r.gameObject);
         _research.Clear();
+
+        // A freshly loaded grid has no gold piles yet (a save restores them after).
+        TreasuryManager.Instance?.ResetState();
 
         if (factions == null || factions.Count == 0)
         {
@@ -398,20 +407,27 @@ public class GameManager2D : MonoBehaviour
 
         if (save.gameState == null) return;
 
-        // Restore per-faction gold. If save predates per-faction wallets,
-        // currentGold goes to the Player wallet as a safe fallback.
-        if (save.gameState.factionGold != null)
+        // Restore per-faction gold. A save from before Treasury storage has
+        // only each faction's total, which becomes its reserve; one from
+        // before per-faction wallets gives currentGold to the Player.
+        var gs = save.gameState;
+        if (gs.factionReserve != null)
         {
-            foreach (var pair in save.gameState.factionGold)
-            {
+            foreach (var pair in gs.factionReserve)
                 if (_wallets.TryGetValue(pair.Key, out var wallet))
-                    wallet.SetGold(pair.Value);
-            }
+                    wallet.SetReserve(pair.Value);
+            TreasuryManager.Instance?.Restore(gs.treasuryGold, gs.goldPiles);
+        }
+        else if (gs.factionGold != null)
+        {
+            foreach (var pair in gs.factionGold)
+                if (_wallets.TryGetValue(pair.Key, out var wallet))
+                    wallet.SetReserve(pair.Value);
         }
         else
         {
             // Legacy single-wallet save — give gold to Player.
-            GetWallet(FactionID.Player)?.SetGold(save.gameState.currentGold);
+            GetWallet(FactionID.Player)?.SetReserve(gs.currentGold);
         }
 
         DungeonHeart.Instance?.RestoreAll(save.gameState.factionHeartHP);
@@ -526,10 +542,17 @@ public class GameManager2D : MonoBehaviour
     {
         var data = new GameStateSaveData();
 
-        // Populate per-faction gold dictionary.
-        data.factionGold = new Dictionary<FactionID, int>();
+        // Per-faction gold: the total (for older readers), the unspent
+        // reserve, and where the rest physically is.
+        data.factionGold    = new Dictionary<FactionID, int>();
+        data.factionReserve = new Dictionary<FactionID, int>();
         foreach (var pair in _wallets)
-            data.factionGold[pair.Key] = pair.Value.Gold;
+        {
+            data.factionGold[pair.Key]    = pair.Value.Gold;
+            data.factionReserve[pair.Key] = pair.Value.Reserve;
+        }
+        data.treasuryGold = TreasuryManager.Instance?.CaptureTreasuryGold();
+        data.goldPiles    = TreasuryManager.Instance?.CapturePiles();
 
         // Populate per-faction Dungeon Heart HP.
         data.factionHeartHP = DungeonHeart.Instance != null
