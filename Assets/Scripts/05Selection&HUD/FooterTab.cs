@@ -49,6 +49,13 @@ public class FooterTab : MonoBehaviour
     public void Add(Entry entry)
     {
         if (entry?.Button == null) return;
+        var clash = Get(entry.Row, entry.Column);
+        if (clash != null)
+        {
+            Debug.LogWarning($"[FooterTab] {tabName} {entry.Row}·{entry.Column}: {entry.Label} shares its slot with " +
+                             $"{clash.Label} — it gets no hotkey or grid slot until one is moved.", this);
+            entry.Row = entry.Column = 0;
+        }
         _entries.Add(entry);
     }
 

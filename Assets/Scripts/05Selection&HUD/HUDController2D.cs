@@ -17,7 +17,11 @@ using TMPro;
 ///
 /// With roomsTab set (the HUD footer's Rooms tab), the buttons go into that
 /// tab's grid at each room's ButtonRow/ButtonColumn slot, which is also its
-/// hotkey (Tab, row, column — see HudFooter).
+/// hotkey (Tab, row, column — see HudFooter). The footer then owns every
+/// player-buildable room button: hand-made Buy Button entries for those
+/// rooms are hidden and replaced by generated ones, and Sell is generated
+/// too, at sellRow/sellColumn. Entries for non-room tiles (e.g. Tunnel) are
+/// left as they are.
 /// </summary>
 public class HUDController2D : MonoBehaviour
 {
@@ -49,7 +53,12 @@ public class HUDController2D : MonoBehaviour
     [SerializeField] private FooterTab roomsTab;
 
     [Header("Sell Button")]
+    [Tooltip("Hand-made Sell button. Ignored (and hidden) when Rooms Tab is set — " +
+             "the footer gets a generated Sell button instead.")]
     [SerializeField] private Button sellButton;
+    [Tooltip("Slot of the generated Sell button in the Rooms tab (also its hotkey).")]
+    [SerializeField, Range(0, 9)] private int sellRow    = 4;
+    [SerializeField, Range(0, 9)] private int sellColumn = 1;
 
     [Header("Summon Button")]
     [Tooltip("Summon Worker button. Managed here so it highlights with the same "
@@ -69,20 +78,33 @@ public class HUDController2D : MonoBehaviour
     /// </summary>
     public bool AnyButtonActive => _activeButton != null;
 
-    private void Awake() => Instance = this;
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+            Debug.LogError($"[HUDController2D] Second HUDController2D on {name} (the first is on " +
+                           $"{Instance.name}). Each would add its own buttons and click handlers — " +
+                           "remove one.", this);
+        Instance = this;
+    }
 
     private void Start()
     {
         buyButtonEntries ??= new List<BuyButtonEntry2D>();
+        if (roomsTab != null)
+        {
+            RetireHandMadeRoomButtons();
+            AddGeneratedSellButton();
+        }
         AddGeneratedRoomButtons();
         RegisterRoomsWithFooter();
 
         foreach (var entry in buyButtonEntries)
         {
+            if (entry?.button == null) continue;
             var captured = entry;
             entry.button.onClick.AddListener(() => OnBuyClicked(captured));
         }
-        sellButton.onClick.AddListener(OnSellClicked);
+        if (sellButton != null) sellButton.onClick.AddListener(OnSellClicked);
 
         if (summonButton != null)
             summonButton.onClick.AddListener(OnSummonClicked);
@@ -207,13 +229,71 @@ public class HUDController2D : MonoBehaviour
         if (img) img.color = on ? activeColour : normalColour;
     }
 
+    private TileRegistry Tiles
+    {
+        get
+        {
+            var grid = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
+            return grid != null ? grid.Tiles : null;
+        }
+    }
+
+    /// <summary>
+    /// With the footer in charge, hand-made Buy Button entries for
+    /// player-buildable rooms are dropped and their buttons hidden, so those
+    /// rooms are generated like the rest. Only needs a template to replace them.
+    /// </summary>
+    private void RetireHandMadeRoomButtons()
+    {
+        var tiles = Tiles;
+        if (roomButtonTemplate == null || tiles == null) return;
+
+        var retired = new List<string>();
+        for (int i = buyButtonEntries.Count - 1; i >= 0; i--)
+        {
+            var entry = buyButtonEntries[i];
+            if (entry == null) { buyButtonEntries.RemoveAt(i); continue; }
+
+            var def = tiles.GetDefinition(entry.tileType);
+            if (def == null || !def.playerBuildable) continue;
+
+            if (entry.button != null && entry.button != roomButtonTemplate)
+                entry.button.gameObject.SetActive(false);
+            buyButtonEntries.RemoveAt(i);
+            retired.Add(entry.tileType.ToString());
+        }
+
+        if (retired.Count > 0)
+            Debug.Log($"[HUDController2D] The footer generates {string.Join(", ", retired)} — their hand-made " +
+                      "Buy Button entries were hidden. Remove them from Buy Buttons (and delete the old " +
+                      "buttons) to tidy the scene.", this);
+    }
+
+    /// <summary>Puts a generated Sell button in the Rooms tab, hiding any hand-made one.</summary>
+    private void AddGeneratedSellButton()
+    {
+        if (roomButtonTemplate == null) return;
+
+        if (sellButton != null && sellButton != roomButtonTemplate)
+            sellButton.gameObject.SetActive(false);
+
+        var button = Instantiate(roomButtonTemplate, roomsTab.Content);
+        button.name = "Sell";
+        button.gameObject.SetActive(true);
+
+        var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label != null) label.text = "Sell" + SlotSuffix(sellRow, sellColumn);
+
+        sellButton = button;
+        roomsTab.Add(new FooterTab.Entry { Row = sellRow, Column = sellColumn, Label = "Sell", Button = button });
+    }
+
     /// <summary>Clones roomButtonTemplate for each buildable room that has no button yet.</summary>
     private void AddGeneratedRoomButtons()
     {
         if (roomButtonTemplate == null) return;
 
-        var grid  = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
-        var tiles = grid != null ? grid.Tiles : null;
+        var tiles = Tiles;
         if (tiles == null)
         {
             Debug.LogWarning("[HUDController2D] No TileRegistry to generate room buttons from.");
@@ -244,10 +324,11 @@ public class HUDController2D : MonoBehaviour
     private static string ButtonLabel(TileDefinition def)
     {
         string text = def.buyCost > 0 ? $"{def.tileName} ({def.buyCost}g)" : def.tileName;
-        if (def.buttonRow > 0 && def.buttonColumn > 0)
-            text += $"  <size=70%><alpha=#99>{def.buttonRow}·{def.buttonColumn}</size>";
-        return text;
+        return text + SlotSuffix(def.buttonRow, def.buttonColumn);
     }
+
+    private static string SlotSuffix(int row, int column) =>
+        row > 0 && column > 0 ? $"  <size=70%><alpha=#99>{row}·{column}</size>" : "";
 
     /// <summary>
     /// Gives the footer's Rooms tab every room button — generated or hand-made —
@@ -257,9 +338,8 @@ public class HUDController2D : MonoBehaviour
     {
         if (roomsTab == null) return;
 
-        var grid  = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
-        var tiles = grid != null ? grid.Tiles : null;
-        if (tiles == null) return;
+        var tiles = Tiles;
+        if (tiles == null) { roomsTab.RebuildLayout(); return; }
 
         foreach (var entry in buyButtonEntries)
         {
@@ -281,7 +361,7 @@ public class HUDController2D : MonoBehaviour
     private bool HasEntryFor(TileType type)
     {
         foreach (var entry in buyButtonEntries)
-            if (entry != null && entry.tileType == type) return true;
+            if (entry?.button != null && entry.tileType == type) return true;
         return false;
     }
 
