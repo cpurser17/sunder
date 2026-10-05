@@ -15,13 +15,14 @@ using UnityEngine;
 ///   A minion that can't reach its own bed when it wants to sleep claims a
 ///   free one it can reach; the old one disappears.
 ///   No free bed anywhere it can reach: it sleeps on the floor, and the
-///   player is told the lair is too small (GameNotifications).
+///   player is told the lair is too small (Announcer, "LairTooSmall").
 ///
 /// Bed visuals: the minion type's bedPrefab (MinionDefinition) on its tile,
 /// or a placeholder block until those assets exist.
 ///
 /// Scene setup: none — GameManager2D adds one if the scene has none. Add it
-/// yourself to set the "lair too small" message and audio, or tune anger.
+/// yourself to tune anger or the placeholder bed. The "lair too small" text
+/// and audio live in the Announcer's catalogue.
 /// </summary>
 public class LairManager : MonoBehaviour
 {
@@ -29,11 +30,6 @@ public class LairManager : MonoBehaviour
 
     [Header("Rooms")]
     [SerializeField] private TileType lairType = TileType.Lair;
-
-    [Header("Lair too small")]
-    [SerializeField] private string lairTooSmallMessage = "Your lair is too small.";
-    [Tooltip("Spoken line played with the message. Optional.")]
-    [SerializeField] private AudioClip lairTooSmallClip;
 
     [Header("Anger (placeholder)")]
     [Tooltip("Lasting anger (0-1) added when a minion's bed is sold or captured from under it.")]
@@ -130,9 +126,8 @@ public class LairManager : MonoBehaviour
         RemoveBedAt(cell);
     }
 
-    /// <summary>Tells the player their lair is too small (once per cooldown).</summary>
-    public void NotifyNoBed(FactionID faction) =>
-        GameNotifications.Instance?.Notify(faction, "lair-too-small", lairTooSmallMessage, lairTooSmallClip);
+    /// <summary>Tells the faction's player, if human, that their lair is too small.</summary>
+    public void NotifyNoBed(FactionID faction) => Announcer.Announce(faction, "LairTooSmall");
 
     // ── Grid events ────────────────────────────────────────────────────
 

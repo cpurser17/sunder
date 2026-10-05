@@ -126,11 +126,11 @@ public class GameManager2D : MonoBehaviour
         if (FindAnyObjectByType<PaydaySystem>() == null)
             gameObject.AddComponent<PaydaySystem>();
 
-        // Lair beds, and messages to the player ("Your lair is too small").
+        // Lair beds, and warnings to human players ("Your lair is too small").
         if (FindAnyObjectByType<LairManager>() == null)
             gameObject.AddComponent<LairManager>();
-        if (FindAnyObjectByType<GameNotifications>() == null)
-            gameObject.AddComponent<GameNotifications>();
+        if (FindAnyObjectByType<Announcer>() == null)
+            gameObject.AddComponent<Announcer>();
     }
 
     private void Start()
@@ -168,16 +168,21 @@ public class GameManager2D : MonoBehaviour
             // Fallback: single player wallet.
             CreateWallet(FactionID.Player, levelDefaultGold);
             CreateResearch(FactionID.Player);
+            Announcer.Instance?.SetHumanPlayers(new[] { FactionID.Player });
             OnWalletsReady?.Invoke();
             return;
         }
 
+        var humans = new List<FactionID>();
         foreach (var setup in factions)
         {
             int gold = setup.startingGold > 0 ? setup.startingGold : levelDefaultGold;
             CreateWallet(setup.factionId, gold);
             CreateResearch(setup.factionId);
+            if (setup.isHuman) humans.Add(setup.factionId);
         }
+        if (humans.Count == 0) humans.Add(FactionID.Player);
+        Announcer.Instance?.SetHumanPlayers(humans);
 
         OnWalletsReady?.Invoke();
     }
