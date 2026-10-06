@@ -61,6 +61,12 @@ public class LevelData
     // levels written before the editor existed.
     public List<MinionPlacement> minions = new();
 
+    // ── Traps and doors ────────────────────────────────────────────────
+    // Placed in the level editor, one per cell, on claimed floor. Nothing
+    // spawns them in game yet — the data is here for when traps and doors
+    // are fleshed out. Null/empty in older levels.
+    public List<TrapDoorPlacement> trapsAndDoors = new();
+
     // ── Future extension slots ─────────────────────────────────────────
     // public List<ObjectiveData>    objectives;
     // public OverworldLevelMetaData overworldMeta;
@@ -155,4 +161,24 @@ public class MinionPlacement
     public float     y;                  // grid units
 
     public MinionPlacement Clone() => (MinionPlacement)MemberwiseClone();
+}
+
+/// <summary>
+/// One trap or door placed in a level, by TrapDoorDefinition kind + typeId.
+/// It sits on a whole cell, and factionId always matches the owner of that
+/// cell — the editor keeps it in step as tiles change hands, so the game can
+/// read ownership straight off the placement.
+/// </summary>
+[System.Serializable]
+public class TrapDoorPlacement
+{
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public TrapDoorKind kind;
+    public string       typeId;              // TrapDoorDefinition.typeId
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public FactionID    factionId;           // owner of the tile it stands on
+    public int          x;                   // cell
+    public int          y;                   // cell
+
+    public TrapDoorPlacement Clone() => (TrapDoorPlacement)MemberwiseClone();
 }

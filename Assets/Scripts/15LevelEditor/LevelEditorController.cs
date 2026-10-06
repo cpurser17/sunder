@@ -22,6 +22,10 @@ using UnityEngine.SceneManagement;
 ///                again moves it), or remove one.
 ///   Minions    — place a minion from any content faction for the selected
 ///                team, or remove minions under the brush.
+///   Traps      — place a trap or door on claimed floor, or remove them.
+///                They take the owner of the tile they stand on, and keep
+///                following it as the tile changes hands; a tile that stops
+///                being claimed floor loses its trap or door.
 ///   Ownership  — paint the selected team onto owned tiles and/or minions.
 ///
 /// The outer ring of the grid is always bedrock and can't be edited.
@@ -30,7 +34,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public partial class LevelEditorController : MonoBehaviour
 {
-    public enum Tool { Tiles, Heart, Minions, Ownership }
+    public enum Tool { Tiles, Heart, Minions, TrapsDoors, Ownership }
 
     private const int HeartSize = 3;
 
@@ -38,6 +42,7 @@ public partial class LevelEditorController : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private GridManager2D     gridManager;
     [SerializeField] private FactionRegistry   factionRegistry;
+    [SerializeField] private TrapDoorRegistry  trapDoorRegistry;
     [Tooltip("Empty = added to the main camera at startup.")]
     [SerializeField] private LevelEditorCamera editorCamera;
 
@@ -73,6 +78,17 @@ public partial class LevelEditorController : MonoBehaviour
     private readonly List<Marker>          _markers = new(); // parallel to _minions
     private Transform _markerRoot;
     private Sprite    _discSprite;
+    private Sprite    _squareSprite;
+
+    private class TrapDoorMarker
+    {
+        public TrapDoorPlacement Data;
+        public GameObject        Root;
+        public SpriteRenderer    Team;
+    }
+    // One trap or door per cell, keyed by cell.
+    private readonly Dictionary<Vector2Int, TrapDoorMarker> _trapsDoors = new();
+    private bool _rebuildingGrid; // ignore OnTileChanged while a whole grid is re-applied
 
     // ── Tool state ─────────────────────────────────────────────────────
     private Tool      _tool      = Tool.Tiles;
@@ -86,6 +102,9 @@ public partial class LevelEditorController : MonoBehaviour
     private FactionDefinition _minionFaction;
     private MinionDefinition  _minionDef;
     private int               _minionLevel = 1;
+
+    private TrapDoorKind       _trapDoorKind = TrapDoorKind.Trap;
+    private TrapDoorDefinition _trapDoorDef;
 
     // ── Stroke / hover ─────────────────────────────────────────────────
     private bool _stroking;
@@ -104,6 +123,7 @@ public partial class LevelEditorController : MonoBehaviour
     {
         public GridSaveData          Grid;
         public List<MinionPlacement> Minions;
+        public List<TrapDoorPlacement> TrapsDoors;
     }
     private readonly LinkedList<Snapshot> _undo = new();
     private readonly Stack<Snapshot>      _redo = new();
@@ -129,14 +149,22 @@ public partial class LevelEditorController : MonoBehaviour
         if (factionRegistry != null) factionRegistry.Initialise();
         else Debug.LogWarning("[LevelEditor] No FactionRegistry assigned — minions can't be placed.");
 
-        _markerRoot = new GameObject("PlacedMinions").transform;
-        _discSprite = BuildDiscSprite();
+        _markerRoot   = new GameObject("PlacedMinions").transform;
+        _discSprite   = BuildDiscSprite();
+        _squareSprite = BuildSquareSprite();
+        gridManager.OnTileChanged += OnTileChanged;
 
         _widthText  = defaultWidth.ToString();
         _heightText = defaultHeight.ToString();
 
         ResetTeams();
         SelectMinionFaction(FirstFactionDefinition());
+        SelectTrapDoorKind(TrapDoorKind.Trap);
+    }
+
+    private void OnDestroy()
+    {
+        if (gridManager != null) gridManager.OnTileChanged -= OnTileChanged;
     }
 
     private void Update()
@@ -172,7 +200,7 @@ public partial class LevelEditorController : MonoBehaviour
         }
 
         ClearHighlights();
-        gridManager.Initialise(width, height, cells);
+        ApplyWholeGrid(() => gridManager.Initialise(width, height, cells));
 
         _level = new LevelData
         {
@@ -183,6 +211,7 @@ public partial class LevelEditorController : MonoBehaviour
         };
         ResetTeams();
         ClearMinions();
+        ClearTrapsDoors();
         BeginEditing();
         SetStatus($"Created a {width}x{height} level.");
     }
@@ -197,7 +226,7 @@ public partial class LevelEditorController : MonoBehaviour
         }
 
         ClearHighlights();
-        SaveLoadSystem.ApplyGrid(gridManager, data.grid);
+        ApplyWholeGrid(() => SaveLoadSystem.ApplyGrid(gridManager, data.grid));
 
         _level = data;
         _level.allowedMinionIds ??= new List<string>();
@@ -213,6 +242,11 @@ public partial class LevelEditorController : MonoBehaviour
         ClearMinions();
         foreach (var p in data.minions ?? new List<MinionPlacement>())
             if (p != null) AddMinion(p.Clone());
+
+        ClearTrapsDoors();
+        foreach (var t in data.trapsAndDoors ?? new List<TrapDoorPlacement>())
+            if (t != null) AddTrapDoor(t.Clone());
+        SyncAllTrapDoors(); // an older or hand-edited file may disagree with its tiles
 
         BeginEditing();
         SetStatus($"Loaded '{levelId}' ({data.grid.width}x{data.grid.height}, " +
@@ -301,6 +335,10 @@ public partial class LevelEditorController : MonoBehaviour
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 valid = CanStandOn(gridManager.GetCell(_hoverX, _hoverY));
                 break;
+            case Tool.TrapsDoors when !_removeMode:
+                cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
+                valid = CanHoldTrapDoor(gridManager.GetCell(_hoverX, _hoverY), out _);
+                break;
             case Tool.Heart:
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 break;
@@ -347,7 +385,12 @@ public partial class LevelEditorController : MonoBehaviour
                 break;
 
             case Tool.Minions when _removeMode:
+            case Tool.TrapsDoors when _removeMode:
                 BeginStroke();
+                break;
+
+            case Tool.TrapsDoors:
+                RunSingleEdit(() => PlaceTrapDoor(gridManager.GetCell(_hoverX, _hoverY)));
                 break;
 
             case Tool.Minions:
@@ -415,6 +458,7 @@ public partial class LevelEditorController : MonoBehaviour
                 Tool.Tiles     => PaintTile(cell),
                 Tool.Ownership => PaintOwnership(cell),
                 Tool.Minions   => RemoveMinionsIn(cell),
+                Tool.TrapsDoors => RemoveTrapDoorAt(cell),
                 _              => false,
             };
             _strokeChanged |= changed;
@@ -808,21 +852,238 @@ public partial class LevelEditorController : MonoBehaviour
         return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
     }
 
+    // ── Traps and doors ────────────────────────────────────────────────
+
+    private void SelectTrapDoorKind(TrapDoorKind kind)
+    {
+        _trapDoorKind = kind;
+        _trapDoorDef  = null;
+        if (trapDoorRegistry == null) return;
+        foreach (var def in trapDoorRegistry.Definitions)
+            if (def != null && def.kind == kind) { _trapDoorDef = def; break; }
+    }
+
+    private TrapDoorDefinition ResolveTrapDoor(TrapDoorPlacement p) =>
+        trapDoorRegistry != null ? trapDoorRegistry.GetDefinition(p.kind, p.typeId) : null;
+
+    /// <summary>Claimed floor: tunnel or a room, not the border, a heart or a portal.</summary>
+    private bool CanHoldTrapDoor(GridCell cell, out string reason)
+    {
+        reason = null;
+        if (cell == null || IsBorder(cell)) { reason = "That's the bedrock border."; return false; }
+        if (cell.TileType == TileType.Tunnel || gridManager.Tiles.IsRoom(cell.TileType)) return true;
+        reason = "Traps and doors go on claimed floor — tunnel or a room.";
+        return false;
+    }
+
+    private bool PlaceTrapDoor(GridCell cell)
+    {
+        if (_trapDoorDef == null)
+        {
+            SetStatus($"No {_trapDoorKind.ToString().ToLower()}s in the Trap/Door Registry yet.", error: true);
+            return false;
+        }
+        if (!CanHoldTrapDoor(cell, out string reason))
+        {
+            SetStatus(reason, error: true);
+            return false;
+        }
+
+        var key = new Vector2Int(cell.X, cell.Y);
+        if (_trapsDoors.TryGetValue(key, out var existing))
+        {
+            if (existing.Data.kind == _trapDoorDef.kind && existing.Data.typeId == _trapDoorDef.typeId)
+                return false;
+            RemoveTrapDoorMarker(key);
+        }
+
+        AddTrapDoor(new TrapDoorPlacement
+        {
+            kind      = _trapDoorDef.kind,
+            typeId    = _trapDoorDef.typeId,
+            factionId = cell.Owner, // inherited from the tile
+            x         = cell.X,
+            y         = cell.Y,
+        });
+        _dirty = true;
+        SetStatus($"Placed {TrapDoorName(_trapDoorDef)} for {FactionTeams.DisplayName(cell.Owner)} (the tile's owner).");
+        return true;
+    }
+
+    private bool RemoveTrapDoorAt(GridCell cell)
+    {
+        var key = new Vector2Int(cell.X, cell.Y);
+        if (!_trapsDoors.ContainsKey(key)) return false;
+        RemoveTrapDoorMarker(key);
+        _dirty = true;
+        return true;
+    }
+
+    private static string TrapDoorName(TrapDoorDefinition def) =>
+        string.IsNullOrWhiteSpace(def.displayName) ? def.typeId : def.displayName;
+
+    /// <summary>
+    /// Every tile write: the trap or door on it follows the tile's new owner,
+    /// or is removed if the tile is no longer claimed floor.
+    /// </summary>
+    private void OnTileChanged(GridCell cell)
+    {
+        if (_rebuildingGrid) return;
+        var key = new Vector2Int(cell.X, cell.Y);
+        if (!_trapsDoors.TryGetValue(key, out var marker)) return;
+
+        if (!CanHoldTrapDoor(cell, out _))
+        {
+            RemoveTrapDoorMarker(key);
+            SetStatus($"Removed the {marker.Data.kind.ToString().ToLower()} at ({cell.X}, {cell.Y}) — " +
+                      "its tile is no longer claimed floor.");
+            return;
+        }
+        if (marker.Data.factionId != cell.Owner)
+        {
+            marker.Data.factionId = cell.Owner;
+            marker.Team.color     = TeamColour(cell.Owner);
+        }
+    }
+
+    /// <summary>Re-applies the tile rule to every trap and door (after a load, before a save).</summary>
+    private void SyncAllTrapDoors()
+    {
+        var keys = new List<Vector2Int>(_trapsDoors.Keys);
+        foreach (var key in keys)
+        {
+            var cell = gridManager.GetCell(key.x, key.y);
+            if (cell == null) RemoveTrapDoorMarker(key);
+            else OnTileChanged(cell);
+        }
+    }
+
+    /// <summary>Rebuilds the whole grid without the per-tile trap/door rule firing for every cell.</summary>
+    private void ApplyWholeGrid(System.Action apply)
+    {
+        _rebuildingGrid = true;
+        try { apply(); }
+        finally { _rebuildingGrid = false; }
+    }
+
+    private void AddTrapDoor(TrapDoorPlacement p)
+    {
+        var key = new Vector2Int(p.x, p.y);
+        if (_trapsDoors.ContainsKey(key)) RemoveTrapDoorMarker(key); // one per cell
+        _trapsDoors[key] = CreateTrapDoorMarker(p);
+    }
+
+    private void RemoveTrapDoorMarker(Vector2Int key)
+    {
+        if (!_trapsDoors.TryGetValue(key, out var marker)) return;
+        if (marker.Root != null) Destroy(marker.Root);
+        _trapsDoors.Remove(key);
+    }
+
+    private void ClearTrapsDoors()
+    {
+        foreach (var marker in _trapsDoors.Values)
+            if (marker.Root != null) Destroy(marker.Root);
+        _trapsDoors.Clear();
+    }
+
+    private List<TrapDoorPlacement> CloneTrapsDoors()
+    {
+        var list = new List<TrapDoorPlacement>(_trapsDoors.Count);
+        foreach (var marker in _trapsDoors.Values) list.Add(marker.Data.Clone());
+        list.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x)); // stable file order
+        return list;
+    }
+
+    /// <summary>
+    /// A team-coloured plate — a diamond for a trap, a square for a door —
+    /// with the definition's icon (or a block of its editor colour) on top.
+    /// Drawn under minion markers.
+    /// </summary>
+    private TrapDoorMarker CreateTrapDoorMarker(TrapDoorPlacement p)
+    {
+        float cell = gridManager.CellSize;
+        bool  trap = p.kind == TrapDoorKind.Trap;
+
+        var root = new GameObject($"{p.kind}_{p.typeId}_{p.x}_{p.y}");
+        root.transform.SetParent(_markerRoot, false);
+        root.transform.position = gridManager.CellToWorld(p.x, p.y) + Vector3.up * 0.03f;
+
+        var team = new GameObject("Team").AddComponent<SpriteRenderer>();
+        team.transform.SetParent(root.transform, false);
+        team.transform.localRotation = Quaternion.Euler(90f, trap ? 45f : 0f, 0f);
+        team.transform.localScale    = Vector3.one * (trap ? 0.62f : 0.86f) * cell;
+        team.sprite       = _squareSprite;
+        team.sortingOrder = 5;
+        team.color        = TeamColour(p.factionId);
+
+        var def  = ResolveTrapDoor(p);
+        var icon = new GameObject("Icon").AddComponent<SpriteRenderer>();
+        icon.transform.SetParent(root.transform, false);
+        icon.transform.localPosition = Vector3.up * 0.01f;
+        icon.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        icon.sortingOrder = 6;
+        if (def != null && def.icon != null)
+        {
+            Vector3 size = def.icon.bounds.size;
+            icon.sprite = def.icon;
+            icon.transform.localScale = Vector3.one * (0.5f * cell / Mathf.Max(size.x, size.y, 0.0001f));
+        }
+        else
+        {
+            icon.sprite = _squareSprite;
+            icon.color  = def != null ? def.editorColour : Color.magenta; // magenta = unknown type
+            icon.transform.localScale = Vector3.one * 0.38f * cell;
+        }
+
+        return new TrapDoorMarker { Data = p, Root = root, Team = team };
+    }
+
+    /// <summary>A white square with a darker rim, one world unit across.</summary>
+    private static Sprite BuildSquareSprite()
+    {
+        const int size = 32;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            wrapMode   = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear,
+            name       = "LevelEditorSquare",
+        };
+        var pixels = new Color32[size * size];
+        for (int y = 0; y < size; y++)
+        for (int x = 0; x < size; x++)
+        {
+            bool rim = x < 2 || y < 2 || x >= size - 2 || y >= size - 2;
+            byte shade = (byte)(rim ? 120 : 235);
+            pixels[y * size + x] = new Color32(shade, shade, shade, 255);
+        }
+        tex.SetPixels32(pixels);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+    }
+
     // ── Undo ───────────────────────────────────────────────────────────
 
     private Snapshot CaptureSnapshot()
     {
         var minions = new List<MinionPlacement>(_minions.Count);
         foreach (var p in _minions) minions.Add(p.Clone());
-        return new Snapshot { Grid = SaveLoadSystem.CaptureGrid(gridManager), Minions = minions };
+        return new Snapshot
+        {
+            Grid       = SaveLoadSystem.CaptureGrid(gridManager),
+            Minions    = minions,
+            TrapsDoors = CloneTrapsDoors(),
+        };
     }
 
     private void RestoreSnapshot(Snapshot snapshot)
     {
         ClearHighlights();
-        SaveLoadSystem.ApplyGrid(gridManager, snapshot.Grid);
+        ApplyWholeGrid(() => SaveLoadSystem.ApplyGrid(gridManager, snapshot.Grid));
         ClearMinions();
         foreach (var p in snapshot.Minions) AddMinion(p.Clone());
+        ClearTrapsDoors();
+        foreach (var t in snapshot.TrapsDoors) AddTrapDoor(t.Clone());
         _dirty = true;
     }
 
@@ -870,7 +1131,8 @@ public partial class LevelEditorController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha1)) _tool = Tool.Tiles;
         if (Input.GetKeyDown(KeyCode.Alpha2)) _tool = Tool.Heart;
         if (Input.GetKeyDown(KeyCode.Alpha3)) _tool = Tool.Minions;
-        if (Input.GetKeyDown(KeyCode.Alpha4)) _tool = Tool.Ownership;
+        if (Input.GetKeyDown(KeyCode.Alpha4)) _tool = Tool.TrapsDoors;
+        if (Input.GetKeyDown(KeyCode.Alpha5)) _tool = Tool.Ownership;
         if (Input.GetKeyDown(KeyCode.R))      _removeMode = !_removeMode;
         if (Input.GetKeyDown(KeyCode.LeftBracket))  _brushSize = Mathf.Max(1, _brushSize - 2);
         if (Input.GetKeyDown(KeyCode.RightBracket)) _brushSize = Mathf.Min(MaxBrush, _brushSize + 2);
@@ -896,6 +1158,8 @@ public partial class LevelEditorController : MonoBehaviour
 
         _level.minions = new List<MinionPlacement>(_minions.Count);
         foreach (var p in _minions) _level.minions.Add(p.Clone());
+        SyncAllTrapDoors();
+        _level.trapsAndDoors = CloneTrapsDoors();
         _level.allowedMinionIds ??= new List<string>();
         return _level;
     }
@@ -954,6 +1218,12 @@ public partial class LevelEditorController : MonoBehaviour
             if (!gridManager.WorldToCell(PlacementWorld(p), out int mx, out int my) ||
                 !CanStandOn(gridManager.GetCell(mx, my))) stranded++;
         }
+        int unknownTraps = 0;
+        foreach (var t in _trapsDoors.Values)
+            if (ResolveTrapDoor(t.Data) == null) unknownTraps++;
+        if (unknownTraps > 0)
+            warnings.Add($"{unknownTraps} trap(s)/door(s) aren't in the Trap/Door Registry.");
+
         if (stranded > 0) warnings.Add($"{stranded} minion(s) are standing inside solid rock or liquid.");
         if (unknown  > 0) warnings.Add($"{unknown} minion(s) aren't in the Faction Registry and won't spawn.");
 

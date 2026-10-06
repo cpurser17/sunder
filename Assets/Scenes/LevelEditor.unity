@@ -390,6 +390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelEditorController
   gridManager: {fileID: 402175833}
   factionRegistry: {fileID: 11400000, guid: 8faf22ae6c439c44087a88947ca55312, type: 2}
+  trapDoorRegistry: {fileID: 11400000, guid: 454d8a560006478390b2c6c2ffb40c1a, type: 2}
   editorCamera: {fileID: 1880469110}
   defaultWidth: 40
   defaultHeight: 40

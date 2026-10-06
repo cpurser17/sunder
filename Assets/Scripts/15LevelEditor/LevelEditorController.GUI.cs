@@ -184,8 +184,8 @@ public partial class LevelEditorController
         }
 
         GUILayout.Space(8f);
-        GUILayout.Label("Tool   (1-4)", _header);
-        var tool = (Tool)GUILayout.Toolbar((int)_tool, new[] { "Tiles", "Heart", "Minions", "Owner" });
+        GUILayout.Label("Tool   (1-5)", _header);
+        var tool = (Tool)GUILayout.Toolbar((int)_tool, new[] { "Tiles", "Heart", "Minions", "Traps", "Owner" });
         if (tool != _tool) Defer(() => _tool = tool);
         GUILayout.Space(4f);
 
@@ -205,6 +205,12 @@ public partial class LevelEditorController
                 PlaceRemoveRow();
                 if (_removeMode) BrushSizeRow();
                 break;
+            case Tool.TrapsDoors:
+                PlaceRemoveRow();
+                if (_removeMode) BrushSizeRow();
+                GUILayout.Label("Goes on claimed floor (tunnel or a room) and belongs to whoever " +
+                                "owns that tile — repaint the tile's owner and it follows.", _small);
+                break;
             case Tool.Ownership:
                 BrushSizeRow();
                 GUILayout.BeginHorizontal();
@@ -220,6 +226,7 @@ public partial class LevelEditorController
         _paletteScroll = GUILayout.BeginScrollView(_paletteScroll);
         if (_tool == Tool.Tiles)                         DrawTilePalette();
         else if (_tool == Tool.Minions && !_removeMode) DrawMinionPalette();
+        else if (_tool == Tool.TrapsDoors && !_removeMode) DrawTrapDoorPalette();
         else if (_tool == Tool.Heart)                   DrawHeartSummary();
         GUILayout.EndScrollView();
 
@@ -337,6 +344,40 @@ public partial class LevelEditorController
         }
     }
 
+    private void DrawTrapDoorPalette()
+    {
+        int kind = GUILayout.Toolbar((int)_trapDoorKind, new[] { "Traps", "Doors" });
+        if (kind != (int)_trapDoorKind) Defer(() => SelectTrapDoorKind((TrapDoorKind)kind));
+        GUILayout.Space(4f);
+
+        if (trapDoorRegistry == null)
+        {
+            GUILayout.Label("No Trap/Door Registry assigned on the LevelEditor object.", _small);
+            return;
+        }
+
+        bool any = false;
+        foreach (var def in trapDoorRegistry.Definitions)
+        {
+            if (def == null || def.kind != _trapDoorKind) continue;
+            any = true;
+            GUILayout.BeginHorizontal();
+            if (def.icon != null) TokenIcon(def.icon, 34f);
+            else
+            {
+                var r = GUILayoutUtility.GetRect(34f, 34f, GUILayout.Width(34f), GUILayout.Height(34f));
+                DrawRect(r, def.editorColour);
+            }
+            string label = $"{TrapDoorName(def)}\n{def.typeId}";
+            if (GUILayout.Toggle(_trapDoorDef == def, label, _minionButton, GUILayout.Height(36)))
+                _trapDoorDef = def;
+            GUILayout.EndHorizontal();
+        }
+        if (!any)
+            GUILayout.Label($"No {_trapDoorKind.ToString().ToLower()}s defined yet — add " +
+                            "TrapDoorDefinition assets to the Trap/Door Registry.", _small);
+    }
+
     private static void TokenIcon(Sprite token, float size)
     {
         var r = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
@@ -386,7 +427,9 @@ public partial class LevelEditorController
             int here = 0;
             foreach (var p in _minions) if (IsInCell(p, cell)) here++;
             string owner = IsOwnable(cell.TileType) ? $" · {FactionTeams.DisplayName(cell.Owner)}" : "";
-            GUILayout.Label($"({_hoverX}, {_hoverY})  {gridManager.Tiles.GetTileName(cell.TileType)}{owner}" +
+            string trap = _trapsDoors.TryGetValue(new Vector2Int(_hoverX, _hoverY), out var td)
+                ? $" · {td.Data.kind} {td.Data.typeId}" : "";
+            GUILayout.Label($"({_hoverX}, {_hoverY})  {gridManager.Tiles.GetTileName(cell.TileType)}{owner}{trap}" +
                             (here > 0 ? $" · {here} minion(s)" : "") +
                             (IsBorder(cell) ? " · border (locked)" : ""), GUILayout.Width(420));
         }
@@ -407,6 +450,13 @@ public partial class LevelEditorController
         if (cam.orthographicSize > LabelZoomLimit || _minions.Count > 500) return;
 
         float cell = gridManager.CellSize;
+        foreach (var t in _trapsDoors.Values)
+        {
+            Vector3 screen = cam.WorldToScreenPoint(gridManager.CellToWorld(t.Data.x, t.Data.y) +
+                                                    new Vector3(0f, 0f, 0.48f * cell));
+            var pos = new Vector2(screen.x / _uiScale, (Screen.height - screen.y) / _uiScale - 14f);
+            GUI.Label(new Rect(pos.x - 40f, pos.y, 80f, 16f), t.Data.typeId, _mapLabel);
+        }
         foreach (var p in _minions)
         {
             Vector3 screen = cam.WorldToScreenPoint(PlacementWorld(p) - new Vector3(0f, 0f, 0.4f * cell));
