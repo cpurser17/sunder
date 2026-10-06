@@ -56,8 +56,40 @@ using UnityEngine;
 /// performance stats drop (exhaustedStatMultiplier), and it can't recover
 /// health from food (CanRecoverFromFood, for the Hatchery).
 ///
-/// Errands wait their turn: one at a time, wages before sleep. Payday
-/// doesn't wake a sleeping minion; it collects when it gets up.
+/// Hunger
+/// -------
+/// Every minion except workers grows hungry — HungerRate per minute on a
+/// 0-1 scale. At hungerThreshold it goes to eat chickens (FoodBehaviour,
+/// HatcheryManager); one passing close to a chicken while a little peckish
+/// (snackThreshold) eats it there and then. Each chicken takes hunger off
+/// and heals, unless the minion is exhausted. Fully hungry (1) it is
+/// starving: anger grows, its performance stats drop, and it slowly loses
+/// health (never the last point). Workers never get hungry: they eat only
+/// when injured, to heal. Dropping a chicken on a minion force-feeds it.
+///
+/// Priorities (after Dungeon Keeper)
+/// ---------------------------------
+/// What a minion does is decided top-down; the first that applies wins.
+///   Highest      fight, prisoner, torture                    (with combat — later)
+///   Enchantment  spells cast on it: call to arms, etc.       (later)
+///   High         collect wages, eat, recover (sleep when badly hurt), sleep
+///   Anger        leave the dungeon (furious), sulk (annoyed)
+///   Assigned     whatever the room it was dropped on by the hand is for:
+///                Lair → sleep, Hatchery → eat, Treasury → wages (at low
+///                thresholds), work rooms → that work (CreatureBehaviour)
+///   Default      room work by preference: train, research, workshop, pray
+///   Idle         nap if a little tired, else wander and grow grumpy
+/// High and Anger jobs run as errands — one at a time, never interrupting
+/// each other (payday doesn't wake a sleeper; it collects when it gets up).
+/// Assigned, Default and Idle are the active behaviour's (CreatureBehaviour
+/// for creatures, WorkerBehaviour for workers).
+///
+/// Mood
+/// ----
+/// Anger (MinionTemper) sums its causes: slaps, unpaid wages, exhaustion,
+/// no bed, starving, idling. From annoyedAnger it sulks now and then; from
+/// furiousAnger a minion that came through the portal leaves for good. All
+/// placeholder values until the anger behaviours are designed properly.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
@@ -97,6 +129,54 @@ public class MinionController : MonoBehaviour, IHandTarget
     [Tooltip("Performance stats (strength, skills, speed…) are multiplied by this while exhausted.")]
     [SerializeField, Range(0f, 1f)] private float exhaustedStatMultiplier = 0.75f;
 
+    [Header("Hunger")]
+    [Tooltip("Hunger (0-1) at which it goes to eat.")]
+    [SerializeField, Range(0f, 1f)] private float hungerThreshold = 0.7f;
+    [Tooltip("Hunger (0-1) above which it eats a chicken it happens to pass.")]
+    [SerializeField, Range(0f, 1f)] private float snackThreshold = 0.3f;
+    [Tooltip("How close, in cells, a passing chicken must be to be snacked on.")]
+    [SerializeField, Min(0f)] private float snackReach = 1.5f;
+    [Tooltip("Hunger gained per minute when the data has no HungerRate.")]
+    [SerializeField, Min(0f)] private float fallbackHungerPerMinute = 0.08f;
+    [Tooltip("Workers (who never get hungry) go to eat below this fraction of max health.")]
+    [SerializeField, Range(0f, 1f)] private float workerEatBelowHealth = 0.5f;
+    [Tooltip("Seconds before trying again after finding nothing to eat.")]
+    [SerializeField, Min(1f)] private float foodRetrySeconds = 10f;
+    [Tooltip("Lasting anger (0-1) gained per minute while starving. Placeholder.")]
+    [SerializeField, Range(0f, 1f)] private float starvingAngerPerMinute = 0.1f;
+    [Tooltip("Health lost per minute while starving, as a fraction of max health. Never kills.")]
+    [SerializeField, Range(0f, 1f)] private float starvingDamagePerMinute = 0.05f;
+    [Tooltip("Performance stats are multiplied by this while starving.")]
+    [SerializeField, Range(0f, 1f)] private float starvingStatMultiplier = 0.75f;
+
+    [Header("Recovering")]
+    [Tooltip("Below this fraction of max health it goes to bed to recover (minions that sleep).")]
+    [SerializeField, Range(0f, 1f)] private float recoverBelowHealth = 0.3f;
+    [Tooltip("A recovering minion stays in bed until healed to this fraction.")]
+    [SerializeField, Range(0f, 1f)] private float recoverUntilHealth = 0.9f;
+
+    [Header("Assigned by the hand")]
+    [Tooltip("Dropped on a Lair, it sleeps if at least this tired; on a Hatchery, eats if at least this hungry.")]
+    [SerializeField, Range(0f, 1f)] private float assignedNeedThreshold = 0.2f;
+
+    [Header("Idle")]
+    [Tooltip("An idle minion naps if at least this tired.")]
+    [SerializeField, Range(0f, 1f)] private float idleSleepThreshold = 0.3f;
+    [Tooltip("Lasting anger (0-1) gained per minute idle. Placeholder.")]
+    [SerializeField, Range(0f, 1f)] private float idleAngerPerMinute = 0.03f;
+    [Tooltip("Idle anger worked off per minute of room work.")]
+    [SerializeField, Range(0f, 1f)] private float workCalmPerMinute = 0.06f;
+
+    [Header("Mood (placeholder)")]
+    [Tooltip("Anger at which it starts to sulk now and then.")]
+    [SerializeField, Range(0f, 1f)] private float annoyedAnger = 0.5f;
+    [Tooltip("Chance per minute of a sulk while annoyed.")]
+    [SerializeField, Range(0f, 1f)] private float sulkChancePerMinute = 0.5f;
+    [Tooltip("Anger at which a minion that came through the portal leaves for good.")]
+    [SerializeField, Range(0f, 1f)] private float furiousAnger = 0.9f;
+    [Tooltip("Seconds before a minion that couldn't reach the portal tries to leave again.")]
+    [SerializeField, Min(1f)] private float leaveRetrySeconds = 30f;
+
     [Header("Keeper's hand")]
     [Tooltip("Seconds a minion dropped on a room favours working in that room type.")]
     [SerializeField] private float dropAffinityDuration = 30f;
@@ -123,6 +203,9 @@ public class MinionController : MonoBehaviour, IHandTarget
     private CreatureBehaviour _creature;
     private WageBehaviour     _wages;
     private SleepBehaviour    _sleep;
+    private FoodBehaviour     _food;
+    private SulkBehaviour     _sulk;
+    private LeaveBehaviour    _leave;
     private MinionBehaviour   _active;
     private MinionBehaviour   _errand;
 
@@ -131,6 +214,14 @@ public class MinionController : MonoBehaviour, IHandTarget
     private float _angerPerUnpaidSalary;
     private bool  _wageTripPending;
     private float _tiredness;
+    private float _hunger;
+    private float _nextFoodAttempt;
+    private float _nextSnackCheck;
+    private bool  _recovering;
+    private float _nextRecoverAttempt;
+    private bool  _assignedSleep, _assignedFood;
+    private float _nextMoodCheck;
+    private float _nextLeaveAttempt;
     private readonly List<MinionBehaviour> _behaviours = new();
 
     public FactionID        Faction    => faction;
@@ -165,6 +256,53 @@ public class MinionController : MonoBehaviour, IHandTarget
     public bool  NeedsSleep  => !IsWorkerFirst && TirednessPerMinute > 0f;
     public float TirednessPerMinute => Mathf.Max(0f, GetStatOr(MinionStat.TirednessRate, fallbackTirednessPerMinute));
     public float SleepThreshold     => sleepThreshold;
+
+    /// <summary>0 (full) to 1 (starving).</summary>
+    public float Hunger     => _hunger;
+    /// <summary>Fully hungry: angrier, weaker, slowly losing health.</summary>
+    public bool  IsStarving => NeedsFood && _hunger >= 1f;
+    /// <summary>Workers never get hungry; nor does anything whose HungerRate is 0.</summary>
+    public bool  NeedsFood  => !IsWorkerFirst && HungerPerMinute > 0f;
+    public float HungerPerMinute => Mathf.Max(0f, GetStatOr(MinionStat.HungerRate, fallbackHungerPerMinute));
+
+    /// <summary>
+    /// Hungry enough to go and eat — or, for a worker, hurt enough. False
+    /// for a while after finding nothing to eat.
+    /// </summary>
+    public bool WantsFood => NeedsFood ? _hunger >= hungerThreshold : _health < MaxHealth * workerEatBelowHealth;
+
+    /// <summary>Still worth eating another chicken: hungry at all, or (workers) not yet healed.</summary>
+    public bool CouldEatMore => NeedsFood ? _hunger > 0.05f : _health < MaxHealth * 0.999f && CanRecoverFromFood;
+
+    /// <summary>In bed to heal rather than (only) to rest.</summary>
+    public bool  IsRecovering => _recovering;
+    public float HealthFraction => MaxHealth > 0f ? _health / MaxHealth : 0f;
+    public float RecoverUntilHealth => recoverUntilHealth;
+
+    /// <summary>What it's doing right now, broadly — for the minion tracker and debugging.</summary>
+    public MinionActivity Activity
+    {
+        get
+        {
+            if (_held) return MinionActivity.Held;
+            if (_errand == _wages) return MinionActivity.CollectingWages;
+            if (_errand == _food)  return MinionActivity.Eating;
+            if (_errand == _sleep) return MinionActivity.Sleeping;
+            if (_errand == _sulk)  return MinionActivity.Sulking;
+            if (_errand == _leave) return MinionActivity.Leaving;
+            if (_active == _worker)
+                return _worker.State == WorkerBehaviour.WorkerState.Idle ? MinionActivity.Idle : MinionActivity.Working;
+            if (_active == _creature)
+                return _creature.State switch
+                {
+                    CreatureBehaviour.CreatureState.ReportingForDuty => MinionActivity.Reporting,
+                    CreatureBehaviour.CreatureState.GoingToWork      => MinionActivity.Working,
+                    CreatureBehaviour.CreatureState.Working          => MinionActivity.Working,
+                    _                                                => MinionActivity.Idle,
+                };
+            return MinionActivity.Idle;
+        }
+    }
 
     /// <summary>The behaviour actually running: the errand if there is one, else the active behaviour.</summary>
     private MinionBehaviour Running => _errand != null ? _errand : _active;
@@ -221,6 +359,9 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (!TryGetComponent(out _creature)) _creature = gameObject.AddComponent<CreatureBehaviour>();
         if (!TryGetComponent(out _wages))    _wages    = gameObject.AddComponent<WageBehaviour>();
         if (!TryGetComponent(out _sleep))    _sleep    = gameObject.AddComponent<SleepBehaviour>();
+        if (!TryGetComponent(out _food))     _food     = gameObject.AddComponent<FoodBehaviour>();
+        if (!TryGetComponent(out _sulk))     _sulk     = gameObject.AddComponent<SulkBehaviour>();
+        if (!TryGetComponent(out _leave))    _leave    = gameObject.AddComponent<LeaveBehaviour>();
         GetComponents(_behaviours);
         foreach (var b in _behaviours) b.enabled = false;
 
@@ -274,6 +415,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead) return;
         TickTiredness();
+        TickHunger();
 
         if (_fleeing && !_held)
         {
@@ -297,7 +439,122 @@ public class MinionController : MonoBehaviour, IHandTarget
         }
 
         bool onDuty = _active != _creature || _creature.HasReported;
-        if (onDuty && NeedsSleep && _tiredness >= sleepThreshold) StartErrand(_sleep);
+        if (!onDuty) return;
+
+        // High: eat, recover, sleep. (Wages are above.)
+        bool wantsFood = WantsFood || (_assignedFood && NeedsFood && _hunger >= assignedNeedThreshold);
+        _assignedFood = false;
+        if (Time.time >= _nextFoodAttempt && wantsFood) { StartErrand(_food); return; }
+
+        _recovering = NeedsSleep && HealthFraction < recoverBelowHealth && Time.time >= _nextRecoverAttempt;
+        bool wantsSleep = _recovering || (NeedsSleep && _tiredness >= sleepThreshold)
+                       || (_assignedSleep && NeedsSleep && _tiredness >= assignedNeedThreshold);
+        _assignedSleep = false;
+        if (wantsSleep) { StartErrand(_sleep); return; }
+
+        // Anger: leave, sulk.
+        if (TryAngerJob()) return;
+
+        // Idle: nap when a little tired.
+        if (NeedsSleep && _tiredness >= idleSleepThreshold && Activity == MinionActivity.Idle)
+        {
+            StartErrand(_sleep);
+            return;
+        }
+
+        TrySnack();
+    }
+
+    private bool TryAngerJob()
+    {
+        if (Time.time < _nextMoodCheck) return false;
+        _nextMoodCheck = Time.time + 1f;
+
+        float anger = Anger;
+        if (anger >= furiousAnger && CanAbandon && Time.time >= _nextLeaveAttempt)
+        {
+            _nextLeaveAttempt = Time.time + leaveRetrySeconds;
+            StartErrand(_leave);
+            return true;
+        }
+
+        if (anger >= annoyedAnger && Random.value < sulkChancePerMinute / 60f)
+        {
+            StartErrand(_sulk);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Called by CreatureBehaviour each frame it idles: grows grumpy.</summary>
+    public void TickIdle(float deltaTime) =>
+        _temper.AddGrievance(MinionTemper.Grievance.Idle, idleAngerPerMinute / 60f * deltaTime);
+
+    /// <summary>Called by CreatureBehaviour each frame it works a room: idle grumpiness wears off.</summary>
+    public void TickWorking(float deltaTime) =>
+        _temper.AddGrievance(MinionTemper.Grievance.Idle, -workCalmPerMinute / 60f * deltaTime);
+
+    /// <summary>Walked out through the portal for good (LeaveBehaviour).</summary>
+    public void Desert()
+    {
+        if (_dead) return;
+        Debug.Log($"[MinionController] {name} ({_definition?.displayName}) has left the {faction} dungeon.");
+        Die();
+    }
+
+    /// <summary>A little peckish and a chicken right here: eat it on the spot.</summary>
+    private void TrySnack()
+    {
+        if (!NeedsFood || _hunger < snackThreshold || Time.time < _nextSnackCheck) return;
+        _nextSnackCheck = Time.time + 0.5f;
+
+        var hatchery = HatcheryManager.Instance;
+        if (hatchery == null || gridManager == null) return;
+
+        var chicken = hatchery.FindFreeChickenNear(transform.position, snackReach * gridManager.CellSize);
+        if (chicken != null) { _food.Target(chicken); StartErrand(_food); }
+    }
+
+    /// <summary>The eating trip is over.</summary>
+    public void FinishFood() => EndErrand(_food);
+
+    /// <summary>Called by FoodBehaviour when it finds nothing to eat: don't look again for a while.</summary>
+    public void OnNoFood() => _nextFoodAttempt = Time.time + foodRetrySeconds;
+
+    private void TickHunger()
+    {
+        if (!NeedsFood) return;
+
+        _hunger = Mathf.Min(1f, _hunger + HungerPerMinute / 60f * Time.deltaTime);
+        if (!IsStarving) return;
+
+        float minutes = Time.deltaTime / 60f;
+        _temper.AddGrievance(MinionTemper.Grievance.Starving, starvingAngerPerMinute * minutes);
+        float damage = MaxHealth * starvingDamagePerMinute * minutes;
+        _health = Mathf.Max(Mathf.Min(_health, 1f), _health - damage);
+    }
+
+    /// <summary>
+    /// One chicken eaten: hunger down, and health up unless exhausted.
+    /// Eaten below hungerThreshold, the anger of starving is forgotten.
+    /// </summary>
+    public void Eat(float hungerRelief, float healFraction)
+    {
+        if (_dead) return;
+        if (NeedsFood) _hunger = Mathf.Max(0f, _hunger - hungerRelief);
+        if (CanRecoverFromFood) Heal(MaxHealth * healFraction);
+        if (_hunger < hungerThreshold) _temper.SetGrievance(MinionTemper.Grievance.Starving, 0f);
+    }
+
+    /// <summary>
+    /// A chicken dropped on it by the Keeper's hand: eaten on the spot, full
+    /// or not, and it stands still while it eats.
+    /// </summary>
+    public void ForceFeed(float hungerRelief, float healFraction, float eatSeconds)
+    {
+        if (_dead) return;
+        Eat(hungerRelief, healFraction);
+        _agent.Pause(eatSeconds);
     }
 
     private void TickTiredness()
@@ -453,6 +710,9 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void FinishSleep(bool sleptInBed)
     {
+        // Came to recover but had no bed to heal in: don't try again straight away.
+        if (_recovering && !sleptInBed) _nextRecoverAttempt = Time.time + 30f;
+        _recovering = false;
         _temper.SetGrievance(MinionTemper.Grievance.Exhaustion, 0f);
         if (sleptInBed) _temper.SetGrievance(MinionTemper.Grievance.NoBed, 0f);
         EndErrand(_sleep);
@@ -489,8 +749,15 @@ public class MinionController : MonoBehaviour, IHandTarget
     public float GetStatOr(MinionStat stat, float fallback) =>
         (_definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback) * Exhaustion(stat);
 
-    /// <summary>The exhaustion penalty on a stat: exhaustedStatMultiplier on performance stats while exhausted, else 1.</summary>
-    private float Exhaustion(MinionStat stat) => IsExhausted && IsPerformanceStat(stat) ? exhaustedStatMultiplier : 1f;
+    /// <summary>The penalty on a stat: exhausted and/or starving multiply performance stats down; others are untouched.</summary>
+    private float Exhaustion(MinionStat stat)
+    {
+        if (!IsPerformanceStat(stat)) return 1f;
+        float m = 1f;
+        if (IsExhausted) m *= exhaustedStatMultiplier;
+        if (IsStarving)  m *= starvingStatMultiplier;
+        return m;
+    }
 
     private static bool IsPerformanceStat(MinionStat stat) => stat switch
     {
@@ -584,7 +851,24 @@ public class MinionController : MonoBehaviour, IHandTarget
             _dropAffinityUntil = Time.time + dropAffinityDuration;
         }
 
+        AssignFromDrop(cell);
         ResumeActive();
+    }
+
+    /// <summary>
+    /// Assigned jobs: dropped on a Lair it sleeps, on a Hatchery it eats, on
+    /// a Treasury it collects what it's owed — sooner than it would on its
+    /// own (assignedNeedThreshold). A sulk is abandoned for it; any other
+    /// errand carries on first.
+    /// </summary>
+    private void AssignFromDrop(GridCell cell)
+    {
+        bool assigned = false;
+        if (cell.TileType == TileType.Lair)          assigned = _assignedSleep = NeedsSleep && _tiredness >= assignedNeedThreshold;
+        else if (cell.TileType == TileType.Hatchery) assigned = _assignedFood  = NeedsFood && _hunger >= assignedNeedThreshold;
+        else if (cell.TileType == TileType.Treasury && _owedWages > 0) assigned = _wageTripPending = true;
+
+        if (assigned && _errand == _sulk) DropErrand();
     }
 
     /// <summary>
@@ -676,6 +960,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; _active = null; }
+        _creature.ForgetReport();   // reports to its new masters' heart
 
         // Its new masters owe it nothing yet, it holds no grudge against them,
         // and its old bed isn't theirs.

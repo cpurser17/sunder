@@ -118,6 +118,11 @@ public class HUDController2D : MonoBehaviour
             spellsTab.RebuildLayout();
         }
 
+        // The Minions tab tracks this player's minions (see MinionTracker).
+        var minionsTab = HudFooter.Instance != null ? HudFooter.Instance.FindTab("Minions") : null;
+        if (minionsTab != null && !minionsTab.TryGetComponent(out MinionTracker tracker))
+            minionsTab.gameObject.AddComponent<MinionTracker>().Initialise(localPlayer);
+
         foreach (var entry in buyButtonEntries)
         {
             if (entry?.button == null) continue;

@@ -368,6 +368,7 @@ public class GridManager2D : MonoBehaviour
     public bool       PlacesOnTunnel(TileType  type) => tileRegistry.PlacesOnTunnel(type);
     public DungeonRoom GetRoomForCell(GridCell cell) => _roomRegistry.GetRoomForCell(cell);
     public List<DungeonRoom> GetRoomsForFaction(FactionID f) => _roomRegistry.GetRoomsForFaction(f);
+    public IReadOnlyList<DungeonRoom> Rooms => _roomRegistry.Rooms;
     public ConnectivityRegistry Connectivity => _roomRegistry.Connectivity;
     public TerritoryRegistry    Territory    => _roomRegistry.Territory;
     public ClearanceMap         Clearance    => _roomRegistry.Clearance;

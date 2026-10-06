@@ -36,3 +36,9 @@ public abstract class MinionBehaviour : MonoBehaviour
     public virtual void Resume()     { }
     public virtual void Deactivate() { }
 }
+
+/// <summary>What a minion is doing, broadly. Read from MinionController.Activity.</summary>
+public enum MinionActivity
+{
+    Held, Reporting, Idle, Working, Fighting, Eating, Sleeping, CollectingWages, Sulking, Leaving,
+}
