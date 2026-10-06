@@ -24,6 +24,13 @@ public class FactionRegistry : ScriptableObject
         }
     }
 
+    /// <summary>Every definition, in the order listed on the asset.</summary>
+    public IReadOnlyList<FactionDefinition> Definitions => definitions;
+
+    /// <summary>The minion with this id in this content faction, or null.</summary>
+    public MinionDefinition FindMinion(string factionContentId, string minionId) =>
+        GetDefinition(factionContentId)?.FindMinion(minionId);
+
     public FactionDefinition GetDefinition(string factionContentId)
     {
         if (string.IsNullOrEmpty(factionContentId)) return null;

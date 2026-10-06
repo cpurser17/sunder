@@ -289,6 +289,7 @@ public class GameManager2D : MonoBehaviour
         RebuildFactionDefinitions();
         SaveLoadSystem.ApplyGrid(gridManager, level.grid);
         InitialiseWallets(_activeFactions, level.startingGold);
+        SpawnPlacedMinions(level.minions);
 
         Debug.Log($"[GameManager2D] Started '{level.displayName}' " +
                   $"with {_activeFactions.Count} faction(s).");
@@ -331,6 +332,55 @@ public class GameManager2D : MonoBehaviour
 
         Debug.Log($"[GameManager2D] Resumed slot={slot} branch={branchId} " +
                   $"index={saveIndex} (tip={_loadedFromBranchTip}).");
+    }
+
+    /// <summary>
+    /// Spawns the minions the level editor placed, from MinionSummoner's
+    /// shared template, as already part of their team (SpawnSource.Placed —
+    /// they don't count against a summoning population). New games only:
+    /// saves don't record minions yet, so a resumed game has none either way.
+    /// </summary>
+    private void SpawnPlacedMinions(List<MinionPlacement> placements)
+    {
+        if (placements == null || placements.Count == 0) return;
+
+        var template = MinionSummoner.Instance != null ? MinionSummoner.Instance.Template : null;
+        int spawned  = 0;
+        foreach (var p in placements)
+        {
+            var def = factionRegistry != null
+                ? factionRegistry.FindMinion(p.contentFactionId, p.minionId)
+                : null;
+            if (def == null)
+            {
+                Debug.LogWarning($"[GameManager2D] Placed minion {p.contentFactionId} {p.minionId} " +
+                                 "not found in the Faction Registry — skipped.");
+                continue;
+            }
+
+            var prefab = def.prefab != null ? def.prefab : template;
+            if (prefab == null)
+            {
+                Debug.LogError("[GameManager2D] No minion template (MinionSummoner) to spawn placed minions from.");
+                return;
+            }
+
+            Vector3 pos = gridManager.transform.position +
+                          new Vector3(p.x * gridManager.CellSize, 0f, p.y * gridManager.CellSize);
+            var go = Instantiate(prefab, pos, Quaternion.identity);
+            go.name = $"{def.minionId}_{p.factionId}_placed{spawned}";
+
+            if (!go.TryGetComponent(out MinionController minion))
+            {
+                Debug.LogError($"[GameManager2D] {prefab.name} is missing MinionController.");
+                Destroy(go);
+                continue;
+            }
+            minion.Initialise(p.factionId, def, Mathf.Max(1, p.level), MinionController.SpawnSource.Placed);
+            spawned++;
+        }
+
+        Debug.Log($"[GameManager2D] Spawned {spawned}/{placements.Count} placed minion(s).");
     }
 
     /// <summary>

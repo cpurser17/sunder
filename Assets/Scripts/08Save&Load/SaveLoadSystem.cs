@@ -117,10 +117,21 @@ public static class SaveLoadSystem
         }
     }
 
-    public static bool SaveLevel(LevelData data)
+    public static string BuiltInLevelsRoot =>
+        Path.Combine(Application.streamingAssetsPath, "Levels");
+
+    /// <summary>Writes a level to CustomLevels (the read-write folder).</summary>
+    public static bool SaveLevel(LevelData data) => SaveLevelTo(data, CustomLevelsRoot);
+
+    /// <summary>
+    /// Writes a level to the given folder as {levelId}.json. The level editor
+    /// uses BuiltInLevelsRoot to ship a level with the game (Editor only — the
+    /// folder is read-only in a build).
+    /// </summary>
+    public static bool SaveLevelTo(LevelData data, string folder)
     {
-        EnsureDirectory(CustomLevelsRoot);
-        string path = Path.Combine(CustomLevelsRoot, $"{data.levelId}.json");
+        EnsureDirectory(folder);
+        string path = Path.Combine(folder, $"{data.levelId}.json");
         try
         {
             File.WriteAllText(path, JsonConvert.SerializeObject(data, LevelSettings));
