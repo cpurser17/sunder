@@ -133,6 +133,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<Announcer>();
         if (FindAnyObjectByType<HatcheryManager>() == null)
             gameObject.AddComponent<HatcheryManager>();
+        if (FindAnyObjectByType<RoomWorkManager>() == null)
+            gameObject.AddComponent<RoomWorkManager>();
     }
 
     private void Start()

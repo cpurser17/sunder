@@ -59,6 +59,8 @@ public class Announcer : MonoBehaviour
     {
         new Entry { id = "LairTooSmall",     text = "Your lair is too small.",     priority = Priority.Normal, cooldown = 30f },
         new Entry { id = "HatcheryTooSmall", text = "Your hatchery is too small.", priority = Priority.Normal, cooldown = 30f },
+        new Entry { id = "MinionLeaving",    text = "A minion is leaving your dungeon.", priority = Priority.High, cooldown = 10f },
+        new Entry { id = "NoGoldForTraining", text = "You cannot afford to train your minions.", priority = Priority.Normal, cooldown = 60f },
     };
 
     [Header("Delivery")]

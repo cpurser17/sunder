@@ -61,7 +61,9 @@ public class SleepBehaviour : MinionBehaviour
 
     private void Update()
     {
-        if (Minion.Tiredness <= 0f) { Minion.FinishSleep(!_onFloor); return; }
+        // Rested — and, if it came to bed to recover, healed (no healing on the floor).
+        bool healed = _onFloor || !Minion.IsRecovering || Minion.HealthFraction >= Minion.RecoverUntilHealth;
+        if (Minion.Tiredness <= 0f && healed) { Minion.FinishSleep(!_onFloor); return; }
 
         var lair = LairManager.Instance;
         switch (_step)

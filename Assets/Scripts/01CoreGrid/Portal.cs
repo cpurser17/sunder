@@ -61,6 +61,10 @@ public class Portal : MonoBehaviour
 
     public bool IsReady(FactionID faction) => _ready && _cells.ContainsKey(faction);
 
+    /// <summary>The faction's portal tile, or null if it has none.</summary>
+    public GridCell CellOf(FactionID faction) =>
+        _ready && _cells.TryGetValue(faction, out var cell) ? cell : null;
+
     public Vector3 SpawnPoint(FactionID faction) =>
         gridManager.CellToWorld(_cells[faction].X, _cells[faction].Y);
 }

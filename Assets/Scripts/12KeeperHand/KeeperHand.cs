@@ -287,6 +287,17 @@ public class KeeperHand : MonoBehaviour
 
     // ── Pick up ────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Picks up a particular target on request (e.g. from the minion
+    /// tracker) — the same rules as clicking it in the world, wherever it is.
+    /// </summary>
+    public bool TryPickUp(IHandTarget target)
+    {
+        if (target == null || !IsGrabbable(target) || _held.Count >= capacity) return false;
+        PickUp(target);
+        return true;
+    }
+
     private void PickUp(IHandTarget target)
     {
         if (target == null || _held.Count >= capacity) return;
