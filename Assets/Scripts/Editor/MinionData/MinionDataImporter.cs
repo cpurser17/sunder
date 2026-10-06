@@ -279,7 +279,8 @@ public static class MinionDataImporter
 
     /// <summary>
     /// Each faction's roster becomes its summonable minions, in sheet order,
-    /// and its worker the Worker-stance row (what its workers are built from).
+    /// its worker the Worker-stance row (what its workers are built from), and
+    /// allMinions every row (what the level editor can place).
     /// A faction with no FactionDefinition yet gets one (with default
     /// population/timing to tune by hand), added to every FactionRegistry.
     /// </summary>
@@ -317,8 +318,9 @@ public static class MinionDataImporter
             var worker = data.WorkerFor(factionId);
             foreach (var faction in factions)
             {
-                faction.roster = new List<MinionDefinition>(roster);
-                faction.worker = worker != null ? minions[worker.Key] : null;
+                faction.roster     = new List<MinionDefinition>(roster);
+                faction.worker     = worker != null ? minions[worker.Key] : null;
+                faction.allMinions = group.Select(m => minions[m.Key]).ToList();
                 EditorUtility.SetDirty(faction);
             }
             report.RostersUpdated.Add($"{factionId} ({roster.Count} summonable)");

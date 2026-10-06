@@ -50,3 +50,13 @@ MonoBehaviour:
     colour: {r: 0.26666668, g: 1, b: 0.26666668, a: 0}
   - faction: 4
     colour: {r: 1, g: 0.6666667, b: 0, a: 0}
+  - faction: 5
+    colour: {r: 0.6666667, g: 0.33333334, b: 1, a: 0}
+  - faction: 6
+    colour: {r: 0.2, g: 0.8666667, b: 0.8666667, a: 0}
+  - faction: 7
+    colour: {r: 1, g: 0.4, b: 0.73333335, a: 0}
+  - faction: 8
+    colour: {r: 0.93333334, g: 0.93333334, b: 0.26666668, a: 0}
+  - faction: 9
+    colour: {r: 0.4, g: 0.06666667, b: 0.06666667, a: 0}

@@ -40,6 +40,12 @@ public class FactionDefinition : ScriptableObject
              "Minion Data from the faction's Worker row. Empty = the worker prefab's own values.")]
     public MinionDefinition worker;
 
+    [Tooltip("Every minion of this faction, summonable or not — workers, commanders, " +
+             "uniques and the General included. What the level editor offers for " +
+             "placement and what placed minions in a level file resolve against. " +
+             "Rebuilt by Sunder > Import Minion Data.")]
+    public List<MinionDefinition> allMinions = new();
+
     [Header("Population")]
     public int populationLimit = 10;
 
@@ -54,4 +60,28 @@ public class FactionDefinition : ScriptableObject
     public int maxHeartHitPoints = 0;
     [Tooltip("Empty = use DungeonHeart's own fallback crystal.")]
     public GameObject crystalPrefab;
+
+    /// <summary>
+    /// Every distinct minion this faction has: allMinions, then anything only
+    /// on the roster or as the worker (assets imported before allMinions existed).
+    /// </summary>
+    public IEnumerable<MinionDefinition> EveryMinion()
+    {
+        var seen = new HashSet<MinionDefinition>();
+        if (worker != null && seen.Add(worker)) yield return worker;
+        foreach (var def in allMinions)
+            if (def != null && seen.Add(def)) yield return def;
+        foreach (var def in roster)
+            if (def != null && seen.Add(def)) yield return def;
+    }
+
+    /// <summary>This faction's minion with the given minionId, or null.</summary>
+    public MinionDefinition FindMinion(string minionId)
+    {
+        if (string.IsNullOrEmpty(minionId)) return null;
+        foreach (var def in EveryMinion())
+            if (string.Equals(def.minionId, minionId, System.StringComparison.OrdinalIgnoreCase))
+                return def;
+        return null;
+    }
 }

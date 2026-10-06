@@ -72,6 +72,17 @@ public class TileRegistry : ScriptableObject
 
     // ── Colour lookups ─────────────────────────────────────────────────
 
+    /// <summary>The faction's own tint colour (opaque), or grey if none is set.</summary>
+    public Color GetFactionColour(FactionID faction)
+    {
+        if (_factionMap != null && _factionMap.TryGetValue(faction, out Color col))
+        {
+            col.a = 1f;
+            return col;
+        }
+        return Color.grey;
+    }
+
     /// <summary>
     /// Returns the display colour for a cell, incorporating faction tinting
     /// for owned tiles.

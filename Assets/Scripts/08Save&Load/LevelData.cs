@@ -55,8 +55,13 @@ public class LevelData
     // ── Grid ──────────────────────────────────────────────────────────
     public GridSaveData grid;
 
+    // ── Placed minions ─────────────────────────────────────────────────
+    // Minions standing in the dungeon when the mission starts, placed in the
+    // level editor. Spawned by GameManager2D on a new game. Null/empty in
+    // levels written before the editor existed.
+    public List<MinionPlacement> minions = new();
+
     // ── Future extension slots ─────────────────────────────────────────
-    // public List<EntitySpawnData>  startingEntities;
     // public List<ObjectiveData>    objectives;
     // public OverworldLevelMetaData overworldMeta;
 }
@@ -128,4 +133,26 @@ public class GameStateSaveData
     // ── Future extension slots ─────────────────────────────────────────
     // public int   score;
     // public float missionElapsedTime;
+}
+
+/// <summary>
+/// One minion placed in a level: which team it fights for, which minion it
+/// is (a content faction's MinionDefinition, by id — resolved through
+/// FactionRegistry), its starting level, and where it stands.
+///
+/// Position is in grid units, not world units: (3.5, 7.5) is the centre of
+/// cell (3, 7), so the level stays valid whatever cellSize a scene uses.
+/// </summary>
+[System.Serializable]
+public class MinionPlacement
+{
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public FactionID factionId;          // owning team (Unaligned = neutral)
+    public string    contentFactionId;   // e.g. "01U" — FactionDefinition.factionContentId
+    public string    minionId;           // e.g. "T1F" — MinionDefinition.minionId
+    public int       level = 1;
+    public float     x;                  // grid units
+    public float     y;                  // grid units
+
+    public MinionPlacement Clone() => (MinionPlacement)MemberwiseClone();
 }
