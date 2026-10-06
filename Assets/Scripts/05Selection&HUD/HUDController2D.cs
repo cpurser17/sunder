@@ -103,6 +103,7 @@ public class HUDController2D : MonoBehaviour
     private void Start()
     {
         buyButtonEntries ??= new List<BuyButtonEntry2D>();
+        UseFooter();
         if (roomsTab != null)
         {
             RetireHandMadeRoomButtons();
@@ -111,7 +112,6 @@ public class HUDController2D : MonoBehaviour
         AddGeneratedRoomButtons();
         RegisterRoomsWithFooter();
 
-        if (spellsTab == null && HudFooter.Instance != null) spellsTab = HudFooter.Instance.FindTab("Spells");
         if (spellsTab != null)
         {
             AddGeneratedSummonButton();
@@ -254,6 +254,34 @@ public class HUDController2D : MonoBehaviour
         if (btn == null) return;
         var img = btn.GetComponent<Image>();
         if (img) img.color = on ? activeColour : normalColour;
+    }
+
+    /// <summary>
+    /// With a HUD footer in the scene, fills in anything left unwired: the
+    /// Rooms and Spells tabs (found by name), and the footer's own
+    /// RoomButtonTemplate — sized for its grids — in place of an empty
+    /// template or one from the old HUD.
+    /// </summary>
+    private void UseFooter()
+    {
+        var footer = HudFooter.Instance;
+        if (footer == null) return;
+
+        if (roomsTab  == null) roomsTab  = footer.FindTab("Rooms");
+        if (spellsTab == null) spellsTab = footer.FindTab("Spells");
+
+        var footerTemplate = footer.transform.Find("RoomButtonTemplate");
+        var template = footerTemplate != null ? footerTemplate.GetComponent<Button>() : null;
+        if (template != null && (roomButtonTemplate == null || !roomButtonTemplate.transform.IsChildOf(footer.transform)))
+        {
+            if (roomButtonTemplate != null)
+                Debug.Log($"[HUDController2D] Using the footer's RoomButtonTemplate instead of {roomButtonTemplate.name} " +
+                          "(not part of the footer). Point Room Button Template at a footer button to choose another.", this);
+            roomButtonTemplate = template;
+        }
+
+        if (roomsTab == null)
+            Debug.LogWarning("[HUDController2D] The HUD footer has no tab named \"Rooms\" — room buttons stay in the old HUD.", this);
     }
 
     private TileRegistry Tiles
@@ -419,6 +447,7 @@ public class HUDController2D : MonoBehaviour
             });
         }
         roomsTab.RebuildLayout();
+        Debug.Log($"[HUDController2D] Rooms tab: {roomsTab.Entries.Count} button(s).", this);
     }
 
     private bool HasEntryFor(TileType type)
