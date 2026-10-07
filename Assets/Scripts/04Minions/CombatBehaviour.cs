@@ -8,7 +8,8 @@ using UnityEngine;
 ///
 ///   Fight   close to within reach of the target (or, for a ranged attack,
 ///           just get it in sight and range — across lava if need be) and
-///           attack on cooldown (CombatSystem rules the hits). Kill it, then
+///           attack on cooldown (CombatSystem rules the hits; each attack
+///           earns experience — standing about doesn't). Kill it, then
 ///           take the next enemy in sight. Creatures with no enemy minion in
 ///           sight attack an enemy Dungeon Heart they can see.
 ///   Flee    workers: run for their own heart, away from the enemy. Caught
@@ -139,8 +140,6 @@ public class CombatBehaviour : MinionBehaviour
 
     private void Fight(CombatSystem combat)
     {
-        Minion.AddExperience(combat.CombatXpPerMinute * Time.deltaTime / 60f);
-
         Vector3 targetPos = _targetIsHeart
             ? Minion.Grid.CellToWorld(_heartCell.X, _heartCell.Y)
             : _target.transform.position;
@@ -161,6 +160,12 @@ public class CombatBehaviour : MinionBehaviour
 
             if (_targetIsHeart) combat.AttackHeart(Minion, _heartFaction, _profile, targetPos);
             else                combat.Attack(Minion, _target, _profile);
+
+            // Combat experience is earned by attacking — hit or miss — not by
+            // being in a fight: one attack's share of the per-minute rate, so
+            // a minion attacking flat out earns the full rate, and two that
+            // can't reach each other earn nothing for glaring across the lava.
+            Minion.AddExperience(combat.CombatXpPerMinute * _profile.Cooldown / 60f);
             return;
         }
 

@@ -49,9 +49,11 @@ public struct AttackProfile
 ///
 /// Experience
 /// ----------
-/// Every minion fighting gains combatXpMultiplier × the training rate per
-/// minute; the one landing the killing blow gets killXpPerVictimLevel × the
-/// victim's level on top.
+/// Each attack a minion makes — hit or miss — earns its share of
+/// combatXpMultiplier × the training rate per minute (the rate × cooldown),
+/// so only minions actually using their attacks learn from a fight, and one
+/// attacking without pause earns the full rate. The one landing the killing
+/// blow gets killXpPerVictimLevel × the victim's level on top.
 ///
 /// Scene setup: none — GameManager2D adds one. Add it yourself to tune.
 /// </summary>
@@ -89,7 +91,8 @@ public class CombatSystem : MonoBehaviour
     [SerializeField, Min(0f)] private float defaultRangedRange = 5f;
 
     [Header("Experience")]
-    [Tooltip("Combat experience per minute, as a multiple of the training rate.")]
+    [Tooltip("Combat experience per minute of attacking without pause, as a multiple of the training rate. " +
+             "Earned per attack made, not per second in a fight.")]
     [SerializeField, Min(0f)] private float combatXpMultiplier = 2f;
     [Tooltip("Bonus experience for the killing blow, per level of the victim.")]
     [SerializeField, Min(0f)] private float killXpPerVictimLevel = 100f;
