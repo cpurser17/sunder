@@ -842,7 +842,10 @@ public class MinionController : MonoBehaviour, IHandTarget
         _held              = true;
         _fleeing           = false;
         _dropAffinityUntil = float.NegativeInfinity;
-        _ignoreUntil.Clear();   // wherever it's set down, it sizes up every enemy afresh
+        // Wherever it's set down, it sizes up every enemy afresh — and every
+        // minion that had given up on it does the same.
+        _ignoreUntil.Clear();
+        foreach (var other in _all) if (other != null && other != this) other._ignoreUntil.Remove(this);
 
         _agent.Stop();
         _agent.enabled = false;
@@ -1030,7 +1033,8 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// whether it can now reach or hit that enemy, and if so stops ignoring
     /// it at once; if not, it keeps ignoring it for the rest of the time.
     /// Being hit by it ends the truce at once too (EnterCombat doesn't
-    /// consult this), and being picked up by the hand forgets every ignore.
+    /// consult this). Being picked up by the hand ends every ignore both
+    /// ways: its own, and any other minion's of it.
     /// </summary>
     public void Ignore(MinionController enemy, float seconds)
     {
