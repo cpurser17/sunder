@@ -119,13 +119,15 @@ public class CombatSystem : MonoBehaviour
 
     /// <summary>
     /// Goes up by one on every tile change. A minion that gave up on an
-    /// unreachable enemy remembers the version it gave up at; any change to
-    /// the map since (a bridge built, a wall dug out) means the enemy might
-    /// be reachable now, so the give-up no longer applies.
+    /// unreachable enemy remembers the version it gave up at; once the map
+    /// has changed (a bridge built, a wall dug out) it checks again whether
+    /// it can now reach or hit that enemy (CanReachOrHit), and only then
+    /// stops ignoring it.
     /// </summary>
     public int MapVersion { get; private set; }
 
-    private GridManager2D _subscribedGrid;
+    private GridManager2D  _subscribedGrid;
+    private GridPathfinder _pathfinder;
 
     private void Awake()
     {
@@ -144,6 +146,27 @@ public class CombatSystem : MonoBehaviour
     }
 
     private void OnTileChanged(GridCell cell) => MapVersion++;
+
+    /// <summary>
+    /// Whether the minion could now get at the enemy: a walkable path to it,
+    /// or (for a ranged attack) already in range with a clear line of sight.
+    /// </summary>
+    public bool CanReachOrHit(MinionController self, MinionController enemy)
+    {
+        var grid = Grid;
+        if (grid == null || self == null || enemy == null || self.Agent == null || enemy.Agent == null) return false;
+        var from = self.Agent.CurrentCell;
+        var to   = enemy.Agent.CurrentCell;
+        if (from == null || to == null) return false;
+
+        var profile = ProfileFor(self);
+        float reach = profile.Range * CellSize + self.Agent.Radius + enemy.HandRadius;
+        Vector3 d = enemy.transform.position - self.transform.position;
+        if (d.x * d.x + d.z * d.z <= reach * reach && CanSee(from, to)) return true;
+
+        if (_pathfinder == null || _subscribedGrid != grid) _pathfinder = new GridPathfinder(grid);
+        return _pathfinder.FindPath(from, to, self.Agent.Capability, self.Faction, false, self.Agent.Radius) != null;
+    }
 
     private void OnDestroy()
     {
@@ -202,12 +225,13 @@ public class CombatSystem : MonoBehaviour
         {
             if (other == null || other == self || !other.IsAlive || other.IsHeld) continue;
             if (!IsEnemy(self.Faction, other.Faction)) continue;
-            if (ignore != null && ignore(other)) continue;
 
             Vector3 d = other.transform.position - self.transform.position;
             float sq = d.x * d.x + d.z * d.z;
             if (sq > bestSq) continue;
             if (!CanSee(from, other.Agent != null ? other.Agent.CurrentCell : null)) continue;
+            // Last, as it may search for a path (see MinionController.IsIgnoring).
+            if (ignore != null && ignore(other)) continue;
             best = other; bestSq = sq;
         }
         return best;

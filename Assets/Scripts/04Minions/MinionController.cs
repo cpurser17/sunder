@@ -1024,10 +1024,12 @@ public class MinionController : MonoBehaviour, IHandTarget
     }
 
     /// <summary>
-    /// Leaves an enemy it couldn't reach or hit alone for a while — or until
-    /// the map changes (a bridge built, a wall dug out), which might open a
-    /// way to it. Being hit by it ends the truce at once too (EnterCombat
-    /// doesn't consult this).
+    /// Leaves an enemy it couldn't reach or hit alone for a while. If the map
+    /// changes meanwhile (a bridge built, a wall dug out) it checks again
+    /// whether it can now reach or hit that enemy, and if so stops ignoring
+    /// it at once; if not, it keeps ignoring it for the rest of the time.
+    /// Being hit by it ends the truce at once too (EnterCombat doesn't
+    /// consult this).
     /// </summary>
     public void Ignore(MinionController enemy, float seconds)
     {
@@ -1039,10 +1041,15 @@ public class MinionController : MonoBehaviour, IHandTarget
     public bool IsIgnoring(MinionController enemy)
     {
         if (enemy == null || !_ignoreUntil.TryGetValue(enemy, out var entry)) return false;
-        int version = CombatSystem.Instance != null ? CombatSystem.Instance.MapVersion : 0;
-        if (Time.time < entry.until && version == entry.mapVersion) return true;
-        _ignoreUntil.Remove(enemy);
-        return false;
+        if (Time.time >= entry.until) { _ignoreUntil.Remove(enemy); return false; }
+
+        var combat = CombatSystem.Instance;
+        if (combat == null || combat.MapVersion == entry.mapVersion) return true;
+
+        // The map has changed since it gave up: is there a way to the enemy now?
+        if (combat.CanReachOrHit(this, enemy)) { _ignoreUntil.Remove(enemy); return false; }
+        _ignoreUntil[enemy] = (entry.until, combat.MapVersion);   // still no way — checked as of now
+        return true;
     }
 
     private void DropCombat()
