@@ -49,6 +49,7 @@ public class RoomWorkManager : MonoBehaviour
     private readonly Dictionary<MinionController, float>    _goldDue  = new();
 
     public Vector2 SessionSeconds => sessionSeconds;
+    public float   TrainExperiencePerMinute => trainExperiencePerMinute;
 
     private GridManager2D Grid => GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
 

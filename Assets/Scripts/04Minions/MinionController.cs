@@ -70,7 +70,8 @@ using UnityEngine;
 /// Priorities (after Dungeon Keeper)
 /// ---------------------------------
 /// What a minion does is decided top-down; the first that applies wins.
-///   Highest      fight, prisoner, torture                    (with combat — later)
+///   Highest      fight (CombatBehaviour) — pauses anything, even sleep;
+///                prisoner, torture                           (later)
 ///   Enchantment  spells cast on it: call to arms, etc.       (later)
 ///   High         collect wages, eat, recover (sleep when badly hurt), sleep
 ///   Anger        leave the dungeon (furious), sulk (annoyed)
@@ -206,6 +207,10 @@ public class MinionController : MonoBehaviour, IHandTarget
     private FoodBehaviour     _food;
     private SulkBehaviour     _sulk;
     private LeaveBehaviour    _leave;
+    private CombatBehaviour   _combat;
+    private bool              _inCombat;
+    private float             _nextSense;
+    private readonly Dictionary<MinionController, float> _ignoreUntil = new();
     private MinionBehaviour   _active;
     private MinionBehaviour   _errand;
 
@@ -285,6 +290,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         get
         {
             if (_held) return MinionActivity.Held;
+            if (_inCombat) return MinionActivity.Fighting;
             if (_errand == _wages) return MinionActivity.CollectingWages;
             if (_errand == _food)  return MinionActivity.Eating;
             if (_errand == _sleep) return MinionActivity.Sleeping;
@@ -305,7 +311,13 @@ public class MinionController : MonoBehaviour, IHandTarget
     }
 
     /// <summary>The behaviour actually running: the errand if there is one, else the active behaviour.</summary>
-    private MinionBehaviour Running => _errand != null ? _errand : _active;
+    private MinionBehaviour Running => _inCombat ? _combat : _errand != null ? _errand : _active;
+
+    /// <summary>Fighting or fleeing an enemy.</summary>
+    public bool InCombat => _inCombat;
+
+    /// <summary>A worker (or WorkerSpawner minion without data): flees enemies rather than fighting.</summary>
+    public bool IsWorkerKind => IsWorkerFirst;
 
     /// <summary>Multiplier for any work this minion does — above 1 while a slap's boost lasts.</summary>
     public float WorkSpeedMultiplier => _temper.WorkSpeedMultiplier;
@@ -362,6 +374,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (!TryGetComponent(out _food))     _food     = gameObject.AddComponent<FoodBehaviour>();
         if (!TryGetComponent(out _sulk))     _sulk     = gameObject.AddComponent<SulkBehaviour>();
         if (!TryGetComponent(out _leave))    _leave    = gameObject.AddComponent<LeaveBehaviour>();
+        if (!TryGetComponent(out _combat))   _combat   = gameObject.AddComponent<CombatBehaviour>();
         GetComponents(_behaviours);
         foreach (var b in _behaviours) b.enabled = false;
 
@@ -416,6 +429,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (_dead) return;
         TickTiredness();
         TickHunger();
+        SenseEnemies();
 
         if (_fleeing && !_held)
         {
@@ -429,7 +443,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// <summary>Starts the most pressing errand that's waiting, if the minion is free for one.</summary>
     private void StartDueErrand()
     {
-        if (_errand != null || _held || _fleeing) return;
+        if (_errand != null || _held || _fleeing || _inCombat) return;
 
         if (_wageTripPending)
         {
@@ -585,7 +599,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         _active = next;
         if (_active == null || _dead) return;
 
-        bool interrupted = _held || _fleeing || _errand != null;
+        bool interrupted = _held || _fleeing || _errand != null || _inCombat;
         _active.enabled = !interrupted;
         _active.Activate();
         if (interrupted) _active.Pause();
@@ -853,6 +867,16 @@ public class MinionController : MonoBehaviour, IHandTarget
 
         AssignFromDrop(cell);
         ResumeActive();
+
+        // Dropped right beside an enemy, even a worker stands and fights.
+        var combat = CombatSystem.Instance;
+        var enemy  = combat != null ? combat.FindVisibleEnemy(this) : null;
+        if (enemy != null)
+        {
+            Vector3 d = enemy.transform.position - transform.position;
+            float near = combat.DropFightRadius * combat.CellSize;
+            if (d.x * d.x + d.z * d.z <= near * near) EnterCombat(enemy, fight: true);
+        }
     }
 
     /// <summary>
@@ -916,10 +940,111 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (_health <= 0f) Die();
     }
 
+    /// <summary>
+    /// Hit by an enemy: it fights back (a worker runs, unless cornered), and
+    /// the player hears their minions are under attack. A killing blow earns
+    /// the attacker its bonus experience.
+    /// </summary>
+    public void TakeDamage(float amount, MinionController attacker)
+    {
+        if (_dead || amount <= 0f) return;
+
+        Announcer.Announce(faction, "MinionsUnderAttack", transform.position);
+        TakeDamage(amount);
+
+        if (_dead) { CombatSystem.Instance?.AwardKill(attacker, this); return; }
+        if (attacker != null && attacker.IsAlive) EnterCombat(attacker);
+    }
+
+    // ── Combat ─────────────────────────────────────────────────────────
+
+    /// <summary>Looks around every so often; an enemy in sight starts a fight.</summary>
+    private void SenseEnemies()
+    {
+        if (_inCombat || _held || Time.time < _nextSense) return;
+        var combat = CombatSystem.Instance;
+        if (combat == null) return;
+        _nextSense = Time.time + combat.SenseInterval * (0.75f + 0.5f * Random.value);
+
+        var enemy = combat.FindVisibleEnemy(this, IsIgnoring);
+        if (enemy != null) { EnterCombat(enemy); return; }
+
+        if (!IsWorkerFirst && combat.FindVisibleEnemyHeart(this, out var heartFaction, out var heartCell))
+            EnterHeartAttack(heartFaction, heartCell);
+    }
+
+    /// <summary>
+    /// Fights an enemy minion — above everything else. A worker flees
+    /// instead unless 'fight' is set (cornered, or dropped beside it).
+    /// Allies nearby are called in.
+    /// </summary>
+    public void EnterCombat(MinionController enemy, bool fight = false)
+    {
+        if (_dead || enemy == null || !CombatSystem.IsEnemy(faction, enemy.Faction)) return;
+        bool fights = fight || !IsWorkerFirst;
+
+        if (_inCombat) { _combat.Engage(enemy, fights); return; }
+
+        BeginCombat();
+        _combat.Begin(enemy, fights);
+        FinishBeginCombat();
+        CombatSystem.Instance?.Rally(this, enemy);
+    }
+
+    /// <summary>Attacks an enemy Dungeon Heart it has seen (creatures only).</summary>
+    public void EnterHeartAttack(FactionID heartFaction, GridCell heartCell)
+    {
+        if (_dead || _inCombat || IsWorkerFirst) return;
+        BeginCombat();
+        _combat.BeginHeart(heartFaction, heartCell);
+        FinishBeginCombat();
+    }
+
+    private void BeginCombat()
+    {
+        PauseActive();      // whatever was running — work, an errand — waits
+        _inCombat = true;
+    }
+
+    private void FinishBeginCombat()
+    {
+        bool interrupted = _held || _fleeing;
+        _combat.enabled = !interrupted;
+        if (interrupted) _combat.Pause();
+    }
+
+    /// <summary>No enemy left in sight: back to whatever it was doing.</summary>
+    public void EndCombat()
+    {
+        if (!_inCombat) return;
+        _combat.Deactivate();
+        _combat.enabled = false;
+        _inCombat = false;
+        if (!_held && !_fleeing) ResumeActive();
+    }
+
+    /// <summary>Leaves an enemy it couldn't reach or hit alone for a while.</summary>
+    public void Ignore(MinionController enemy, float seconds)
+    {
+        if (enemy != null) _ignoreUntil[enemy] = Time.time + seconds;
+    }
+
+    public bool IsIgnoring(MinionController enemy) =>
+        enemy != null && _ignoreUntil.TryGetValue(enemy, out float until) && Time.time < until;
+
+    private void DropCombat()
+    {
+        if (!_inCombat) return;
+        _combat.Deactivate();
+        _combat.enabled = false;
+        _inCombat = false;
+    }
+
     public void Die()
     {
         if (_dead) return;
 
+        DropCombat();
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; }
         _dead = true;
@@ -958,6 +1083,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead || newFaction == faction) return;
 
+        DropCombat();
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; _active = null; }
         _creature.ForgetReport();   // reports to its new masters' heart

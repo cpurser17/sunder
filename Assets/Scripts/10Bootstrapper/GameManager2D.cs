@@ -137,6 +137,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<RoomWorkManager>();
         if (FindAnyObjectByType<MinionHealthBars>() == null)
             gameObject.AddComponent<MinionHealthBars>();
+        if (FindAnyObjectByType<CombatSystem>() == null)
+            gameObject.AddComponent<CombatSystem>();
     }
 
     private void Start()

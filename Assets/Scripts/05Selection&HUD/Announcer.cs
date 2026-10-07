@@ -45,8 +45,12 @@ public class Announcer : MonoBehaviour
 
     public static Announcer Instance { get; private set; }
 
-    /// <summary>Raised whenever an announcement is given (player, id, text).</summary>
-    public static event System.Action<FactionID, string, string> OnAnnounced;
+    /// <summary>
+    /// Raised whenever an announcement is given (player, id, text, where —
+    /// null if it isn't about a place). The location is for the planned
+    /// message log's jump-to-event.
+    /// </summary>
+    public static event System.Action<FactionID, string, string, Vector3?> OnAnnounced;
 
     [SerializeField] private List<Entry> catalogue = DefaultCatalogue();
 
@@ -61,6 +65,8 @@ public class Announcer : MonoBehaviour
         new Entry { id = "HatcheryTooSmall", text = "Your hatchery is too small.", priority = Priority.Normal, cooldown = 30f },
         new Entry { id = "MinionLeaving",    text = "A minion is leaving your dungeon.", priority = Priority.High, cooldown = 10f },
         new Entry { id = "NoGoldForTraining", text = "You cannot afford to train your minions.", priority = Priority.Normal, cooldown = 60f },
+        new Entry { id = "MinionsUnderAttack", text = "Your minions are under attack!", priority = Priority.Critical, cooldown = 20f },
+        new Entry { id = "HeartUnderAttack",   text = "Your Dungeon Heart is under attack!", priority = Priority.Critical, cooldown = 20f },
     };
 
     [Header("Delivery")]
@@ -75,8 +81,9 @@ public class Announcer : MonoBehaviour
 
     private class Pending
     {
-        public Entry Entry;
-        public float QueuedAt;
+        public Entry    Entry;
+        public float    QueuedAt;
+        public Vector3? Where;
     }
 
     /// <summary>One human player's announcements: their cooldowns, queue and voice.</summary>
@@ -135,9 +142,12 @@ public class Announcer : MonoBehaviour
     // ── Announcing ─────────────────────────────────────────────────────
 
     /// <summary>Gives a warning to a faction's player, if it's human. Safe to call for anyone, any time.</summary>
-    public static void Announce(FactionID faction, string id) => Instance?.Give(faction, id);
+    public static void Announce(FactionID faction, string id) => Instance?.Give(faction, id, null);
 
-    private void Give(FactionID faction, string id)
+    /// <summary>As Announce, for something happening at a place (an attack, a full room).</summary>
+    public static void Announce(FactionID faction, string id, Vector3 where) => Instance?.Give(faction, id, where);
+
+    private void Give(FactionID faction, string id, Vector3? where)
     {
         if (!_channels.TryGetValue(faction, out var channel)) return;   // AI, or not a player
         if (!_byId.TryGetValue(id, out var entry))
@@ -151,7 +161,7 @@ public class Announcer : MonoBehaviour
         if (channel.Queue.Exists(p => p.Entry == entry)) return;
         channel.LastGiven[id] = now;
 
-        channel.Queue.Add(new Pending { Entry = entry, QueuedAt = now });
+        channel.Queue.Add(new Pending { Entry = entry, QueuedAt = now, Where = where });
         // Highest priority first; oldest first within a priority.
         channel.Queue.Sort((a, b) => a.Entry.priority != b.Entry.priority
             ? b.Entry.priority.CompareTo(a.Entry.priority)
@@ -179,6 +189,6 @@ public class Announcer : MonoBehaviour
         if (target != null) target.Show($"<b>{next.Entry.text}</b>", textHoldSeconds);
 
         Debug.Log($"[Announcer] {channel.Player}: {next.Entry.text}");
-        OnAnnounced?.Invoke(channel.Player, next.Entry.id, next.Entry.text);
+        OnAnnounced?.Invoke(channel.Player, next.Entry.id, next.Entry.text, next.Where);
     }
 }
