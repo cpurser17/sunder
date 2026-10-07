@@ -210,7 +210,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     private CombatBehaviour   _combat;
     private bool              _inCombat;
     private float             _nextSense;
-    private readonly Dictionary<MinionController, float> _ignoreUntil = new();
+    private readonly Dictionary<MinionController, (float until, int mapVersion)> _ignoreUntil = new();
     private MinionBehaviour   _active;
     private MinionBehaviour   _errand;
 
@@ -1023,14 +1023,27 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (!_held && !_fleeing) ResumeActive();
     }
 
-    /// <summary>Leaves an enemy it couldn't reach or hit alone for a while.</summary>
+    /// <summary>
+    /// Leaves an enemy it couldn't reach or hit alone for a while — or until
+    /// the map changes (a bridge built, a wall dug out), which might open a
+    /// way to it. Being hit by it ends the truce at once too (EnterCombat
+    /// doesn't consult this).
+    /// </summary>
     public void Ignore(MinionController enemy, float seconds)
     {
-        if (enemy != null) _ignoreUntil[enemy] = Time.time + seconds;
+        if (enemy == null) return;
+        int version = CombatSystem.Instance != null ? CombatSystem.Instance.MapVersion : 0;
+        _ignoreUntil[enemy] = (Time.time + seconds, version);
     }
 
-    public bool IsIgnoring(MinionController enemy) =>
-        enemy != null && _ignoreUntil.TryGetValue(enemy, out float until) && Time.time < until;
+    public bool IsIgnoring(MinionController enemy)
+    {
+        if (enemy == null || !_ignoreUntil.TryGetValue(enemy, out var entry)) return false;
+        int version = CombatSystem.Instance != null ? CombatSystem.Instance.MapVersion : 0;
+        if (Time.time < entry.until && version == entry.mapVersion) return true;
+        _ignoreUntil.Remove(enemy);
+        return false;
+    }
 
     private void DropCombat()
     {

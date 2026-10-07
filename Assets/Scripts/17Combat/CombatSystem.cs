@@ -117,15 +117,38 @@ public class CombatSystem : MonoBehaviour
     private GridManager2D Grid => GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
     public float CellSize => Grid != null ? Grid.CellSize : 1f;
 
+    /// <summary>
+    /// Goes up by one on every tile change. A minion that gave up on an
+    /// unreachable enemy remembers the version it gave up at; any change to
+    /// the map since (a bridge built, a wall dug out) means the enemy might
+    /// be reachable now, so the give-up no longer applies.
+    /// </summary>
+    public int MapVersion { get; private set; }
+
+    private GridManager2D _subscribedGrid;
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
     }
 
+    private void Update()
+    {
+        // The grid is created by the scene bootstrapper; hook it once it exists.
+        var grid = Grid;
+        if (grid == null || grid == _subscribedGrid) return;
+        if (_subscribedGrid != null) _subscribedGrid.OnTileChanged -= OnTileChanged;
+        _subscribedGrid = grid;
+        _subscribedGrid.OnTileChanged += OnTileChanged;
+    }
+
+    private void OnTileChanged(GridCell cell) => MapVersion++;
+
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
+        if (_subscribedGrid != null) _subscribedGrid.OnTileChanged -= OnTileChanged;
     }
 
     // ── Sides ──────────────────────────────────────────────────────────
