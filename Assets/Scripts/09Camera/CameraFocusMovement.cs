@@ -41,7 +41,7 @@ public class CameraFocusMovement : MonoBehaviour
         if (_movingToTarget)
         {
             transform.position = Vector3.MoveTowards(
-                transform.position, _moveTarget, jumpSpeed * Time.deltaTime);
+                transform.position, _moveTarget, jumpSpeed * Time.unscaledDeltaTime);
 
             if (Vector3.Distance(transform.position, _moveTarget) < 0.05f)
             {
@@ -69,9 +69,9 @@ public class CameraFocusMovement : MonoBehaviour
 
         Vector3 targetVelocity = (forward * input.y + right * input.x) * speed;
 
-        float lerpFactor  = smoothTime > 0.0001f ? Time.deltaTime / smoothTime : 1f;
+        float lerpFactor  = smoothTime > 0.0001f ? Time.unscaledDeltaTime / smoothTime : 1f;
         _currentVelocity  = Vector3.Lerp(_currentVelocity, targetVelocity, lerpFactor);
-        transform.position += _currentVelocity * Time.deltaTime;
+        transform.position += _currentVelocity * Time.unscaledDeltaTime;
 
         Vector3 pos = transform.position;
         pos.y = fixedHeight;

@@ -99,11 +99,11 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
             isSnapping = false;
 
         InputAxis horizontal = orbitalFollow.HorizontalAxis;
-        horizontal.Value += mouseDelta.x * yawSpeed * Time.deltaTime;
+        horizontal.Value += mouseDelta.x * yawSpeed * Time.unscaledDeltaTime;
         orbitalFollow.HorizontalAxis = horizontal;
 
         InputAxis vertical = orbitalFollow.VerticalAxis;
-        vertical.Value -= mouseDelta.y * pitchSpeed * Time.deltaTime;
+        vertical.Value -= mouseDelta.y * pitchSpeed * Time.unscaledDeltaTime;
         vertical.Value = Mathf.Clamp(vertical.Value, minPitch, maxPitch);
         orbitalFollow.VerticalAxis = vertical;
 
@@ -151,7 +151,7 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
 
         InputAxis horizontal = orbitalFollow.HorizontalAxis;
 
-        float newYaw = Mathf.LerpAngle(horizontal.Value, targetYaw, snapSpeed * Time.deltaTime);
+        float newYaw = Mathf.LerpAngle(horizontal.Value, targetYaw, snapSpeed * Time.unscaledDeltaTime);
 
         horizontal.Value = newYaw;
         orbitalFollow.HorizontalAxis = horizontal;

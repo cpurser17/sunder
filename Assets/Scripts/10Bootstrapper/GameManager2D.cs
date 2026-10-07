@@ -139,6 +139,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<MinionHealthBars>();
         if (FindAnyObjectByType<CombatSystem>() == null)
             gameObject.AddComponent<CombatSystem>();
+        if (FindAnyObjectByType<PauseController>() == null)
+            gameObject.AddComponent<PauseController>();
     }
 
     private void Start()

@@ -211,6 +211,7 @@ public class KeeperHand : MonoBehaviour
 
     private static bool ShouldStandDown()
     {
+        if (PauseController.IsPaused) return true;
         if (HUDController2D.Instance != null && HUDController2D.Instance.AnyButtonActive) return true;
         if (WorkerSpawner.AnySummonModeActive) return true;
         if (MinimapFullscreen.IsOpen)       return true;
