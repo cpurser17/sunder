@@ -20,6 +20,11 @@ using UnityEngine;
 /// the same separation system that already keeps them off each other,
 /// rather than the grid refusing to route through the tile.
 ///
+/// Enemy minions attack a heart they can see (CombatBehaviour). At 0 HP the
+/// faction is eliminated: the crystal is removed and every footprint tile
+/// reverts to ordinary Tunnel (still the fallen faction's, so enemies can
+/// claim it). MinionHealthBars draws each standing heart's health.
+///
 /// Every newly summoned minion (see MinionSummoner / CreatureBehaviour)
 /// must reach a cell inside its faction's footprint before it is considered
 /// part of the faction — FindApproachCell is what CreatureBehaviour paths to.
@@ -53,6 +58,8 @@ public class DungeonHeart : MonoBehaviour
     {
         public readonly List<GridCell> Footprint = new();
         public GridCell CrystalCell;
+        public GameObject Crystal;
+        public Vector3 Centre;
         public int MaxHitPoints;
         public int CurrentHP;
         public bool Eliminated;
@@ -119,6 +126,9 @@ public class DungeonHeart : MonoBehaviour
                 Debug.LogWarning($"[DungeonHeart] No Heart tiles found for faction {faction}.");
             else
                 SpawnCrystal(faction, state);
+
+            // Loaded already destroyed (a save from before hearts fell to Tunnel).
+            if (state.Eliminated) Demolish(state);
         }
 
         _pendingRestoreHP.Clear();
@@ -145,6 +155,16 @@ public class DungeonHeart : MonoBehaviour
     /// </summary>
     private void SpawnCrystal(FactionID faction, HeartState state)
     {
+        // The centre (and its cell) are known with or without a crystal, so
+        // health bars and attackers can find the heart either way.
+        Vector3 sum = Vector3.zero;
+        foreach (var cell in state.Footprint)
+            sum += gridManager.CellToWorld(cell.X, cell.Y);
+        Vector3 centre = sum / state.Footprint.Count;
+        state.Centre = centre;
+        if (gridManager.WorldToCell(centre, out int ccx, out int ccy))
+            state.CrystalCell = gridManager.GetCell(ccx, ccy);
+
         var prefab = CrystalPrefabFor(faction);
         if (prefab == null)
         {
@@ -152,19 +172,12 @@ public class DungeonHeart : MonoBehaviour
             return;
         }
 
-        Vector3 sum = Vector3.zero;
-        foreach (var cell in state.Footprint)
-            sum += gridManager.CellToWorld(cell.X, cell.Y);
+        state.Crystal = Instantiate(prefab, centre, Quaternion.identity, transform);
 
-        Vector3 centre = sum / state.Footprint.Count;
-        Instantiate(prefab, centre, Quaternion.identity, transform);
-
-        // Excluded from FindApproachCell below — a destination sitting under
-        // the crystal's own collision radius could leave a creature
-        // permanently oscillating just outside arriveTolerance, never
-        // registering as arrived.
-        if (gridManager.WorldToCell(centre, out int cx, out int cy))
-            state.CrystalCell = gridManager.GetCell(cx, cy);
+        // CrystalCell (set above) is excluded from FindApproachCell below — a
+        // destination sitting under the crystal's own collision radius could
+        // leave a creature permanently oscillating just outside
+        // arriveTolerance, never registering as arrived.
 
         var agent = prefab.GetComponent<GridAgent>();
         if (agent == null || !agent.IsStatic)
@@ -187,6 +200,26 @@ public class DungeonHeart : MonoBehaviour
     public int MaxHitPoints(FactionID faction) =>
         _hearts.TryGetValue(faction, out var s) ? s.MaxHitPoints : 0;
 
+    /// <summary>A standing heart, for health bars and the like.</summary>
+    public readonly struct HeartInfo
+    {
+        public readonly FactionID Faction;
+        public readonly Vector3   Centre;
+        public readonly int       CurrentHP, MaxHP;
+        public HeartInfo(FactionID f, Vector3 c, int hp, int max) { Faction = f; Centre = c; CurrentHP = hp; MaxHP = max; }
+    }
+
+    /// <summary>Every heart still standing.</summary>
+    public IEnumerable<HeartInfo> StandingHearts()
+    {
+        foreach (var pair in _hearts)
+        {
+            var s = pair.Value;
+            if (s.Eliminated || s.Footprint.Count == 0) continue;
+            yield return new HeartInfo(pair.Key, s.Centre, s.CurrentHP, s.MaxHitPoints);
+        }
+    }
+
     // ── Damage / elimination ─────────────────────────────────────────────
 
     public void TakeDamage(FactionID faction, int amount)
@@ -199,8 +232,27 @@ public class DungeonHeart : MonoBehaviour
         if (state.CurrentHP <= 0)
         {
             state.Eliminated = true;
+            Demolish(state);
             OnFactionEliminated?.Invoke(faction);
         }
+    }
+
+    /// <summary>
+    /// A destroyed heart: the crystal goes, and its footprint becomes
+    /// ordinary Tunnel, keeping its owner (so enemies can claim it).
+    /// </summary>
+    private void Demolish(HeartState state)
+    {
+        if (state.Crystal != null) Destroy(state.Crystal);
+        state.Crystal = null;
+
+        var footprint = new List<GridCell>(state.Footprint);
+        state.Footprint.Clear();
+        state.CrystalCell = null;
+
+        foreach (var cell in footprint)
+            if (cell.TileType == TileType.Heart)
+                gridManager.SetTileType(cell, TileType.Tunnel, cell.Owner);
     }
 
     // ── Save / load ──────────────────────────────────────────────────────
@@ -233,6 +285,7 @@ public class DungeonHeart : MonoBehaviour
             if (!_hearts.TryGetValue(pair.Key, out var state)) continue;
             state.CurrentHP  = Mathf.Clamp(pair.Value, 0, state.MaxHitPoints);
             state.Eliminated = state.CurrentHP <= 0;
+            if (state.Eliminated) Demolish(state);
         }
     }
 

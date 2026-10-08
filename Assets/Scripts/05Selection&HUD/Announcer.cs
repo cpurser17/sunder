@@ -67,6 +67,7 @@ public class Announcer : MonoBehaviour
         new Entry { id = "NoGoldForTraining", text = "You cannot afford to train your minions.", priority = Priority.Normal, cooldown = 60f },
         new Entry { id = "MinionsUnderAttack", text = "Your minions are under attack!", priority = Priority.Critical, cooldown = 20f },
         new Entry { id = "HeartUnderAttack",   text = "Your Dungeon Heart is under attack!", priority = Priority.Critical, cooldown = 20f },
+        new Entry { id = "TreasuryFull",       text = "Your treasury is full.", priority = Priority.Normal, cooldown = 45f },
     };
 
     [Header("Delivery")]

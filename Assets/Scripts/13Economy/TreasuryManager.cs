@@ -57,6 +57,7 @@ public class TreasuryManager : MonoBehaviour
     private readonly Dictionary<GridCell, GoldPile> _piles  = new();
     private readonly Dictionary<FactionID, int>     _stored = new();
     private readonly Dictionary<FactionID, int>     _free   = new();
+    private readonly Dictionary<FactionID, int>     _tiles  = new();
     private bool _countsDirty = true;
     private bool _subscribed;
 
@@ -104,7 +105,8 @@ public class TreasuryManager : MonoBehaviour
 
     /// <summary>
     /// Gold one Treasury tile can hold: capacityPerTile, × its room's
-    /// efficiency if the Treasury scales with it. Just after the tile is
+    /// efficiency if the Treasury scales with it. (Provisional — how
+    /// Treasury capacity is calculated is due to be reworked.) Just after the tile is
     /// built, before the room is measured, the room type's base efficiency
     /// stands in.
     /// </summary>
@@ -138,6 +140,16 @@ public class TreasuryManager : MonoBehaviour
         Recount();
         return _stored.TryGetValue(faction, out int v) ? v : 0;
     }
+
+    /// <summary>How many Treasury tiles the faction owns.</summary>
+    public int TreasuryTiles(FactionID faction)
+    {
+        Recount();
+        return _tiles.TryGetValue(faction, out int v) ? v : 0;
+    }
+
+    /// <summary>True if the faction has Treasury tiles and every one is full.</summary>
+    public bool AllFull(FactionID faction) => TreasuryTiles(faction) > 0 && FreeCapacity(faction) <= 0;
 
     /// <summary>Room left across all of a faction's Treasury tiles.</summary>
     public int FreeCapacity(FactionID faction)
@@ -246,6 +258,7 @@ public class TreasuryManager : MonoBehaviour
         _countsDirty = false;
         _stored.Clear();
         _free.Clear();
+        _tiles.Clear();
 
         var grid = Grid;
         if (grid == null) return;
@@ -256,6 +269,7 @@ public class TreasuryManager : MonoBehaviour
             if (c == null || c.StoredGold <= 0 && !IsTreasury(c)) continue;
             _stored[c.Owner] = (_stored.TryGetValue(c.Owner, out int s) ? s : 0) + c.StoredGold;
             _free[c.Owner]   = (_free.TryGetValue(c.Owner, out int f) ? f : 0) + FreeSpace(c);
+            if (IsTreasury(c)) _tiles[c.Owner] = (_tiles.TryGetValue(c.Owner, out int t) ? t : 0) + 1;
         }
     }
 

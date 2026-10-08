@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// A small health bar floating above every minion.
+/// A small health bar floating above every minion, and a larger one above
+/// every Dungeon Heart still standing.
 ///
 /// Drawn on its own screen-space overlay canvas (beneath the HUD) and
 /// placed over each minion every frame, so bars stay the same crisp size at
@@ -24,6 +25,12 @@ public class MinionHealthBars : MonoBehaviour
     [SerializeField] private float heightAboveMinion = 1.1f;
     [Tooltip("Bar size in pixels at the reference resolution.")]
     [SerializeField] private Vector2 size = new(36f, 5f);
+
+    [Header("Dungeon Hearts")]
+    [Tooltip("World units above the heart's centre its bar sits.")]
+    [SerializeField] private float heartHeight = 2.5f;
+    [Tooltip("Heart bar size in pixels at the reference resolution.")]
+    [SerializeField] private Vector2 heartSize = new(110f, 10f);
 
     [Header("Showing")]
     [Tooltip("Hide bars on minions at full health.")]
@@ -48,7 +55,8 @@ public class MinionHealthBars : MonoBehaviour
 
     private Camera        _camera;
     private RectTransform _canvas;
-    private readonly List<Bar> _bars = new();
+    private readonly List<Bar> _bars      = new();
+    private readonly List<Bar> _heartBars = new();
 
     private void Awake()
     {
@@ -84,7 +92,7 @@ public class MinionHealthBars : MonoBehaviour
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvas, screen, null, out Vector2 local))
                 continue;
 
-            var bar = used < _bars.Count ? _bars[used] : NewBar();
+            var bar = used < _bars.Count ? _bars[used] : NewBar(size, _bars);
             used++;
 
             bar.Root.gameObject.SetActive(true);
@@ -98,14 +106,52 @@ public class MinionHealthBars : MonoBehaviour
 
         for (int i = used; i < _bars.Count; i++)
             if (_bars[i].Root.gameObject.activeSelf) _bars[i].Root.gameObject.SetActive(false);
+
+        DrawHearts();
     }
 
-    private Bar NewBar()
+    /// <summary>One bar per standing heart — always shown, hurt or not.</summary>
+    private void DrawHearts()
+    {
+        int used = 0;
+        var hearts = DungeonHeart.Instance;
+        if (hearts != null)
+            foreach (var heart in hearts.StandingHearts())
+            {
+                float fraction = heart.MaxHP > 0 ? (float)heart.CurrentHP / heart.MaxHP : 0f;
+                var bar = used < _heartBars.Count ? _heartBars[used] : NewBar(heartSize, _heartBars);
+                if (!Place(bar, heart.Centre + Vector3.up * heartHeight, fraction, heart.Faction)) continue;
+                used++;
+            }
+
+        for (int i = used; i < _heartBars.Count; i++)
+            if (_heartBars[i].Root.gameObject.activeSelf) _heartBars[i].Root.gameObject.SetActive(false);
+    }
+
+    /// <summary>Positions and fills a bar over a world point. False if the point is behind the camera.</summary>
+    private bool Place(Bar bar, Vector3 world, float fraction, FactionID owner)
+    {
+        Vector3 screen = _camera.WorldToScreenPoint(world);
+        if (screen.z <= 0f) { bar.Root.gameObject.SetActive(false); return false; }
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvas, screen, null, out Vector2 local))
+        { bar.Root.gameObject.SetActive(false); return false; }
+
+        bar.Root.gameObject.SetActive(true);
+        bar.Root.anchoredPosition = local;
+        bar.Fill.localScale = new Vector3(Mathf.Clamp01(fraction), 1f, 1f);
+        bar.FillImage.color = fraction > 0.5f
+            ? Color.Lerp(hurt, healthy, (fraction - 0.5f) * 2f)
+            : Color.Lerp(dying, hurt, fraction * 2f);
+        bar.Strip.color = owner == localPlayer ? ownFaction : otherFaction;
+        return true;
+    }
+
+    private Bar NewBar(Vector2 barSize, List<Bar> pool)
     {
         var root = NewRect("HealthBar", _canvas);
         root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
         root.pivot     = new Vector2(0.5f, 0f);
-        root.sizeDelta = size;
+        root.sizeDelta = barSize;
         var bg = root.gameObject.AddComponent<Image>();
         bg.color = background;
         bg.raycastTarget = false;
@@ -130,7 +176,7 @@ public class MinionHealthBars : MonoBehaviour
         stripImage.raycastTarget = false;
 
         var bar = new Bar { Root = root, Fill = fill, FillImage = fillImage, Strip = stripImage };
-        _bars.Add(bar);
+        pool.Add(bar);
         return bar;
     }
 
