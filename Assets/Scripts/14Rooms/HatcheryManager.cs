@@ -97,6 +97,16 @@ public class HatcheryManager : MonoBehaviour
 
     public bool IsHatchery(GridCell cell) => cell != null && cell.TileType == hatcheryType;
 
+    /// <summary>True if the faction owns any Hatchery tiles.</summary>
+    public bool HasHatchery(FactionID faction)
+    {
+        var grid = Grid;
+        if (grid == null) return false;
+        foreach (var room in grid.Rooms)
+            if (room.TileType == hatcheryType && room.Owner == faction) return true;
+        return false;
+    }
+
     /// <summary>
     /// Whether a chicken on 'from' may step to 'to': within a Hatchery it
     /// stays in that Hatchery; anywhere else it may walk any open floor.

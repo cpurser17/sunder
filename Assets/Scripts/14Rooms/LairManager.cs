@@ -15,7 +15,8 @@ using UnityEngine;
 ///   A minion that can't reach its own bed when it wants to sleep claims a
 ///   free one it can reach; the old one disappears.
 ///   No free bed anywhere it can reach: it sleeps on the floor, and the
-///   player is told the lair is too small (Announcer, "LairTooSmall").
+///   player is told the lair is too small (Announcer, "LairTooSmall") — or
+///   that they need one, if they have none ("NoLair").
 ///
 /// Bed visuals: the minion type's bedPrefab (MinionDefinition) on its tile,
 /// or a placeholder block until those assets exist.
@@ -126,8 +127,22 @@ public class LairManager : MonoBehaviour
         RemoveBedAt(cell);
     }
 
-    /// <summary>Tells the faction's player, if human, that their lair is too small.</summary>
-    public void NotifyNoBed(FactionID faction) => Announcer.Announce(faction, "LairTooSmall");
+    /// <summary>
+    /// A minion found no bed: the faction's player hears they need a lair
+    /// (none built) or that it's too small (none free it can reach).
+    /// </summary>
+    public void NotifyNoBed(FactionID faction) =>
+        Announcer.Announce(faction, HasLair(faction) ? "LairTooSmall" : "NoLair");
+
+    /// <summary>True if the faction owns any Lair tiles.</summary>
+    public bool HasLair(FactionID faction)
+    {
+        var grid = Grid;
+        if (grid == null) return false;
+        foreach (var room in grid.Rooms)
+            if (room.TileType == lairType && room.Owner == faction) return true;
+        return false;
+    }
 
     // ── Grid events ────────────────────────────────────────────────────
 

@@ -429,9 +429,11 @@ public class WorkerBehaviour : MinionBehaviour
         var treasury = FindNearestTreasuryByPath();
         if (treasury == null || !Agent.SetDestination(treasury))
         {
-            // Every Treasury tile full: tell the player (once per cooldown).
+            // No Treasury at all, or every tile full: tell the player (once per cooldown).
             var manager = TreasuryManager.Instance;
-            if (manager != null && manager.AllFull(Faction))
+            if (manager != null && manager.TreasuryTiles(Faction) == 0)
+                Announcer.Announce(Faction, "NoTreasury", transform.position);
+            else if (manager != null && manager.AllFull(Faction))
                 Announcer.Announce(Faction, "TreasuryFull", transform.position);
 
             DropCarriedGold();

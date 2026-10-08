@@ -12,7 +12,8 @@ using UnityEngine;
 ///
 /// No chicken it can reach: it goes to its faction's nearest Hatchery and
 /// waits for one to hatch. No Hatchery either (or still nothing after
-/// waitSeconds): the player is told their hatchery is too small, and the
+/// waitSeconds): the player is told their hatchery is too small (or that
+/// they need one, if they have none), and the
 /// minion doesn't look again for a while (MinionController.OnNoFood).
 /// </summary>
 public class FoodBehaviour : MinionBehaviour
@@ -148,7 +149,9 @@ public class FoodBehaviour : MinionBehaviour
 
     private void GiveUp()
     {
-        Announcer.Announce(Minion.Faction, "HatcheryTooSmall");
+        var hatchery = HatcheryManager.Instance;
+        bool hasOne  = hatchery != null && hatchery.HasHatchery(Minion.Faction);
+        Announcer.Announce(Minion.Faction, hasOne ? "HatcheryTooSmall" : "NoHatchery");
         Finish(true);
     }
 
