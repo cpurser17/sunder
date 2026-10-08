@@ -14,7 +14,9 @@ using UnityEngine.EventSystems;
 ///   LMB on a chicken        — pick it up. Dropped on one of your minions it
 ///                             force-feeds it; elsewhere it wanders off.
 ///   RMB on a chicken        — the slap kills it.
-///   RMB while holding       — drop the most recently picked-up minion.
+///   RMB while holding       — drop the most recently picked-up minion. Only
+///                             where it could land: on rock (e.g. a dig-marked
+///                             tile) the click goes to dig deselection instead.
 ///   Shift + RMB             — drop every held minion at once.
 ///   Dropping onto your portal — a summoned creature abandons the dungeon
 ///                             (despawns). Workers, commanders and the general
@@ -206,7 +208,26 @@ public class KeeperHand : MonoBehaviour
         _standDown = mainCamera == null || gridManager == null || ShouldStandDown();
         _hovered   = _standDown ? null : FindHovered();
         _claimsLmb = _hovered != null && _held.Count < capacity;
-        _claimsRmb = !_standDown && (_held.Count > 0 || _hovered != null);
+        _claimsRmb = !_standDown && (_held.Count > 0 ? CanDropUnderCursor() : _hovered != null);
+    }
+
+    /// <summary>
+    /// Holding something, the hand only takes a right-click it could act on:
+    /// a spot the most recent item can land (or be fed to a minion), or the
+    /// portal to dismiss it. Anywhere else — rock, a dig-marked tile — the
+    /// click is left for other handlers, so right-drag dig deselection still
+    /// works with minions in hand.
+    /// </summary>
+    private bool CanDropUnderCursor()
+    {
+        if (!TryGetGroundPoint(out Vector3 point)) return false;
+        var target = _held[_held.Count - 1];
+        if (IsGone(target)) return false;
+
+        var cell = CellAt(point);
+        if (IsOwnPortal(cell) && target.CanAbandon) return true;
+        if (target is IHandFeed && MinionAt(point) != null) return true;
+        return CanDropOn(target, cell);
     }
 
     private static bool ShouldStandDown()

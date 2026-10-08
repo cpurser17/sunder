@@ -20,8 +20,8 @@ using UnityEngine.Serialization;
 /// -----------
 ///   Dig       Stone / Wall / Gold / Gem marked by the player, one job per
 ///             accessible side, several workers per side
-///   Claim     unclaimed Cave adjacent to owned territory, or an enemy-owned
-///             tile adjacent to owned territory
+///   Claim     unclaimed Cave or an unowned portal adjacent to owned territory,
+///             or an enemy-owned tile (portals included) adjacent to it
 ///   Reinforce Stone adjacent to owned territory
 ///
 /// Maintenance
@@ -352,27 +352,29 @@ public class WorkerTaskManager : MonoBehaviour
     };
 
     /// <summary>
-    /// Unclaimed Cave, or a tile held by another faction — in both cases only
-    /// when it touches territory we already hold.
+    /// Unclaimed Cave or an unowned portal, or a tile held by another
+    /// faction — in every case only when it touches territory we already hold.
     /// </summary>
     private bool IsClaimable(GridCell cell)
     {
         bool unclaimedCave = cell.TileType == TileType.Cave &&
                              cell.Owner    == FactionID.Unaligned;
 
-        // Portal and Heart are both Owned and walkable like a normal room
-        // tile, but neither is capturable through ordinary territory-claim
-        // overflow — they only change hands through dedicated mechanics
-        // (Heart specifically only falls when its HP reaches 0).
+        // Portals are claimed like floor: an unowned one becomes ours, an
+        // enemy's is captured (Portal re-indexes, so summoning follows).
+        bool unclaimedPortal = cell.TileType == TileType.Portal &&
+                               cell.Owner    == FactionID.Unaligned;
+
+        // The Heart is Owned and walkable like a room tile, but never changes
+        // hands through claiming — it only falls when its HP reaches 0.
         bool enemyHeld = cell.Owner != faction &&
                          cell.Owner != FactionID.Unaligned &&
-                         cell.TileType != TileType.Portal &&
                          cell.TileType != TileType.Heart &&
                          gridManager.GetCategory(cell.TileType) == TileCategory.Owned &&
                          TraversalRules.CanPathOn(cell.TileType,
                                                   TraversalCapability.LandOnly, faction);
 
-        if (!unclaimedCave && !enemyHeld) return false;
+        if (!unclaimedCave && !unclaimedPortal && !enemyHeld) return false;
         return TouchesOwnTerritory(cell);
     }
 

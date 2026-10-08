@@ -73,9 +73,24 @@ public class CameraFocusMovement : MonoBehaviour
         _currentVelocity  = Vector3.Lerp(_currentVelocity, targetVelocity, lerpFactor);
         transform.position += _currentVelocity * Time.unscaledDeltaTime;
 
-        Vector3 pos = transform.position;
+        Vector3 pos = ClampToMap(transform.position);
         pos.y = fixedHeight;
         transform.position = pos;
+    }
+
+    /// <summary>
+    /// Keeps the focus point over the map: within the grid's footprint, from
+    /// its origin to width × height cells. Unclamped if there's no grid yet.
+    /// </summary>
+    private Vector3 ClampToMap(Vector3 position)
+    {
+        var grid = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
+        if (grid == null || grid.Width <= 0 || grid.Height <= 0) return position;
+
+        Vector3 origin = grid.transform.position;
+        position.x = Mathf.Clamp(position.x, origin.x, origin.x + grid.Width  * grid.CellSize);
+        position.z = Mathf.Clamp(position.z, origin.z, origin.z + grid.Height * grid.CellSize);
+        return position;
     }
 
     // ── Public API ─────────────────────────────────────────────────────
@@ -88,7 +103,7 @@ public class CameraFocusMovement : MonoBehaviour
     /// <summary>Smoothly moves the camera focus to the given world position.</summary>
     public void MoveTo(Vector3 worldPosition)
     {
-        _moveTarget      = new Vector3(worldPosition.x, fixedHeight, worldPosition.z);
+        _moveTarget      = ClampToMap(new Vector3(worldPosition.x, fixedHeight, worldPosition.z));
         _movingToTarget  = true;
         _currentVelocity = Vector3.zero;
     }
@@ -96,7 +111,7 @@ public class CameraFocusMovement : MonoBehaviour
     /// <summary>Instantly teleports the camera focus to the given world position.</summary>
     public void TeleportTo(Vector3 worldPosition)
     {
-        transform.position = new Vector3(worldPosition.x, fixedHeight, worldPosition.z);
+        transform.position = ClampToMap(new Vector3(worldPosition.x, fixedHeight, worldPosition.z));
         _movingToTarget    = false;
         _currentVelocity   = Vector3.zero;
 

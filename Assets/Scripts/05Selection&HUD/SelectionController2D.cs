@@ -468,6 +468,11 @@ public class SelectionController2D : MonoBehaviour
     /// Tunnel and every room type (isRoom, which includes Bridge) qualify.
     /// Wall is excluded — it is a perimeter tile, not a traversable floor.
     /// </summary>
+    /// <summary>
+    /// Floor that counts as "ours" for adjacency rules (e.g. a bridge must
+    /// touch one): Tunnel, any room, and the Portal and Dungeon Heart.
+    /// </summary>
     private bool IsOwnedDungeonTile(TileType t) =>
-        t == TileType.Tunnel || (gridManager.GetDefinition(t)?.isRoom ?? false);
+        t == TileType.Tunnel || t == TileType.Portal || t == TileType.Heart ||
+        (gridManager.GetDefinition(t)?.isRoom ?? false);
 }
