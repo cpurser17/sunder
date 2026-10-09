@@ -66,6 +66,7 @@ public class Announcer : MonoBehaviour
         ("NoTreasury",         "You need a treasury.",                    Priority.Normal,   45f),
         ("MinionLeaving",      "A minion is leaving your dungeon.",       Priority.High,     10f),
         ("NoGoldForTraining",  "You cannot afford to train your minions.", Priority.Normal,  60f),
+        ("NotEnoughGold",      "You don't have enough gold.",             Priority.Normal,    5f),
         ("MinionsUnderAttack", "Your minions are under attack!",          Priority.Critical, 20f),
         ("HeartUnderAttack",   "Your Dungeon Heart is under attack!",     Priority.Critical, 20f),
     };

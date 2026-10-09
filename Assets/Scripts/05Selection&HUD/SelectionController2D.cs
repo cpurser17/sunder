@@ -182,58 +182,64 @@ public class SelectionController2D : MonoBehaviour
     /// </summary>
     private (int cost, bool regionValid) PreviewBuy()
     {
+        var buildable = BuildableCells();
+        int cost = buildable.Count * gridManager.GetBuyCost(ActiveTileType);
+        Color col = Wallet.Gold >= cost ? ColCanAfford : ColCannotAfford;
+
+        // Cells that will be built in the afford colour; the rest dimmed, so
+        // the player sees the selection boundary but knows they won't be built.
+        foreach (var c in _currentSelection)
+            gridManager.SetHighlight(c, true, buildable.Contains(c) ? col : ColInvalid);
+
+        return (cost, buildable.Count > 0);
+    }
+
+    /// <summary>
+    /// The selected cells the active buy type will actually be built on.
+    ///
+    /// Each must be a valid source (liquid for a bridge, own Tunnel for a
+    /// room). For types that require adjacency (bridges), a cell must also
+    /// connect to the player's floor: it touches it directly, or touches —
+    /// edge to edge, through the selection — another cell that does. That
+    /// way a drag spans a whole lake from its shore in one go, while a
+    /// second lake caught in the same drag that doesn't touch the player's
+    /// floor gets nothing. Any number of separate starting points work.
+    /// </summary>
+    private HashSet<GridCell> BuildableCells()
+    {
         bool placesOnLiquid = gridManager.PlacesOnLiquid(ActiveTileType);
         bool placesOnTunnel = gridManager.PlacesOnTunnel(ActiveTileType);
-        bool requiresAdj    = gridManager.RequiresAdjacency(ActiveTileType);
 
-        // For adjacency-required types, check at the region level:
-        // at least one valid source cell must neighbour a player-owned tile.
-        bool adjacencySatisfied = true;
-        if (requiresAdj)
-        {
-            adjacencySatisfied = false;
-            foreach (var c in _currentSelection)
-            {
-                if (!IsValidSource(c, placesOnLiquid, placesOnTunnel)) continue;
-                if (gridManager.HasAdjacentMatch(c.X, c.Y,
-                        n => n.Owner == localPlayer && IsOwnedDungeonTile(n.TileType)))
-                {
-                    adjacencySatisfied = true;
-                    break;
-                }
-            }
-        }
-
-        int cost = 0;
+        var valid = new HashSet<GridCell>();
         foreach (var c in _currentSelection)
-        {
-            bool validSource = IsValidSource(c, placesOnLiquid, placesOnTunnel);
+            if (IsValidSource(c, placesOnLiquid, placesOnTunnel)) valid.Add(c);
 
-            if (validSource && adjacencySatisfied)
-            {
-                cost += gridManager.GetBuyCost(ActiveTileType);
-                Color col = Wallet.Gold >= cost ? ColCanAfford : ColCannotAfford;
-                gridManager.SetHighlight(c, true, col);
-            }
-            else
-            {
-                // Show dim highlight for invalid cells so the player can see
-                // the selection boundary but knows those cells won't be built.
-                gridManager.SetHighlight(c, true, ColInvalid);
-            }
+        if (!gridManager.RequiresAdjacency(ActiveTileType)) return valid;
+
+        // Spread from every valid cell touching the player's floor, through
+        // orthogonal neighbours that are themselves valid selected cells.
+        var reached = new HashSet<GridCell>();
+        var queue   = new Queue<GridCell>();
+        foreach (var c in valid)
+        {
+            if (!gridManager.HasAdjacentMatch(c.X, c.Y,
+                    n => n.Owner == localPlayer && IsOwnedDungeonTile(n.TileType))) continue;
+            reached.Add(c);
+            queue.Enqueue(c);
         }
 
-        // Re-colour all valid cells uniformly once total cost is known.
-        if (adjacencySatisfied)
+        (int dx, int dy)[] dirs = { (0, 1), (0, -1), (1, 0), (-1, 0) };
+        while (queue.Count > 0)
         {
-            Color finalCol = Wallet.Gold >= cost ? ColCanAfford : ColCannotAfford;
-            foreach (var c in _currentSelection)
-                if (IsValidSource(c, placesOnLiquid, placesOnTunnel))
-                    gridManager.SetHighlight(c, true, finalCol);
+            var c = queue.Dequeue();
+            foreach (var (dx, dy) in dirs)
+            {
+                var n = gridManager.GetCell(c.X + dx, c.Y + dy);
+                if (n == null || !valid.Contains(n) || !reached.Add(n)) continue;
+                queue.Enqueue(n);
+            }
         }
-
-        bool regionValid = adjacencySatisfied && cost > 0;
-        return (cost, regionValid);
+        return reached;
     }
 
     private bool IsValidSource(GridCell c, bool placesOnLiquid, bool placesOnTunnel)
@@ -291,35 +297,19 @@ public class SelectionController2D : MonoBehaviour
     private void CommitBuy()
     {
         bool placesOnLiquid = gridManager.PlacesOnLiquid(ActiveTileType);
-        bool placesOnTunnel = gridManager.PlacesOnTunnel(ActiveTileType);
-        bool requiresAdj    = gridManager.RequiresAdjacency(ActiveTileType);
 
-        // Re-validate adjacency rule at commit time.
-        if (requiresAdj)
+        // Same rules as the preview, re-checked now (the grid may have changed).
+        var targets = BuildableCells();
+        if (targets.Count == 0) return;
+
+        // All or nothing: if the whole selection can't be afforded, nothing is built.
+        int total = targets.Count * gridManager.GetBuyCost(ActiveTileType);
+        if (!Wallet.TrySpend(total))
         {
-            bool ok = false;
-            foreach (var c in _currentSelection)
-            {
-                if (!IsValidSource(c, placesOnLiquid, placesOnTunnel)) continue;
-                if (gridManager.HasAdjacentMatch(c.X, c.Y,
-                        n => n.Owner == localPlayer && IsOwnedDungeonTile(n.TileType)))
-                { ok = true; break; }
-            }
-            if (!ok) return;
+            Announcer.Announce(localPlayer, "NotEnoughGold");
+            return;
         }
 
-        // Tally cost.
-        var targets = new List<GridCell>();
-        int total   = 0;
-        foreach (var c in _currentSelection)
-        {
-            if (!IsValidSource(c, placesOnLiquid, placesOnTunnel)) continue;
-            targets.Add(c);
-            total += gridManager.GetBuyCost(ActiveTileType);
-        }
-        if (targets.Count == 0 || !Wallet.TrySpend(total)) return;
-
-        // Apply changes.
         foreach (var c in targets)
         {
             if (placesOnLiquid)
@@ -463,14 +453,9 @@ public class SelectionController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns true for tile types that count as valid anchors for
-    /// adjacency-required placements (Bridge, future Wall).
-    /// Tunnel and every room type (isRoom, which includes Bridge) qualify.
-    /// Wall is excluded — it is a perimeter tile, not a traversable floor.
-    /// </summary>
-    /// <summary>
     /// Floor that counts as "ours" for adjacency rules (e.g. a bridge must
-    /// touch one): Tunnel, any room, and the Portal and Dungeon Heart.
+    /// touch one): Tunnel, any room (Bridge included), and the Portal and
+    /// Dungeon Heart. Wall is excluded — it's a perimeter, not floor.
     /// </summary>
     private bool IsOwnedDungeonTile(TileType t) =>
         t == TileType.Tunnel || t == TileType.Portal || t == TileType.Heart ||
