@@ -369,4 +369,7 @@ public class WorkerSpawner : MonoBehaviour
 
     /// <summary>Called by MinionController when one of this spawner's workers dies or converts.</summary>
     public void NotifyWorkerDied() => _activeWorkerCount = Mathf.Max(0, _activeWorkerCount - 1);
+
+    /// <summary>Loading a save: a worker it spawned earlier is back — counts towards the summon cost.</summary>
+    public void NotifyWorkerRestored() => _activeWorkerCount++;
 }

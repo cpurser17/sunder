@@ -341,8 +341,8 @@ public class GameManager2D : MonoBehaviour
     /// <summary>
     /// Spawns the minions the level editor placed, from MinionSummoner's
     /// shared template, as already part of their team (SpawnSource.Placed —
-    /// they don't count against a summoning population). New games only:
-    /// saves don't record minions yet, so a resumed game has none either way.
+    /// they don't count against a summoning population). New games only —
+    /// a resumed game restores the minions its save recorded instead.
     /// </summary>
     private void SpawnPlacedMinions(List<MinionPlacement> placements)
     {
@@ -504,7 +504,99 @@ public class GameManager2D : MonoBehaviour
         }
 
         PaydaySystem.Instance?.Restore(gs.paydays);
+
+        // Minions, chickens, progress and dig marks wait a frame, so every
+        // system that sets itself up at scene start (summoner, dig
+        // controllers, task managers) is ready to take them.
+        StartCoroutine(RestoreWorldNextFrame(gs));
         DungeonHeart.Instance?.RestoreAll(save.gameState.factionHeartHP);
+    }
+
+    // ── Restoring the world from a save ────────────────────────────────
+
+    private System.Collections.IEnumerator RestoreWorldNextFrame(GameStateSaveData gs)
+    {
+        yield return null;
+
+        if (gs.factionProgress != null)
+            foreach (var pair in gs.factionProgress)
+                GetResearch(pair.Key)?.Restore(pair.Value);
+
+        HatcheryManager.Instance?.Restore(gs.chickens);
+        RestoreMinions(gs.minions);
+
+        var dig = DigSelectionManager.Instance;
+        if (gs.digMarks != null && dig != null)
+            foreach (var pair in gs.digMarks)
+            {
+                var ctrl = dig.GetController(pair.Key);
+                if (ctrl == null || pair.Value == null) continue;
+                foreach (var c in pair.Value) ctrl.QueueCell(gridManager.GetCell(c.x, c.y));
+            }
+    }
+
+    /// <summary>
+    /// Puts every saved minion back: its kind and level, where it stood,
+    /// its needs, wages, anger, bed and duty status. Counts it back into
+    /// its summoner's population or worker cost. It then decides what to do
+    /// afresh, like a minion just set down by the hand.
+    /// </summary>
+    private void RestoreMinions(List<MinionSaveData> saved)
+    {
+        if (saved == null || saved.Count == 0) return;
+
+        var template = MinionSummoner.Instance != null ? MinionSummoner.Instance.Template : null;
+        int restored = 0;
+        foreach (var data in saved)
+        {
+            MinionDefinition def = null;
+            if (!string.IsNullOrEmpty(data.minionId))
+            {
+                def = factionRegistry != null ? factionRegistry.FindMinion(data.contentFactionId, data.minionId) : null;
+                if (def == null)
+                {
+                    Debug.LogWarning($"[GameManager2D] Saved minion {data.contentFactionId} {data.minionId} " +
+                                     "isn't in the Faction Registry any more — skipped.");
+                    continue;
+                }
+            }
+
+            var prefab = def != null && def.prefab != null ? def.prefab : template;
+            if (prefab == null)
+            {
+                Debug.LogError("[GameManager2D] No minion template (MinionSummoner) to restore minions from.");
+                return;
+            }
+
+            var position = new Vector3(data.x, gridManager.transform.position.y, data.z);
+            var go = Instantiate(prefab, position, Quaternion.identity);
+            go.name = $"{(def != null ? def.minionId : "Worker")}_{data.faction}_{restored}";
+            if (!go.TryGetComponent(out MinionController minion))
+            {
+                Debug.LogError($"[GameManager2D] {prefab.name} is missing MinionController.");
+                Destroy(go);
+                continue;
+            }
+
+            minion.Initialise(data.faction, def, Mathf.Max(1, data.level), data.source);
+            minion.ApplySave(data);
+
+            if (data.bedX >= 0 && data.bedY >= 0)
+                LairManager.Instance?.Claim(minion, gridManager.GetCell(data.bedX, data.bedY));
+
+            switch (data.source)
+            {
+                case MinionController.SpawnSource.Portal:
+                    MinionSummoner.Instance?.NotifyCreatureJoined(data.faction, def);
+                    break;
+                case MinionController.SpawnSource.WorkerSpawner:
+                    WorkerSpawner.GetForFaction(data.faction)?.NotifyWorkerRestored();
+                    break;
+            }
+            restored++;
+        }
+
+        Debug.Log($"[GameManager2D] Restored {restored}/{saved.Count} minion(s).");
     }
 
     // ── Save routing ───────────────────────────────────────────────────
@@ -608,6 +700,7 @@ public class GameManager2D : MonoBehaviour
         slotIndex   = _activeSlot,
         branchId    = _activeBranchId,
         saveIndex   = _activeSaveIndex,
+        saveVersion = 2,   // 2: minions, chickens, faction progress and dig marks
         grid        = SaveLoadSystem.CaptureGrid(gridManager),
         gameState   = BuildGameStateSaveData(),
     };
@@ -638,6 +731,28 @@ public class GameManager2D : MonoBehaviour
         data.currentGold = GetWallet(FactionID.Player)?.Gold ?? 0;
 
         data.masterSeed = MasterSeed;
+
+        // Minions (anything in the hand is saved where it was picked up), chickens,
+        // research/room-work progress, and dig marks.
+        data.minions = new List<MinionSaveData>();
+        foreach (var m in MinionController.All)
+            if (m != null && m.IsAlive) data.minions.Add(m.CaptureSave());
+
+        data.chickens = HatcheryManager.Instance?.Capture();
+
+        data.factionProgress = new Dictionary<FactionID, FactionProgressSaveData>();
+        foreach (var pair in _research)
+            if (pair.Value != null) data.factionProgress[pair.Key] = pair.Value.Capture();
+
+        data.digMarks = new Dictionary<FactionID, List<CellRefSaveData>>();
+        var dig = DigSelectionManager.Instance;
+        if (dig != null)
+            foreach (var pair in dig.Controllers)
+            {
+                var list = new List<CellRefSaveData>();
+                foreach (var cell in pair.Value.GetDigQueue()) list.Add(new CellRefSaveData(cell.X, cell.Y));
+                if (list.Count > 0) data.digMarks[pair.Key] = list;
+            }
 
         return data;
     }

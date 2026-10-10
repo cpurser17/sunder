@@ -76,11 +76,15 @@ public class GoldPile : MonoBehaviour, IHandTarget
     public bool      IsHeld     => _held;
     public bool      CanAbandon => false;
 
+    /// <summary>Where it lay before the hand picked it up — a save puts held gold back there.</summary>
+    public GridCell LastCell { get; private set; }
+
     public void OnPickedUp()
     {
         _held     = true;
         ClaimedBy = null;
         _manager.Detach(this);
+        LastCell = Cell;
         Cell = null;
     }
 

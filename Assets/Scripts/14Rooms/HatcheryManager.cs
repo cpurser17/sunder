@@ -155,7 +155,10 @@ public class HatcheryManager : MonoBehaviour
         }
     }
 
-    private void Spawn(GridCell cell)
+    private void Spawn(GridCell cell) =>
+        SpawnAt(cell, Grid.CellToWorld(cell.X, cell.Y) + Jitter(Grid.CellSize));
+
+    private void SpawnAt(GridCell cell, Vector3 at)
     {
         var grid = Grid;
         var go   = new GameObject("Chicken");
@@ -178,7 +181,6 @@ public class HatcheryManager : MonoBehaviour
         }
 
         var chicken = go.AddComponent<Chicken>();
-        Vector3 at  = grid.CellToWorld(cell.X, cell.Y) + Jitter(grid.CellSize);
         chicken.Initialise(this, grid, cell, at, size * 0.6f);
         _chickens.Add(chicken);
         AddToCell(chicken, cell);
@@ -251,6 +253,36 @@ public class HatcheryManager : MonoBehaviour
         if (cell == null || !_byCell.TryGetValue(cell, out var list)) return;
         list.Remove(chicken);
         if (list.Count == 0) _byCell.Remove(cell);
+    }
+
+    // ── Save / load ────────────────────────────────────────────────────
+
+    /// <summary>Every chicken's position; one in the hand is saved where it was picked up.</summary>
+    public List<ChickenSaveData> Capture()
+    {
+        var list = new List<ChickenSaveData>();
+        var grid = Grid;
+        foreach (var c in _chickens)
+        {
+            if (c == null || !c.IsAlive) continue;
+            Vector3 at = c.transform.position;
+            if (c.IsHeld && c.LastCell != null && grid != null) at = grid.CellToWorld(c.LastCell.X, c.LastCell.Y);
+            list.Add(new ChickenSaveData { x = at.x, z = at.z });
+        }
+        return list;
+    }
+
+    public void Restore(List<ChickenSaveData> saved)
+    {
+        var grid = Grid;
+        if (saved == null || grid == null) return;
+        foreach (var c in saved)
+        {
+            var at = new Vector3(c.x, grid.transform.position.y, c.z);
+            if (!grid.WorldToCell(at, out int x, out int y)) continue;
+            var cell = grid.GetCell(x, y);
+            if (cell != null) SpawnAt(cell, at);
+        }
     }
 
     /// <summary>Removes every chicken — called when a new grid is loaded.</summary>

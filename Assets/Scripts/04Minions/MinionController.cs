@@ -227,6 +227,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     private bool  _assignedSleep, _assignedFood;
     private float _nextMoodCheck;
     private float _nextLeaveAttempt;
+    private Vector3 _pickedUpAt;
     private readonly List<MinionBehaviour> _behaviours = new();
 
     public FactionID        Faction    => faction;
@@ -842,6 +843,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         _held              = true;
         _fleeing           = false;
         _dropAffinityUntil = float.NegativeInfinity;
+        _pickedUpAt        = transform.position;
         // Wherever it's set down, it sizes up every enemy afresh — and every
         // minion that had given up on it does the same.
         _ignoreUntil.Clear();
@@ -1104,6 +1106,85 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// Starts its behaviour over, so a creature treks to its new masters'
     /// heart before counting as truly theirs, same as a freshly summoned one.
     /// </summary>
+    // ── Save / load ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Everything about this minion a save keeps. A minion in the hand is
+    /// saved where it was picked up.
+    /// </summary>
+    public MinionSaveData CaptureSave()
+    {
+        Vector3 at  = _held ? _pickedUpAt : transform.position;
+        var     bed = LairManager.Instance != null ? LairManager.Instance.BedOf(this) : null;
+
+        var grievances = new Dictionary<string, float>();
+        foreach (MinionTemper.Grievance g in System.Enum.GetValues(typeof(MinionTemper.Grievance)))
+        {
+            float v = _temper.GetGrievance(g);
+            if (v > 0f) grievances[g.ToString()] = v;
+        }
+
+        return new MinionSaveData
+        {
+            faction              = faction,
+            source               = _source,
+            contentFactionId     = _definition != null ? _definition.factionId : null,
+            minionId             = _definition != null ? _definition.minionId  : null,
+            x                    = at.x,
+            z                    = at.z,
+            level                = _level,
+            experience           = _experience,
+            health               = _health,
+            tiredness            = _tiredness,
+            hunger               = _hunger,
+            owedWages            = _owedWages,
+            missedPaydays        = _missedPaydays,
+            angerPerUnpaidSalary = _angerPerUnpaidSalary,
+            grievances           = grievances,
+            reported             = _creature != null && _creature.HasReported,
+            bedX                 = bed != null ? bed.X : -1,
+            bedY                 = bed != null ? bed.Y : -1,
+            carryingGold         = _worker != null ? _worker.CarryingGold : 0,
+        };
+    }
+
+    /// <summary>
+    /// Loading a save, straight after Initialise: puts back its level,
+    /// health, needs, wages, anger and duty status. Its bed is reclaimed by
+    /// whoever restores it (it needs the grid cell). It then decides what to
+    /// do afresh, like a minion just set down by the hand.
+    /// </summary>
+    public void ApplySave(MinionSaveData data)
+    {
+        if (data == null) return;
+
+        if (_definition != null)
+        {
+            _level      = Mathf.Clamp(data.level, 1, _definition.maxLevel);
+            _experience = Mathf.Max(data.experience, _definition.ExperienceForLevel(_level));
+        }
+        _health               = Mathf.Clamp(data.health > 0f ? data.health : MaxHealth, 1f, MaxHealth);
+        _tiredness            = Mathf.Clamp01(data.tiredness);
+        _hunger               = Mathf.Clamp01(data.hunger);
+        _owedWages            = Mathf.Max(0, data.owedWages);
+        _missedPaydays        = Mathf.Max(0, data.missedPaydays);
+        _angerPerUnpaidSalary = data.angerPerUnpaidSalary;
+
+        _temper.ClearGrievances();
+        if (data.grievances != null)
+            foreach (var pair in data.grievances)
+                if (System.Enum.TryParse(pair.Key, out MinionTemper.Grievance g)) _temper.SetGrievance(g, pair.Value);
+
+        if (data.carryingGold > 0) _worker.RestoreCarriedGold(data.carryingGold);
+
+        // A creature that had reported goes straight back to work (or to worker jobs).
+        if (data.reported && !IsWorkerFirst)
+        {
+            _creature.RestoreReported();
+            if (CanDoWorkerJobs) SwitchTo(_worker);
+        }
+    }
+
     public void ConvertTo(FactionID newFaction)
     {
         if (_dead || newFaction == faction) return;

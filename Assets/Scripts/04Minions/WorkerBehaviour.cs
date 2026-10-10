@@ -115,6 +115,9 @@ public class WorkerBehaviour : MinionBehaviour
     public GridCell    Cell         => Agent != null ? Agent.CurrentCell : null;
     public int         CarryingGold => _carryingGold;
 
+    /// <summary>Loading a save: the gold it was carrying. It banks it as soon as it can.</summary>
+    public void RestoreCarriedGold(int amount) => _carryingGold = Mathf.Max(0, amount);
+
     private GridManager2D Grid => Minion.Grid;
 
     private float DigDamagePerSecond => Minion.GetStatOr(MinionStat.Strength, damagePerSecond);

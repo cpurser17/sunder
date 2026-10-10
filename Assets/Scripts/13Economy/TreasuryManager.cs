@@ -448,12 +448,16 @@ public class TreasuryManager : MonoBehaviour
         return list;
     }
 
+    /// <summary>Every gold pile — one in the Keeper's hand is saved where it was picked up.</summary>
     public List<CellGoldSaveData> CapturePiles()
     {
         var list = new List<CellGoldSaveData>();
-        foreach (var pile in _piles.Values)
-            if (pile != null && pile.Cell != null)
-                list.Add(new CellGoldSaveData(pile.Cell.X, pile.Cell.Y, pile.Amount));
+        foreach (var pile in GetComponentsInChildren<GoldPile>())
+        {
+            if (pile == null || pile.Amount <= 0) continue;
+            var cell = pile.IsHeld ? pile.LastCell : pile.Cell;
+            if (cell != null) list.Add(new CellGoldSaveData(cell.X, cell.Y, pile.Amount));
+        }
         return list;
     }
 

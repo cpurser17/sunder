@@ -59,6 +59,15 @@ public class CreatureBehaviour : MinionBehaviour
     /// <summary>Changed sides: it must report to its new masters' heart.</summary>
     public void ForgetReport() => _reported = false;
 
+    /// <summary>Loading a save: it had already reported for duty — straight to choosing work.</summary>
+    public void RestoreReported()
+    {
+        _reported         = true;
+        _startedReporting = true;
+        _headingToHeart   = false;
+        _state            = CreatureState.Choosing;
+    }
+
     // ── Behaviour lifecycle ────────────────────────────────────────────
 
     public override void Activate()
