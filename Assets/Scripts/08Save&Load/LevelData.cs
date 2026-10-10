@@ -126,6 +126,20 @@ public class GameStateSaveData
     // (Enum keys are written as names by default; no item converter — the values are objects.)
     public System.Collections.Generic.Dictionary<FactionID, PaydaySaveData> paydays;
 
+    // Every live minion, with its level, needs, wages, bed and anger. Null in
+    // older saves — those resume with no minions (bar a new game's placed ones).
+    public System.Collections.Generic.List<MinionSaveData> minions;
+
+    // Chickens, wherever they are. Null in older saves.
+    public System.Collections.Generic.List<ChickenSaveData> chickens;
+
+    // Per-faction research/manufacture/prayer points and completed research.
+    // (Enum keys are written as names by default; no item converter — the values are objects.)
+    public System.Collections.Generic.Dictionary<FactionID, FactionProgressSaveData> factionProgress;
+
+    // Per-faction cells marked for digging.
+    public System.Collections.Generic.Dictionary<FactionID, System.Collections.Generic.List<CellRefSaveData>> digMarks;
+
     // Per-faction Dungeon Heart HP, keyed by FactionID.
     // Null in saves predating DungeonHeart — hearts simply start at full HP.
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

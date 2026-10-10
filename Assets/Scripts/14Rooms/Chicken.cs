@@ -126,12 +126,16 @@ public class Chicken : MonoBehaviour, IHandTarget, IHandFeed
     public bool      IsHeld     => _held;
     public bool      CanAbandon => false;
 
+    /// <summary>Where it was before the hand picked it up — a save puts a held chicken back there.</summary>
+    public GridCell LastCell { get; private set; }
+
     public void OnPickedUp()
     {
         _held     = true;
         _moving   = false;
         ClaimedBy = null;
         _manager.Detach(this, Cell);
+        LastCell = Cell;
         Cell = null;
     }
 

@@ -163,6 +163,10 @@ public class WorkerSpawner : MonoBehaviour
         if (wallet == null) return;
 
         int cost = CurrentSummonCost;
+        // TODO (spells): when more spells are added, give every spell cast one
+        // shared "can't afford it" path that announces "NotEnoughGold" (as
+        // room/bridge purchases do in SelectionController2D.CommitBuy) — and
+        // route this summon through it, rather than announcing here alone.
         if (cost <= 0 || wallet.Gold < cost)
         {
             Debug.Log($"[WorkerSpawner] Not enough gold. Need {cost}, have {wallet.Gold}.");
@@ -365,4 +369,7 @@ public class WorkerSpawner : MonoBehaviour
 
     /// <summary>Called by MinionController when one of this spawner's workers dies or converts.</summary>
     public void NotifyWorkerDied() => _activeWorkerCount = Mathf.Max(0, _activeWorkerCount - 1);
+
+    /// <summary>Loading a save: a worker it spawned earlier is back — counts towards the summon cost.</summary>
+    public void NotifyWorkerRestored() => _activeWorkerCount++;
 }

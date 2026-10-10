@@ -47,6 +47,27 @@ public class FactionResearchState : MonoBehaviour
         if (!string.IsNullOrEmpty(researchId)) _completed.Add(researchId);
     }
 
+    // ── Save / load ────────────────────────────────────────────────────
+
+    public FactionProgressSaveData Capture() => new()
+    {
+        completedResearch = new List<string>(_completed),
+        researchPoints    = ResearchPoints,
+        manufacturePoints = ManufacturePoints,
+        prayerPoints      = PrayerPoints,
+    };
+
+    public void Restore(FactionProgressSaveData data)
+    {
+        if (data == null) return;
+        _completed.Clear();
+        if (data.completedResearch != null)
+            foreach (var id in data.completedResearch) CompleteResearch(id);
+        ResearchPoints    = data.researchPoints;
+        ManufacturePoints = data.manufacturePoints;
+        PrayerPoints      = data.prayerPoints;
+    }
+
     public void SetSummonIntervalMultiplier(float multiplier) =>
         SummonIntervalMultiplier = Mathf.Max(0.05f, multiplier);
 }
