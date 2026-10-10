@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,7 +14,8 @@ using UnityEngine.UI;
 ///
 /// The fill shades from green (healthy) through yellow to red (near death).
 /// A thin strip under each bar shows its faction: the local player's in one
-/// colour, everyone else's in another.
+/// colour, everyone else's in another. Each minion's level is shown just
+/// above its bar.
 ///
 /// Scene setup: none — GameManager2D adds one. Add it yourself to tune the
 /// look, or to show bars only on hurt minions.
@@ -37,6 +39,10 @@ public class MinionHealthBars : MonoBehaviour
     [SerializeField] private bool onlyWhenHurt = false;
     [Tooltip("Hide bars on minions held by the Keeper's hand.")]
     [SerializeField] private bool hideWhenHeld = true;
+    [Tooltip("Show each minion's level just above its bar.")]
+    [SerializeField] private bool showLevel = true;
+    [Tooltip("Level text size in pixels at the reference resolution.")]
+    [SerializeField] private float levelFontSize = 12f;
 
     [Header("Colours")]
     [SerializeField] private Color background   = new(0f, 0f, 0f, 0.65f);
@@ -45,12 +51,15 @@ public class MinionHealthBars : MonoBehaviour
     [SerializeField] private Color dying        = new(0.90f, 0.20f, 0.15f, 1f);
     [SerializeField] private Color ownFaction   = new(0.35f, 0.60f, 1.00f, 1f);
     [SerializeField] private Color otherFaction = new(0.85f, 0.30f, 0.85f, 1f);
+    [SerializeField] private Color levelColour  = Color.white;
     [SerializeField] private FactionID localPlayer = FactionID.Player;
 
     private class Bar
     {
         public RectTransform Root, Fill;
         public Image FillImage, Strip;
+        public TextMeshProUGUI Level;   // minion bars only
+        public int ShownLevel = -1;
     }
 
     private Camera        _camera;
@@ -92,7 +101,7 @@ public class MinionHealthBars : MonoBehaviour
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvas, screen, null, out Vector2 local))
                 continue;
 
-            var bar = used < _bars.Count ? _bars[used] : NewBar(size, _bars);
+            var bar = used < _bars.Count ? _bars[used] : NewBar(size, _bars, withLevel: true);
             used++;
 
             bar.Root.gameObject.SetActive(true);
@@ -102,6 +111,13 @@ public class MinionHealthBars : MonoBehaviour
                 ? Color.Lerp(hurt, healthy, (fraction - 0.5f) * 2f)
                 : Color.Lerp(dying, hurt, fraction * 2f);
             bar.Strip.color = minion.Faction == localPlayer ? ownFaction : otherFaction;
+
+            bar.Level.enabled = showLevel;
+            if (showLevel && bar.ShownLevel != minion.Level)
+            {
+                bar.ShownLevel = minion.Level;
+                bar.Level.text = minion.Level.ToString();
+            }
         }
 
         for (int i = used; i < _bars.Count; i++)
@@ -146,7 +162,7 @@ public class MinionHealthBars : MonoBehaviour
         return true;
     }
 
-    private Bar NewBar(Vector2 barSize, List<Bar> pool)
+    private Bar NewBar(Vector2 barSize, List<Bar> pool, bool withLevel = false)
     {
         var root = NewRect("HealthBar", _canvas);
         root.anchorMin = root.anchorMax = new Vector2(0.5f, 0.5f);
@@ -176,6 +192,23 @@ public class MinionHealthBars : MonoBehaviour
         stripImage.raycastTarget = false;
 
         var bar = new Bar { Root = root, Fill = fill, FillImage = fillImage, Strip = stripImage };
+
+        // Level: centred just above the bar.
+        if (withLevel)
+        {
+            var level = NewRect("Level", root);
+            level.anchorMin = level.anchorMax = new Vector2(0.5f, 1f);
+            level.pivot     = new Vector2(0.5f, 0f);
+            level.sizeDelta = new Vector2(barSize.x, levelFontSize + 2f);
+            level.anchoredPosition = new Vector2(0f, 1f);
+            var text = level.gameObject.AddComponent<TextMeshProUGUI>();
+            text.fontSize      = levelFontSize;
+            text.fontStyle     = FontStyles.Bold;
+            text.color         = levelColour;
+            text.alignment     = TextAlignmentOptions.Bottom;
+            text.raycastTarget = false;
+            bar.Level = text;
+        }
         pool.Add(bar);
         return bar;
     }
