@@ -27,6 +27,8 @@ MonoBehaviour:
   hazardDamagePerSecond: 0
   isRoom: 1
   playerBuildable: 1
+  buttonRow: 2
+  buttonColumn: 4
   capacityPerTile: 0
   capacityScalesWithEfficiency: 1
   baseEfficiency: 0.5
@@ -39,5 +41,3 @@ MonoBehaviour:
   positionOffset: {x: 0, y: 0, z: 0}
   rotationOffset: {x: 0, y: 0, z: 0}
   scaleMultiplier: 1
-  buttonRow: 2
-  buttonColumn: 4

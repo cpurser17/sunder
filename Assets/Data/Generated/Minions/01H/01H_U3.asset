@@ -17,6 +17,7 @@ MonoBehaviour:
   displayName: Heracles
   token: {fileID: 21300000, guid: 9a4fd8290f726e949916dc27a52da077, type: 3}
   prefab: {fileID: 0}
+  bedPrefab: {fileID: 0}
   stance: 5
   tier: 0
   movement: 0
@@ -165,6 +166,20 @@ MonoBehaviour:
   - stat: 18
     min: 0
     max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 19
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 20
+    min: 1
+    max: 1
     curve: 0
     skew: 0
     wholeNumber: 0

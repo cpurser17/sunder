@@ -17,6 +17,7 @@ MonoBehaviour:
   displayName: Eidolon
   token: {fileID: 21300000, guid: a51fef2fd50f5f44fa17bb39a270e282, type: 3}
   prefab: {fileID: 2069081368136572123, guid: 85f1156bdf93c084289394bbc06089b5, type: 3}
+  bedPrefab: {fileID: 0}
   stance: 7
   tier: 0
   movement: 0
@@ -165,6 +166,20 @@ MonoBehaviour:
   - stat: 18
     min: 0
     max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 19
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 20
+    min: 1
+    max: 1
     curve: 0
     skew: 0
     wholeNumber: 0

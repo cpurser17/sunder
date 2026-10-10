@@ -17,6 +17,7 @@ MonoBehaviour:
   displayName: Minotaur
   token: {fileID: 21300000, guid: d0f4824bad093064ea4021c32fec7976, type: 3}
   prefab: {fileID: 0}
+  bedPrefab: {fileID: 0}
   stance: 0
   tier: 2
   movement: 0
@@ -182,6 +183,20 @@ MonoBehaviour:
   - stat: 18
     min: 0
     max: 0
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 19
+    min: 1
+    max: 1
+    curve: 0
+    skew: 0
+    wholeNumber: 0
+    authored: 0
+  - stat: 20
+    min: 1
+    max: 1
     curve: 0
     skew: 0
     wholeNumber: 0

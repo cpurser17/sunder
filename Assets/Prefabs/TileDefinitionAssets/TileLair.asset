@@ -14,23 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TileDefinition
   tileType: 8
   tileName: Lair
+  description: Each minion claims one bed tile and keeps it. Beds don't overlap.
+    Efficiency speeds up sleep.
   category: 2
   traversalType: 1
   gridColour: {r: 0, g: 0.6666667, b: 0.26666668, a: 1}
   buyCost: 20
   sellValue: 10
   isIndestructible: 0
-  requiresAdjacency: 0
-  placesOnLiquid: 0
-  placesOnTunnel: 1
-  prefab3D: {fileID: 2965602958111023015, guid: f3c214f3701525d42930201135dcd8d1, type: 3}
-  description: 'Each minion claims one bed tile and keeps it. Beds don''t overlap. Efficiency speeds up sleep.'
+  maxHitPoints: 0
+  wealthCapacity: 0
+  workerDamagePerSecond: 20
+  hazardDamagePerSecond: 0
   isRoom: 1
   playerBuildable: 1
+  buttonRow: 1
+  buttonColumn: 2
   capacityPerTile: 1
   capacityScalesWithEfficiency: 0
   baseEfficiency: 0.5
   shapeWeight: 0.3
   wallWeight: 0.2
-  buttonRow: 1
-  buttonColumn: 2
+  requiresAdjacency: 0
+  placesOnLiquid: 0
+  placesOnTunnel: 1
+  prefab3D: {fileID: 2965602958111023015, guid: f3c214f3701525d42930201135dcd8d1, type: 3}
+  positionOffset: {x: 0, y: 0, z: 0}
+  rotationOffset: {x: 0, y: 0, z: 0}
+  scaleMultiplier: 1

@@ -37,7 +37,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f54056dc5545c0243bc3f905d32460a4, type: 2}
   worker: {fileID: 11400000, guid: c8dcaae614088284e978c8f512240bbb, type: 2}
   allMinions:
-  - {fileID: 11400000, guid: c8dcaae614088284e978c8f512240bbb, type: 2}
+  - {fileID: 11400000, guid: 75f7b8ed3b6368b45a751a30c807c03a, type: 2}
+  - {fileID: 11400000, guid: 6da18704bfa6ff74195593db632099e8, type: 2}
+  - {fileID: 11400000, guid: 3588d6d5bb8eff5449d2116612381be0, type: 2}
+  - {fileID: 11400000, guid: 5af21f0b0e45dba45ad4a26e3ea3095b, type: 2}
   - {fileID: 11400000, guid: e7cdcc7dfd8fb47458e4f709b60e617f, type: 2}
   - {fileID: 11400000, guid: c1969003f18e2a1418c89695a10abc52, type: 2}
   - {fileID: 11400000, guid: f30004650ecb00a4682b56001f96f45e, type: 2}
@@ -56,10 +59,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4107e7b88bf979a4a944297dd235f029, type: 2}
   - {fileID: 11400000, guid: 2b6bbef15ed2a1342a1ba900a60b1c59, type: 2}
   - {fileID: 11400000, guid: f54056dc5545c0243bc3f905d32460a4, type: 2}
-  - {fileID: 11400000, guid: 75f7b8ed3b6368b45a751a30c807c03a, type: 2}
-  - {fileID: 11400000, guid: 6da18704bfa6ff74195593db632099e8, type: 2}
-  - {fileID: 11400000, guid: 3588d6d5bb8eff5449d2116612381be0, type: 2}
-  - {fileID: 11400000, guid: 5af21f0b0e45dba45ad4a26e3ea3095b, type: 2}
+  - {fileID: 11400000, guid: c8dcaae614088284e978c8f512240bbb, type: 2}
   - {fileID: 11400000, guid: a5f2f548a43b8da42a4c52e031acc0cc, type: 2}
   populationLimit: 10
   baseSummonInterval: 6

@@ -27,6 +27,8 @@ MonoBehaviour:
   hazardDamagePerSecond: 0
   isRoom: 0
   playerBuildable: 0
+  buttonRow: 0
+  buttonColumn: 0
   capacityPerTile: 0
   capacityScalesWithEfficiency: 1
   baseEfficiency: 1

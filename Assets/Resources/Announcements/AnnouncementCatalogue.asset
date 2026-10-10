@@ -1,0 +1,298 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e85aa751c1a551b458947f026baed8a0, type: 3}
+  m_Name: AnnouncementCatalogue
+  m_EditorClassIdentifier: Assembly-CSharp::AnnouncementCatalogue
+  defaultLanguage: en
+  announcements:
+  - id: MinionsUnderAttack
+    priority: 3
+    cooldown: 20
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your minions are under attack!
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 73209c72172c5384e90abe0545d7e4ad, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Some of your minions are in danger.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 07b05d0e4699f05439949b662b8b883b, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Violence is prevalent.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 52d955e1bcd38274c83507552ecb1a42, type: 3}
+  - id: HeartUnderAttack
+    priority: 3
+    cooldown: 20
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your Dungeon Heart is under attack!
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: f677143cd50582849a0ffa7c2e5cc7cd, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: The core of your dungeon is in danger!
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 366c50d3250f90343966a61d3374145a, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: If you do not tend to your heart, you will lose it.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 7ff5b1691d2dc0e4190da936abff968b, type: 3}
+  - id: MinionLeaving
+    priority: 2
+    cooldown: 10
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: A minion is leaving your dungeon.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 9adb02849968c5b42be82fbfedfe4e74, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Minions are abandoning the war effort.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 10356dc4bfc79f349a0854d9fc69b173, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Minions voluntarily despawning really says something about your leadership.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: ef28d7e506937f24c91f67cc7aff5095, type: 3}
+  - id: NoLair
+    priority: 1
+    cooldown: 30
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: You need a lair.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 815f8352d32f39048a2537a90d42d2b6, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: You must build a lair to house your minions.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: b00f2db62cb710745878858029e5ed88, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: If you never build a lair, who will pay the real estate moguls?
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: d4a2babd156e2f84e8207d7ec3ab4f2d, type: 3}
+  - id: LairTooSmall
+    priority: 1
+    cooldown: 30
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your lair is too small.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: f7a0515ead40ef04ab57f1243c5750ad, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your lair needs to be bigger.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 0f234ec351ca39e4e87f577943b07d6c, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Your minions are sleeping on the floor. Again.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: f7ff0eb17bd5dcc4bb190d09b7181abf, type: 3}
+  - id: NoHatchery
+    priority: 1
+    cooldown: 30
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: You need a hatchery.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 828a5469ef630714a936e56008ea0a8d, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: You must build a hatchery to feed your minions.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: c779da11b8a185d4ba18256ed2f5a2bd, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Would you survive without food? Build a hatchery!
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 67514c38292d835449b2e1f972d961d6, type: 3}
+  - id: HatcheryTooSmall
+    priority: 1
+    cooldown: 30
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your hatchery is too small.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 916523abc8cdfa643a92db605b72ffba, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Food has been exhausted, enlarge your hatchery.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: b66c51bc913b43e478141cbd9294dc52, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Freerange is spacially inefficient, expand your hatchery or abandon
+          your ethics.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 20c0ce406de6ff441bf23aa97470ca10, type: 3}
+  - id: NoTreasury
+    priority: 1
+    cooldown: 45
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: You need a treasury.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 68d1e1b3ff162db4c95d8d91033fd442, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Workers cannot find anywhere to place your gold.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: a5d46951b752b1c49ad616d872fb77b2, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Gold is tangible, fungible, and recession-proof, build a place to store
+          it.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: d5ee01b81f3aa9a44bd8e77087f0ce5a, type: 3}
+  - id: TreasuryFull
+    priority: 1
+    cooldown: 45
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: Your treasury is full.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 7e0d2bf5cb44532439f17793e4808872, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: You've exeeded the capacity of your treasury.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 6a925d34d2211fc4fa1cfcc22caf1c48, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Hoarding wealth is not healthy for an economy.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: b036ccfd6502f844d86aa5cca0b28f46, type: 3}
+  - id: NoGoldForTraining
+    priority: 1
+    cooldown: 60
+    lines:
+    - variant: 1
+      weight: 49.5
+      texts:
+      - language: en
+        text: You cannot afford to train your minions.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: b4654ba841a6c2a439c712f2a21fa5e6, type: 3}
+    - variant: 2
+      weight: 49.5
+      texts:
+      - language: en
+        text: Minions need financial motivation to exercise.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: c4c4199b35764a34aa057c18c9fb0b49, type: 3}
+    - variant: Rare
+      weight: 1
+      texts:
+      - language: en
+        text: Gym memberships are pricey these days.
+      clips:
+      - language: en
+        clip: {fileID: 8300000, guid: 88a5a351ad31a534f9b9622bd7c92f44, type: 3}
