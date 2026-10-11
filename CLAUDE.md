@@ -8,6 +8,7 @@ by hand in Excel; changes to them come only from the user's own commits.
 - `Assets/Data/MinionData.xlsx`
 - `Assets/Data/RoomData.xlsx`
 - `Assets/Data/Announcements.xlsx`
+- `Assets/Data/SpellData.xlsx`
 
 If code needs a new column or sheet, change the parser/importer to tolerate its
 absence and tell the user what to add, rather than editing the workbook.

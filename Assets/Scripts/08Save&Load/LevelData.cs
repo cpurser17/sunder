@@ -126,6 +126,9 @@ public class GameStateSaveData
     // (Enum keys are written as names by default; no item converter — the values are objects.)
     public System.Collections.Generic.Dictionary<FactionID, PaydaySaveData> paydays;
 
+    // Spell cooldowns still running. Null in older saves — none running.
+    public System.Collections.Generic.List<SpellCooldownSaveData> spellCooldowns;
+
     // Every live minion, with its level, needs, wages, bed and anger. Null in
     // older saves — those resume with no minions (bar a new game's placed ones).
     public System.Collections.Generic.List<MinionSaveData> minions;

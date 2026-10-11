@@ -77,7 +77,7 @@ public class DigSelectionController : MonoBehaviour
         bool hudActive = HUDController2D.Instance != null &&
                          HUDController2D.Instance.AnyButtonActive;
 
-        if (hudActive || WorkerSpawner.AnySummonModeActive)
+        if (hudActive || SpellCaster.AnyArmed)
         {
             // Cancel any in-progress drag and hide the box if HUD becomes active.
             if (_lmbDragging || _rmbDragging)

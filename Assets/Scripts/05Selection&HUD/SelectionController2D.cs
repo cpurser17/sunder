@@ -115,6 +115,8 @@ public class SelectionController2D : MonoBehaviour
         if (!Input.GetMouseButtonDown(1)) return;
         // Dropping or slapping a minion — the hand's click, not a deselect.
         if (KeeperHand.OwnsMouseButton(1)) return;
+        // An armed spell handles its own right-click (cancel the charge, or put it away).
+        if (SpellCaster.AnyArmed) return;
         if (_dragging) CancelDrag();
         else           HUDController2D.Instance?.RequestDeselect();
     }

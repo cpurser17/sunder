@@ -38,9 +38,10 @@ using UnityEngine.EventSystems;
 /// whichever component's Update runs first.
 ///
 /// The hand stands down entirely — no grabs, slaps, drops or hover pauses —
-/// while a HUD buy/sell button is active, a summon placement is pending, the
-/// fullscreen minimap is open, or the cursor is over UI. Minions already held
-/// stay held and keep following the cursor.
+/// while a HUD buy/sell button is active, the fullscreen minimap is open, or
+/// the cursor is over UI. With a spell armed it stands down too, but still
+/// pauses minions it moves over, so they're easy to aim at. Minions already
+/// held stay held and keep following the cursor.
 ///
 /// Scene setup
 /// -----------
@@ -119,6 +120,7 @@ public class KeeperHand : MonoBehaviour
     // Per-frame state, computed once by EnsureFrameState.
     private int         _stateFrame = -1;
     private bool        _standDown;
+    private bool        _hoverPausesOnly;   // standing down, but still pausing hovered minions
     private IHandTarget _hovered;
     private bool        _claimsLmb;
     private bool        _claimsRmb;
@@ -205,9 +207,10 @@ public class KeeperHand : MonoBehaviour
 
         ResolveDependencies();
 
-        _standDown = mainCamera == null || gridManager == null || ShouldStandDown();
-        _hovered   = _standDown ? null : FindHovered();
-        _claimsLmb = _hovered != null && _held.Count < capacity;
+        _hoverPausesOnly = false;
+        _standDown = mainCamera == null || gridManager == null || ShouldStandDown(out _hoverPausesOnly);
+        _hovered   = _standDown && !_hoverPausesOnly ? null : FindHovered();
+        _claimsLmb = !_standDown && _hovered != null && _held.Count < capacity;
         _claimsRmb = !_standDown && (_held.Count > 0 ? CanDropUnderCursor() : _hovered != null);
     }
 
@@ -230,13 +233,14 @@ public class KeeperHand : MonoBehaviour
         return CanDropOn(target, cell);
     }
 
-    private static bool ShouldStandDown()
+    private static bool ShouldStandDown(out bool hoverPausesOnly)
     {
+        hoverPausesOnly = false;
         if (PauseController.IsPaused) return true;
-        if (HUDController2D.Instance != null && HUDController2D.Instance.AnyButtonActive) return true;
-        if (WorkerSpawner.AnySummonModeActive) return true;
-        if (MinimapFullscreen.IsOpen)       return true;
-        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        if (MinimapFullscreen.IsOpen) return true;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return true;
+        if (SpellCaster.AnyArmed) { hoverPausesOnly = true; return true; }
+        return HUDController2D.Instance != null && HUDController2D.Instance.AnyButtonActive;
     }
 
     private void ResolveDependencies()
@@ -305,6 +309,15 @@ public class KeeperHand : MonoBehaviour
 
         if (_hovered.Agent != null) _hovered.Agent.Pause(hoverPauseDuration);
         _lastPaused = _hovered;
+    }
+
+    /// <summary>
+    /// Restarts a minion's hover pause, as if the hand had just moved onto
+    /// it — e.g. after healing it, so it can be healed again before it walks off.
+    /// </summary>
+    public void HoldStill(MinionController minion)
+    {
+        if (minion != null && minion.Agent != null) minion.Agent.Pause(hoverPauseDuration);
     }
 
     // ── Pick up ────────────────────────────────────────────────────────

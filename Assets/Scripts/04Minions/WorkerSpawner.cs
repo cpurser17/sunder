@@ -1,29 +1,18 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Serialization;
-using UnityEngine.UI;
 
 /// <summary>
-/// Handles worker summoning: cost calculation and click-to-place. Spawned
-/// workers register themselves with their faction's WorkerTaskManager.
-///
-/// Cost formula: cost = b + k * c
-///   b = baseCost     (default 25 — cost of the first worker)
-///   c = costIncrement (default 25 — added per existing active worker)
-///   k = current active worker count (0 when no workers exist)
-///
-/// Usage
-/// -----
-/// 1. Player clicks "Summon Worker" HUD button → sets IsSummonModeActive = true.
-/// 2. Player left-clicks a valid world cell → worker spawns there, cost deducted.
-/// 3. Right-click or pressing the button again cancels summon mode.
+/// Spawns a faction's workers. Summoning is the Summon Worker spell (see
+/// SummonWorkerEffect): the spell system handles the button, the click and
+/// the gold, then asks this spawner whether a tile will do and to spawn
+/// there. Its price — the SummonWorker row of the SpellData workbook — rises
+/// with ActiveWorkerCount.
 ///
 /// Scene setup
 /// -----------
 /// 1. Create child GO under GameManager. Name it "WorkerSpawner_Player".
-/// 2. Attach WorkerSpawner. Set faction, gridManager, mainCamera. Leave workerPrefab
+/// 2. Attach WorkerSpawner. Set faction and gridManager. Leave workerPrefab
 ///    empty to use MinionSummoner's shared minion template.
-/// 3. Wire the Summon Worker HUD button to ToggleSummonMode().
 ///
 /// Data
 /// ----
@@ -45,21 +34,6 @@ public class WorkerSpawner : MonoBehaviour
     public static WorkerSpawner GetForFaction(FactionID faction) =>
         _registry.TryGetValue(faction, out var s) ? s : null;
 
-    /// <summary>
-    /// True while any spawner is awaiting a placement click. Other click
-    /// handlers (dig selection) check this so a summon click is not also
-    /// consumed as a drag-select.
-    /// </summary>
-    public static bool AnySummonModeActive
-    {
-        get
-        {
-            foreach (var s in _registry.Values)
-                if (s != null && s.IsSummonModeActive) return true;
-            return false;
-        }
-    }
-
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Identity")]
     [SerializeField] private FactionID faction = FactionID.Player;
@@ -70,25 +44,19 @@ public class WorkerSpawner : MonoBehaviour
     [FormerlySerializedAs("impPrefab")]
     [SerializeField] private GameObject    workerPrefab;
     [SerializeField] private GridManager2D gridManager;
-    [SerializeField] private Camera        mainCamera;
 
     [Header("Placement")]
     [Tooltip("Gap kept between the spawned token edge and the tile boundary, "
              + "in world units.")]
     [SerializeField] private float spawnEdgeGap = 0.02f;
 
-    [Header("Cost Formula: cost = baseCost + activeWorkers * costIncrement")]
-    [SerializeField] private int baseCost      = 25;
-    [SerializeField] private int costIncrement = 25;
-
     // ── Runtime ────────────────────────────────────────────────────────
-    private bool _summonModeActive;
     private TraversalCapability? _prefabCapability;
     private bool _warnedNoWorkerData;
     private int  _activeWorkerCount;
 
-    public bool IsSummonModeActive => _summonModeActive;
-    public int  CurrentSummonCost  => baseCost + _activeWorkerCount * costIncrement;
+    /// <summary>Workers this spawner has out — the Summon Worker price rises with it.</summary>
+    public int ActiveWorkerCount => _activeWorkerCount;
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -103,91 +71,24 @@ public class WorkerSpawner : MonoBehaviour
             _registry.Remove(faction);
     }
 
-    private void Update()
-    {
-        if (!_summonModeActive) return;
-
-        // Cancel on right-click or Escape.
-        if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
-        {
-            SetSummonMode(false);
-            return;
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-                return;
-
-            // Mode stays open — the player can place several workers in a row and
-            // leaves deliberately via right-click, Escape, or the button.
-            TrySpawnWorker();
-        }
-    }
-
     // ── Public API ─────────────────────────────────────────────────────
 
-    /// <summary>Toggles summon mode on/off. Wire to the Summon Worker HUD button.</summary>
-    public void ToggleSummonMode() => SetSummonMode(!_summonModeActive);
-
-    /// <summary>Exits summon mode on every faction's spawner.</summary>
-    public static void CancelAllSummonModes()
+    /// <summary>Whether a worker could be summoned onto this tile.</summary>
+    public bool CanSpawnOn(GridCell cell)
     {
-        foreach (var s in _registry.Values)
-            if (s != null && s.IsSummonModeActive) s.SetSummonMode(false);
+        if (gridManager == null && GameManager2D.Instance != null) gridManager = GameManager2D.Instance.Grid;
+        return cell != null && gridManager != null && IsValidSpawnCell(cell);
     }
 
     /// <summary>
-    /// Enters or exits summon mode.
-    ///
-    /// Button highlighting is owned by HUDController2D so the summon button
-    /// behaves identically to the buy/sell buttons. When the mode is exited
-    /// from here — right-click or Escape rather than the button — the HUD is
-    /// told so it can clear the highlight.
+    /// Spawns a worker on the tile, as close to point (where the player
+    /// clicked) as its token fits. False if it couldn't. Gold is the
+    /// caller's business — see SummonWorkerEffect.
     /// </summary>
-    public void SetSummonMode(bool active)
-    {
-        if (_summonModeActive == active) return;
-        _summonModeActive = active;
-
-        if (!active)
-            HUDController2D.Instance?.NotifySummonModeExited(faction);
-    }
+    public bool SpawnAt(GridCell cell, Vector3 point) =>
+        CanSpawnOn(cell) && SpawnWorker(cell, point);
 
     // ── Spawning ───────────────────────────────────────────────────────
-
-    private void TrySpawnWorker()
-    {
-        // Check funds before attempting placement; pay after.
-        var wallet = GameManager2D.Instance?.GetWallet(faction);
-        if (wallet == null) return;
-
-        int cost = CurrentSummonCost;
-        // TODO (spells): when more spells are added, give every spell cast one
-        // shared "can't afford it" path that announces "NotEnoughGold" (as
-        // room/bridge purchases do in SelectionController2D.CommitBuy) — and
-        // route this summon through it, rather than announcing here alone.
-        if (cost <= 0 || wallet.Gold < cost)
-        {
-            Debug.Log($"[WorkerSpawner] Not enough gold. Need {cost}, have {wallet.Gold}.");
-            return;
-        }
-
-        // Raycast to find click position.
-        if (!TryGetGridCell(out int x, out int y, out Vector3 clickPoint)) return;
-
-        var cell = gridManager.GetCell(x, y);
-        if (cell == null || !IsValidSpawnCell(cell))
-        {
-            Debug.Log("[WorkerSpawner] Invalid spawn location — must be an owned tile " +
-                      "or unclaimed Cave that the worker can stand on.");
-            return;
-        }
-
-        // Paid only once the worker exists, so a failed spawn costs nothing
-        // (gold can't simply be handed back — it may have come from the reserve).
-        if (SpawnWorker(cell, clickPoint)) wallet.TrySpend(cost);
-    }
 
     private bool SpawnWorker(GridCell cell, Vector3 clickPoint)
     {
@@ -229,8 +130,7 @@ public class WorkerSpawner : MonoBehaviour
 
         _activeWorkerCount++;
 
-        Debug.Log($"[WorkerSpawner] Spawned worker {_activeWorkerCount} for {faction}. " +
-                  $"Next cost: {CurrentSummonCost}g.");
+        Debug.Log($"[WorkerSpawner] Spawned worker {_activeWorkerCount} for {faction}.");
         return true;
     }
 
@@ -303,28 +203,6 @@ public class WorkerSpawner : MonoBehaviour
                                               : TraversalCapability.LandOnly;
             return _prefabCapability.Value;
         }
-    }
-
-    /// <summary>
-    /// Resolves the click to a grid cell AND keeps the exact world point that
-    /// was hit, so the worker can be placed where the player actually clicked
-    /// rather than snapped to the middle of the tile.
-    /// </summary>
-    private bool TryGetGridCell(out int x, out int y, out Vector3 hitPoint)
-    {
-        x = y = 0;
-        hitPoint = Vector3.zero;
-
-        Ray          ray  = mainCamera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit[] hits = Physics.RaycastAll(ray);
-
-        foreach (var hit in hits)
-        {
-            if (hit.collider.gameObject != gridManager.gameObject) continue;
-            hitPoint = hit.point;
-            return gridManager.WorldToCell(hit.point, out x, out y);
-        }
-        return false;
     }
 
     /// <summary>

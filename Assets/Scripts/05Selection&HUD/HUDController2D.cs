@@ -24,8 +24,9 @@ using TMPro;
 /// left as they are.
 ///
 /// Likewise, with a Spells tab (spellsTab, or the footer's tab named
-/// "Spells"), Summon Worker is generated there at summonRow/summonColumn —
-/// the first spell — and any hand-made summon button is hidden.
+/// "Spells"), every spell with an effect script and a slot in the SpellData
+/// workbook gets a button there, Summon Worker included; any hand-made summon
+/// button is hidden. Selecting a spell button arms it (SpellCaster).
 /// </summary>
 public class HUDController2D : MonoBehaviour
 {
@@ -64,26 +65,27 @@ public class HUDController2D : MonoBehaviour
     [SerializeField, Range(0, 9)] private int sellRow    = 4;
     [SerializeField, Range(0, 9)] private int sellColumn = 1;
 
-    [Header("Summon Button")]
-    [Tooltip("Summon Worker button. Managed here so it highlights with the same "
-             + "system as the buy/sell buttons and is mutually exclusive with them. "
-             + "Ignored (and hidden) when there's a Spells tab — one is generated there.")]
+    [Header("Spell Buttons")]
+    [Tooltip("Hand-made Summon Worker button, for a HUD without a Spells tab — it arms the " +
+             "Summon Worker spell. Ignored (and hidden) when there's a Spells tab.")]
     [SerializeField] private Button summonButton;
-    [Tooltip("The HUD footer's Spells tab. Empty = the footer's tab named \"Spells\", if any.")]
+    [Tooltip("The HUD footer's Spells tab. Empty = the footer's tab named \"Spells\", if any. " +
+             "Spells go at their SpellData ButtonRow/ButtonColumn slot (also the hotkey).")]
     [SerializeField] private FooterTab spellsTab;
-    [Tooltip("Slot of the generated Summon Worker button in the Spells tab (also its hotkey).")]
-    [SerializeField, Range(0, 9)] private int summonRow    = 1;
-    [SerializeField, Range(0, 9)] private int summonColumn = 1;
 
     [Header("Highlight Colours")]
     [SerializeField] private Color activeColour = new(1f, 0.85f, 0.1f, 1f);
     [SerializeField] private Color normalColour = Color.white;
 
     private Button _activeButton;
-    private bool   _syncingSummon;   // re-entrancy guard
 
-    private TextMeshProUGUI _summonLabel;   // generated button's label, kept showing the current cost
-    private int             _summonLabelCost = -1;
+    private class SpellButton
+    {
+        public SpellDefinition Spell;
+        public TextMeshProUGUI Label;   // kept showing the current cost
+        public int             ShownCost = -1;
+    }
+    private readonly Dictionary<Button, SpellButton> _spellButtons = new();
 
     /// <summary>
     /// True while any buy or sell button is active.
@@ -114,8 +116,13 @@ public class HUDController2D : MonoBehaviour
 
         if (spellsTab != null)
         {
-            AddGeneratedSummonButton();
+            AddGeneratedSpellButtons();
             spellsTab.RebuildLayout();
+        }
+        else if (summonButton != null)
+        {
+            var summon = SpellSystem.Instance != null ? SpellSystem.Instance.Find("SummonWorker") : null;
+            if (summon != null) AddSpellButton(summonButton, summon);
         }
 
         // The Minions tab tracks this player's minions (see MinionTracker).
@@ -131,8 +138,11 @@ public class HUDController2D : MonoBehaviour
         }
         if (sellButton != null) sellButton.onClick.AddListener(OnSellClicked);
 
-        if (summonButton != null)
-            summonButton.onClick.AddListener(OnSummonClicked);
+        foreach (var pair in _spellButtons)
+        {
+            var button = pair.Key;
+            button.onClick.AddListener(() => OnSpellClicked(button));
+        }
 
         // Wallets are created by GameManager2D after the scene loads.
         // Subscribe to OnWalletsReady so the gold display connects at the
@@ -149,7 +159,7 @@ public class HUDController2D : MonoBehaviour
         GameManager2D.OnWalletsReady -= ConnectWallet;
     }
 
-    private void Update() => RefreshSummonLabel();
+    private void Update() => RefreshSpellLabels();
 
     private void ConnectWallet()
     {
@@ -180,28 +190,13 @@ public class HUDController2D : MonoBehaviour
         selectionController.ActiveMode = SelectionController2D.InteractionMode.Sell;
     }
 
-    private void OnSummonClicked()
+    private void OnSpellClicked(Button button)
     {
-        SelectButton(summonButton);
+        SelectButton(button);
 
-        // Summon is not a buy/sell interaction, so the tile selection
-        // controller must stand down while it is held open.
+        // A spell is not a buy/sell interaction, so the tile selection
+        // controller stands down while one is armed.
         selectionController.ActiveMode = SelectionController2D.InteractionMode.None;
-    }
-
-    /// <summary>
-    /// Called by WorkerSpawner when summon mode is exited from its own input
-    /// (right-click or Escape) rather than from the button, so the highlight
-    /// does not get left on.
-    /// </summary>
-    public void NotifySummonModeExited(FactionID exitedFaction)
-    {
-        if (_syncingSummon) return;
-        if (exitedFaction != localPlayer) return;
-        if (_activeButton != summonButton) return;
-
-        SetHighlight(_activeButton, false);
-        _activeButton = null;
     }
 
     public void RequestDeselect() => Deselect();
@@ -215,30 +210,27 @@ public class HUDController2D : MonoBehaviour
             // Clicking the active button toggles it off.
             _activeButton = null;
             selectionController.ActiveMode = SelectionController2D.InteractionMode.None;
-            SyncSummonMode();
+            SyncSpell();
             return;
         }
 
         _activeButton = btn;
         SetHighlight(_activeButton, true);
-        SyncSummonMode();
+        SyncSpell();
     }
 
     /// <summary>
-    /// Summon mode is on exactly when the summon button is the active one.
-    /// Selecting any other button therefore cancels it, which is what makes all
-    /// the mode buttons mutually exclusive without special-casing summon.
+    /// A spell is armed exactly when its button is the active one, so
+    /// selecting any other button puts it away — every mode button stays
+    /// mutually exclusive without special cases.
     /// </summary>
-    private void SyncSummonMode()
+    private void SyncSpell()
     {
-        if (_syncingSummon) return;
+        var caster = SpellCaster.Instance;
+        if (caster == null) return;
 
-        var spawner = WorkerSpawner.GetForFaction(localPlayer);
-        if (spawner == null) return;
-
-        _syncingSummon = true;
-        spawner.SetSummonMode(summonButton != null && _activeButton == summonButton);
-        _syncingSummon = false;
+        if (_activeButton != null && _spellButtons.TryGetValue(_activeButton, out var spell)) caster.Arm(spell.Spell);
+        else caster.Disarm();
     }
 
     private void Deselect()
@@ -246,7 +238,7 @@ public class HUDController2D : MonoBehaviour
         SetHighlight(_activeButton, false);
         _activeButton = null;
         selectionController.ActiveMode = SelectionController2D.InteractionMode.None;
-        SyncSummonMode();
+        SyncSpell();
     }
 
     private void SetHighlight(Button btn, bool on)
@@ -343,40 +335,61 @@ public class HUDController2D : MonoBehaviour
         roomsTab.Add(new FooterTab.Entry { Row = sellRow, Column = sellColumn, Label = "Sell", Button = button });
     }
 
-    /// <summary>Puts a generated Summon Worker button in the Spells tab, hiding any hand-made one.</summary>
-    private void AddGeneratedSummonButton()
+    /// <summary>
+    /// A button in the Spells tab for every spell that has an effect script
+    /// and a slot, hiding any hand-made summon button. Spells still waiting
+    /// on their script get no button yet.
+    /// </summary>
+    private void AddGeneratedSpellButtons()
     {
-        if (roomButtonTemplate == null) return;
+        var spells = SpellSystem.Instance;
+        if (roomButtonTemplate == null || spells == null) return;
 
         if (summonButton != null && summonButton != roomButtonTemplate)
             summonButton.gameObject.SetActive(false);
 
-        var button = Instantiate(roomButtonTemplate, spellsTab.Content);
-        button.name = "SummonWorker";
-        button.gameObject.SetActive(true);
-
-        _summonLabel = button.GetComponentInChildren<TextMeshProUGUI>(true);
-        summonButton = button;
-        RefreshSummonLabel();
-
-        spellsTab.Add(new FooterTab.Entry
+        foreach (var spell in spells.Spells)
         {
-            Row = summonRow, Column = summonColumn, Label = "Summon Worker", Button = button,
-        });
+            if (spell.buttonRow <= 0 || spell.buttonColumn <= 0) continue;
+            if (SpellSystem.EffectFor(spell) == null) continue;
+
+            var button = Instantiate(roomButtonTemplate, spellsTab.Content);
+            button.name = $"Spell_{spell.id}";
+            button.gameObject.SetActive(true);
+            AddSpellButton(button, spell);
+
+            spellsTab.Add(new FooterTab.Entry
+            {
+                Row = spell.buttonRow, Column = spell.buttonColumn, Label = spell.displayName, Button = button,
+            });
+        }
     }
 
-    /// <summary>Keeps the generated button's cost current — it rises with each worker.</summary>
-    private void RefreshSummonLabel()
+    private void AddSpellButton(Button button, SpellDefinition spell)
     {
-        if (_summonLabel == null) return;
+        _spellButtons[button] = new SpellButton
+        {
+            Spell = spell,
+            Label = button.GetComponentInChildren<TextMeshProUGUI>(true),
+        };
+    }
 
-        var spawner = WorkerSpawner.GetForFaction(localPlayer);
-        int cost    = spawner != null ? spawner.CurrentSummonCost : 0;
-        if (cost == _summonLabelCost) return;
+    /// <summary>Keeps each spell button's cost current — Summon Worker's rises with each worker.</summary>
+    private void RefreshSpellLabels()
+    {
+        var spells = SpellSystem.Instance;
+        if (spells == null) return;
 
-        _summonLabelCost  = cost;
-        _summonLabel.text = (cost > 0 ? $"Summon Worker ({cost}g)" : "Summon Worker")
-                          + SlotSuffix(summonRow, summonColumn);
+        foreach (var entry in _spellButtons.Values)
+        {
+            if (entry.Label == null) continue;
+            int cost = spells.CostOf(localPlayer, entry.Spell, 1);
+            if (cost == entry.ShownCost) continue;
+
+            entry.ShownCost  = cost;
+            entry.Label.text = (cost > 0 ? $"{entry.Spell.displayName} ({cost}g)" : entry.Spell.displayName)
+                             + SlotSuffix(entry.Spell.buttonRow, entry.Spell.buttonColumn);
+        }
     }
 
     /// <summary>Clones roomButtonTemplate for each buildable room that has no button yet.</summary>
