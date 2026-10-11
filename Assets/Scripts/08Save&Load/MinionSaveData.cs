@@ -46,6 +46,9 @@ public class MinionSaveData
 
     /// <summary>Gold a worker was carrying.</summary>
     public int carryingGold;
+
+    /// <summary>Seconds left as a chicken (the Chicken spell), or 0.</summary>
+    public float polymorphSeconds;
 }
 
 /// <summary>A chicken in a save (world x, z).</summary>

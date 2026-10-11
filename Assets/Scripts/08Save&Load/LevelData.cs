@@ -129,6 +129,9 @@ public class GameStateSaveData
     // Spell cooldowns still running. Null in older saves — none running.
     public System.Collections.Generic.List<SpellCooldownSaveData> spellCooldowns;
 
+    // Call to Arms rally points. Null in older saves — none up.
+    public System.Collections.Generic.List<RallySaveData> rallyPoints;
+
     // Every live minion, with its level, needs, wages, bed and anger. Null in
     // older saves — those resume with no minions (bar a new game's placed ones).
     public System.Collections.Generic.List<MinionSaveData> minions;

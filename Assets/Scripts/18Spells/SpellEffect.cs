@@ -44,6 +44,21 @@ public abstract class SpellEffect
     /// <summary>Does the spell. Returns false if it couldn't after all (then nothing is paid).</summary>
     public abstract bool Cast(in SpellTarget target);
 
+    // ── Lasting spells (e.g. Call to Arms) ─────────────────────────────
+
+    /// <summary>True while a lasting cast of this spell is up — its button shows as on.</summary>
+    public virtual bool IsToggledOn(FactionID caster) => false;
+
+    /// <summary>Ends the lasting cast — pressing the spell's button while it's on does this.</summary>
+    public virtual void ToggleOff(FactionID caster) { }
+
+    /// <summary>
+    /// A right-click at this point while the spell is armed. True if the
+    /// effect used it (e.g. calling off a rally by clicking its marker);
+    /// otherwise the click puts the spell away as usual.
+    /// </summary>
+    public virtual bool OnRightClick(FactionID caster, Vector3 point) => false;
+
     // ── Registry ───────────────────────────────────────────────────────
 
     private static Dictionary<string, SpellEffect> _effects;

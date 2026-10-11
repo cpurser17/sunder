@@ -10,7 +10,7 @@ public class HealEffect : SpellEffect
     public override bool CanTarget(in SpellTarget target)
     {
         var m = target.Minion;
-        return m != null && m.IsAlive && !m.IsHeld && m.Faction == target.Caster &&
+        return m != null && m.IsTargetable && m.Faction == target.Caster &&
                m.HealthFraction < 0.999f;
     }
 

@@ -14,7 +14,11 @@ using UnityEngine.UI;
 ///                       can roam while charging). An invalid target there
 ///                       casts nothing and costs nothing.
 ///   RMB while charging — cancel the cast; the spell stays armed.
-///   RMB / Escape      — put the spell away (the button deselects).
+///   RMB / Escape      — put the spell away (the button deselects) — unless
+///                       the spell uses the click itself (right-clicking a
+///                       Call to Arms marker calls the rally off).
+///
+/// A spell with a radius shows it as a ring at the cursor.
 ///
 /// The spell stays armed after casting, so it can be cast again. Hovering
 /// over your own minions still makes them pause, as with the bare hand.
@@ -42,6 +46,10 @@ public class SpellCaster : MonoBehaviour
     [SerializeField] private Color   validColour   = Color.white;
     [SerializeField] private Color   invalidColour = new(1f, 0.45f, 0.4f, 1f);
 
+    [Header("Radius ring")]
+    [SerializeField] private float ringWidth    = 0.05f;
+    [SerializeField] private int   ringSegments = 64;
+
     private SpellDefinition _armed;
     private bool  _charging;
     private float _chargeTime;
@@ -49,6 +57,7 @@ public class SpellCaster : MonoBehaviour
 
     private RectTransform   _canvas;
     private TextMeshProUGUI _label;
+    private LineRenderer    _ring;
 
     public SpellDefinition Armed => _armed;
 
@@ -57,6 +66,7 @@ public class SpellCaster : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
         BuildLabel();
+        BuildRing();
     }
 
     private void OnDestroy()
@@ -78,7 +88,8 @@ public class SpellCaster : MonoBehaviour
     {
         _armed    = null;
         _charging = false;
-        if (_label != null) _label.gameObject.SetActive(false);
+        ShowLabel(false);
+        ShowRing(false);
     }
 
     /// <summary>Puts the spell away, deselecting its button too.</summary>
@@ -99,6 +110,7 @@ public class SpellCaster : MonoBehaviour
             // Let go while paused: that cast is off.
             if (_charging && !Input.GetMouseButton(0)) _charging = false;
             ShowLabel(false);
+            ShowRing(false);
             return;
         }
 
@@ -122,8 +134,9 @@ public class SpellCaster : MonoBehaviour
         }
         else if (Input.GetMouseButtonDown(1))
         {
-            PutAway();
-            return;
+            var effect = SpellSystem.EffectFor(_armed);
+            var aimed  = TargetUnderCursor(1);
+            if (effect == null || aimed.Cell == null || !effect.OnRightClick(localPlayer, aimed.Point)) { PutAway(); return; }
         }
         else if (Input.GetMouseButtonDown(0) && !PointerOverUI())
         {
@@ -131,6 +144,7 @@ public class SpellCaster : MonoBehaviour
         }
 
         UpdateLabel(spells);
+        UpdateRing(spells);
     }
 
     private void StartCharge(SpellSystem spells)
@@ -194,7 +208,7 @@ public class SpellCaster : MonoBehaviour
         float bestSq = float.MaxValue;
         foreach (var m in MinionController.All)
         {
-            if (m == null || !m.IsAlive || m.IsHeld) continue;
+            if (m == null || !m.IsTargetable) continue;
             if (own ? m.Faction != localPlayer : !CombatSystem.IsEnemy(localPlayer, m.Faction)) continue;
 
             Vector3 pos = m.transform.position;
@@ -240,6 +254,55 @@ public class SpellCaster : MonoBehaviour
         _label.alignment     = TextAlignmentOptions.TopLeft;
         _label.raycastTarget = false;
         labelGo.SetActive(false);
+    }
+
+    // ── Radius ring ────────────────────────────────────────────────────
+
+    private void BuildRing()
+    {
+        var go = new GameObject("SpellRadiusRing");
+        go.transform.SetParent(transform, false);
+        _ring = go.AddComponent<LineRenderer>();
+        _ring.loop              = true;
+        _ring.useWorldSpace     = false;
+        _ring.material          = new Material(Shader.Find("Unlit/Color"));
+        _ring.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        _ring.receiveShadows    = false;
+        _ring.enabled           = false;
+    }
+
+    private void ShowRing(bool on)
+    {
+        if (_ring != null && _ring.enabled != on) _ring.enabled = on;
+    }
+
+    /// <summary>The area the spell would cover at its current level, round the cursor.</summary>
+    private void UpdateRing(SpellSystem spells)
+    {
+        if (_ring == null || _armed == null) return;
+        int level = _charging ? _level : 1;
+        float tiles = _armed.RadiusAt(level);
+        var target = TargetUnderCursor(level);
+        if (tiles <= 0f || target.Cell == null || (PointerOverUI() && !_charging)) { ShowRing(false); return; }
+
+        float cell = GameManager2D.Instance.Grid.CellSize;
+        _ring.transform.position = target.Point;
+        _ring.startWidth = _ring.endWidth = ringWidth * cell;
+        _ring.material.color = spells.CanCast(target) && spells.CanAfford(localPlayer, _armed, level) ? validColour : invalidColour;
+        DrawCircle(_ring, tiles * cell, ringSegments, 0.03f);
+        ShowRing(true);
+    }
+
+    /// <summary>Lays a LineRenderer (local space) out as a flat circle, lifted slightly off the ground.</summary>
+    public static void DrawCircle(LineRenderer line, float radius, int segments, float lift)
+    {
+        segments = Mathf.Max(8, segments);
+        line.positionCount = segments;
+        for (int i = 0; i < segments; i++)
+        {
+            float a = i * Mathf.PI * 2f / segments;
+            line.SetPosition(i, new Vector3(Mathf.Cos(a) * radius, lift, Mathf.Sin(a) * radius));
+        }
     }
 
     private void ShowLabel(bool on)

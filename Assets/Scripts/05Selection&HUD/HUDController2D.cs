@@ -76,6 +76,8 @@ public class HUDController2D : MonoBehaviour
     [Header("Highlight Colours")]
     [SerializeField] private Color activeColour = new(1f, 0.85f, 0.1f, 1f);
     [SerializeField] private Color normalColour = Color.white;
+    [Tooltip("A lasting spell that's on (e.g. Call to Arms with its rally up), when its button isn't selected.")]
+    [SerializeField] private Color toggledColour = new(1f, 0.55f, 0.3f, 1f);
 
     private Button _activeButton;
 
@@ -192,6 +194,15 @@ public class HUDController2D : MonoBehaviour
 
     private void OnSpellClicked(Button button)
     {
+        // A lasting spell that's on (Call to Arms): its button calls it off.
+        var effect = SpellSystem.EffectFor(_spellButtons[button].Spell);
+        if (effect != null && effect.IsToggledOn(localPlayer))
+        {
+            effect.ToggleOff(localPlayer);
+            if (_activeButton == button) Deselect();
+            return;
+        }
+
         SelectButton(button);
 
         // A spell is not a buy/sell interaction, so the tile selection
@@ -374,14 +385,26 @@ public class HUDController2D : MonoBehaviour
         };
     }
 
-    /// <summary>Keeps each spell button's cost current — Summon Worker's rises with each worker.</summary>
+    /// <summary>
+    /// Keeps each spell button's cost current — Summon Worker's rises with
+    /// each worker — and shows lasting spells that are on.
+    /// </summary>
     private void RefreshSpellLabels()
     {
         var spells = SpellSystem.Instance;
         if (spells == null) return;
 
-        foreach (var entry in _spellButtons.Values)
+        foreach (var pair in _spellButtons)
         {
+            var entry = pair.Value;
+            if (pair.Key != _activeButton)
+            {
+                var effect = SpellSystem.EffectFor(entry.Spell);
+                var img    = pair.Key.GetComponent<Image>();
+                var colour = effect != null && effect.IsToggledOn(localPlayer) ? toggledColour : normalColour;
+                if (img != null && img.color != colour) img.color = colour;
+            }
+
             if (entry.Label == null) continue;
             int cost = spells.CostOf(localPlayer, entry.Spell, 1);
             if (cost == entry.ShownCost) continue;

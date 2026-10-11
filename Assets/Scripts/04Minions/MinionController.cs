@@ -208,7 +208,15 @@ public class MinionController : MonoBehaviour, IHandTarget
     private SulkBehaviour     _sulk;
     private LeaveBehaviour    _leave;
     private CombatBehaviour   _combat;
+    private RallyBehaviour    _rally;
+    private ChickenFormBehaviour _chickenForm;
     private bool              _inCombat;
+    private bool              _polymorphed;
+    private float             _polymorphUntil;
+    private float             _polymorphHealth;
+    private GameObject        _chickenBody;
+    private readonly List<Renderer> _hiddenRenderers = new();
+    private float             _rallyRetryAt;
     private float             _nextSense;
     private readonly Dictionary<MinionController, (float until, int mapVersion)> _ignoreUntil = new();
     private MinionBehaviour   _active;
@@ -291,7 +299,9 @@ public class MinionController : MonoBehaviour, IHandTarget
         get
         {
             if (_held) return MinionActivity.Held;
+            if (_polymorphed) return MinionActivity.Polymorphed;
             if (_inCombat) return MinionActivity.Fighting;
+            if (_errand == _rally) return MinionActivity.Rallying;
             if (_errand == _wages) return MinionActivity.CollectingWages;
             if (_errand == _food)  return MinionActivity.Eating;
             if (_errand == _sleep) return MinionActivity.Sleeping;
@@ -312,7 +322,8 @@ public class MinionController : MonoBehaviour, IHandTarget
     }
 
     /// <summary>The behaviour actually running: the errand if there is one, else the active behaviour.</summary>
-    private MinionBehaviour Running => _inCombat ? _combat : _errand != null ? _errand : _active;
+    private MinionBehaviour Running =>
+        _polymorphed ? _chickenForm : _inCombat ? _combat : _errand != null ? _errand : _active;
 
     /// <summary>Fighting or fleeing an enemy.</summary>
     public bool InCombat => _inCombat;
@@ -376,6 +387,8 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (!TryGetComponent(out _sulk))     _sulk     = gameObject.AddComponent<SulkBehaviour>();
         if (!TryGetComponent(out _leave))    _leave    = gameObject.AddComponent<LeaveBehaviour>();
         if (!TryGetComponent(out _combat))   _combat   = gameObject.AddComponent<CombatBehaviour>();
+        if (!TryGetComponent(out _rally))    _rally    = gameObject.AddComponent<RallyBehaviour>();
+        if (!TryGetComponent(out _chickenForm)) _chickenForm = gameObject.AddComponent<ChickenFormBehaviour>();
         GetComponents(_behaviours);
         foreach (var b in _behaviours) b.enabled = false;
 
@@ -430,6 +443,11 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (_dead) return;
         TickTiredness();
         TickHunger();
+        if (_polymorphed)
+        {
+            if (Time.time >= _polymorphUntil) EndPolymorph();
+            return;
+        }
         SenseEnemies();
 
         if (_fleeing && !_held)
@@ -444,7 +462,9 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// <summary>Starts the most pressing errand that's waiting, if the minion is free for one.</summary>
     private void StartDueErrand()
     {
-        if (_errand != null || _held || _fleeing || _inCombat) return;
+        if (_held || _fleeing || _inCombat) return;
+        if (TryRally()) return;
+        if (_errand != null) return;
 
         if (_wageTripPending)
         {
@@ -600,7 +620,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         _active = next;
         if (_active == null || _dead) return;
 
-        bool interrupted = _held || _fleeing || _errand != null || _inCombat;
+        bool interrupted = _held || _fleeing || _errand != null || _inCombat || _polymorphed;
         _active.enabled = !interrupted;
         _active.Activate();
         if (interrupted) _active.Pause();
@@ -612,7 +632,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void StartErrand(MinionBehaviour errand)
     {
-        if (_dead || errand == null || _errand != null) return;
+        if (_dead || errand == null || _errand != null || _polymorphed) return;
 
         PauseActive();
         _errand = errand;
@@ -837,7 +857,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void OnPickedUp()
     {
-        if (_dead || _held) return;
+        if (_dead || _held || _polymorphed) return;
 
         PauseActive();
         _held              = true;
@@ -923,7 +943,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     public void OnSlapped(in HandSlap slap)
     {
-        if (_dead) return;
+        if (_dead || _polymorphed) return;
 
         _temper.ApplySlap(slap);
         TakeDamage(slap.DamageFor(_health, MaxHealth));
@@ -940,7 +960,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     public void TakeDamage(float amount)
     {
-        if (_dead || amount <= 0f) return;
+        if (_dead || _polymorphed || amount <= 0f) return;
 
         _health -= amount;
         if (_health <= 0f) Die();
@@ -953,7 +973,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void TakeDamage(float amount, MinionController attacker)
     {
-        if (_dead || amount <= 0f) return;
+        if (_dead || _polymorphed || amount <= 0f) return;
 
         Announcer.Announce(faction, "MinionsUnderAttack", transform.position);
         TakeDamage(amount);
@@ -986,7 +1006,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void EnterCombat(MinionController enemy, bool fight = false)
     {
-        if (_dead || enemy == null || !CombatSystem.IsEnemy(faction, enemy.Faction)) return;
+        if (_dead || _polymorphed || enemy == null || !CombatSystem.IsEnemy(faction, enemy.Faction)) return;
         bool fights = fight || !IsWorkerFirst;
 
         if (_inCombat) { _combat.Engage(enemy, fights); return; }
@@ -1027,6 +1047,98 @@ public class MinionController : MonoBehaviour, IHandTarget
         _combat.enabled = false;
         _inCombat = false;
         if (!_held && !_fleeing) ResumeActive();
+    }
+
+    // ── Chicken (polymorph) ────────────────────────────────────────────
+
+    /// <summary>Turned into a chicken: can't be hurt, targeted, picked up or eaten, and does nothing but wander.</summary>
+    public bool IsPolymorphed => _polymorphed;
+
+    /// <summary>A live, unheld minion that isn't a chicken — what enemies may attack and spells may target.</summary>
+    public bool IsTargetable => !_dead && !_held && !_polymorphed;
+
+    /// <summary>
+    /// Turns it into a chicken for a few seconds (the Chicken spell). It
+    /// drops whatever it was doing — a fight included — and wanders about,
+    /// untouchable. Afterwards it's itself again with the health it had,
+    /// and decides what to do afresh. False if it can't be turned now.
+    /// </summary>
+    public bool Polymorph(float seconds)
+    {
+        if (_dead || _held || _polymorphed || seconds <= 0f) return false;
+
+        PauseActive();
+        DropCombat();
+        _fleeing         = false;
+        _polymorphed     = true;
+        _polymorphUntil  = Time.time + seconds;
+        _polymorphHealth = _health;
+        ShowChickenBody(true);
+
+        _chickenForm.enabled = true;
+        _chickenForm.Activate();
+        return true;
+    }
+
+    /// <summary>Seconds left as a chicken (0 when not one).</summary>
+    public float PolymorphSecondsLeft => _polymorphed ? Mathf.Max(0f, _polymorphUntil - Time.time) : 0f;
+
+    private void EndPolymorph()
+    {
+        if (!_polymorphed) return;
+        _chickenForm.Deactivate();
+        _chickenForm.enabled = false;
+        _polymorphed = false;
+        _health      = Mathf.Min(MaxHealth, _polymorphHealth);
+        ShowChickenBody(false);
+        if (!_held && !_fleeing) ResumeActive();
+    }
+
+    /// <summary>Hides the minion's own look behind a chicken's, or puts it back.</summary>
+    private void ShowChickenBody(bool chicken)
+    {
+        if (chicken)
+        {
+            _hiddenRenderers.Clear();
+            foreach (var r in GetComponentsInChildren<Renderer>())
+                if (r.enabled) { r.enabled = false; _hiddenRenderers.Add(r); }
+
+            _chickenBody = HatcheryManager.CreateChickenBody(transform, gridManager != null ? gridManager.CellSize : 1f);
+        }
+        else
+        {
+            foreach (var r in _hiddenRenderers) if (r != null) r.enabled = true;
+            _hiddenRenderers.Clear();
+            if (_chickenBody != null) Destroy(_chickenBody);
+            _chickenBody = null;
+        }
+    }
+
+    // ── Call to Arms ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Its faction's rally point is up and it's within the radius: a
+    /// creature drops any errand to answer — second only to fighting.
+    /// Workers ignore it. True while it's answering.
+    /// </summary>
+    private bool TryRally()
+    {
+        if (_errand == _rally) return true;
+        if (IsWorkerFirst || Time.time < _rallyRetryAt) return false;
+
+        var rally = RallyPoints.Instance;
+        if (rally == null || !rally.InRange(faction, transform.position)) return false;
+
+        DropErrand();
+        StartErrand(_rally);
+        return _errand == _rally;
+    }
+
+    /// <summary>Couldn't get to the rally point: leave it be for a while.</summary>
+    public void GiveUpRally(float seconds)
+    {
+        _rallyRetryAt = Time.time + seconds;
+        EndErrand(_rally);
     }
 
     /// <summary>
@@ -1071,6 +1183,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead) return;
 
+        if (_polymorphed) EndPolymorph();
         DropCombat();
         DropErrand();
         if (_active != null) { _active.Deactivate(); _active.enabled = false; }
@@ -1145,6 +1258,7 @@ public class MinionController : MonoBehaviour, IHandTarget
             bedX                 = bed != null ? bed.X : -1,
             bedY                 = bed != null ? bed.Y : -1,
             carryingGold         = _worker != null ? _worker.CarryingGold : 0,
+            polymorphSeconds     = PolymorphSecondsLeft,
         };
     }
 
@@ -1183,6 +1297,8 @@ public class MinionController : MonoBehaviour, IHandTarget
             _creature.RestoreReported();
             if (CanDoWorkerJobs) SwitchTo(_worker);
         }
+
+        if (data.polymorphSeconds > 0f) Polymorph(data.polymorphSeconds);
     }
 
     public void ConvertTo(FactionID newFaction)

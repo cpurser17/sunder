@@ -165,25 +165,35 @@ public class HatcheryManager : MonoBehaviour
         go.transform.SetParent(transform, false);
 
         float size = placeholderSize * grid.CellSize;
-        if (chickenPrefab != null)
-        {
-            Instantiate(chickenPrefab, go.transform);
-        }
-        else
-        {
-            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(body.GetComponent<Collider>());
-            body.transform.SetParent(go.transform, false);
-            body.transform.localScale    = Vector3.one * size;
-            body.transform.localPosition = new Vector3(0f, size * 0.5f, 0f);
-            var r = body.GetComponent<Renderer>();
-            if (r != null) r.material.color = placeholderColour;
-        }
+        CreateChickenBody(go.transform, grid.CellSize);
 
         var chicken = go.AddComponent<Chicken>();
         chicken.Initialise(this, grid, cell, at, size * 0.6f);
         _chickens.Add(chicken);
         AddToCell(chicken, cell);
+    }
+
+    /// <summary>
+    /// A chicken's look under parent: the chicken prefab if one is set, else
+    /// a placeholder ball. Also used for a minion turned into a chicken.
+    /// </summary>
+    public static GameObject CreateChickenBody(Transform parent, float cellSize)
+    {
+        var manager = Instance;
+        float size  = (manager != null ? manager.placeholderSize : 0.18f) * cellSize;
+
+        if (manager != null && manager.chickenPrefab != null)
+            return Instantiate(manager.chickenPrefab, parent);
+
+        var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        Destroy(body.GetComponent<Collider>());
+        body.name = "ChickenBody";
+        body.transform.SetParent(parent, false);
+        body.transform.localScale    = Vector3.one * size;
+        body.transform.localPosition = new Vector3(0f, size * 0.5f, 0f);
+        var r = body.GetComponent<Renderer>();
+        if (r != null) r.material.color = manager != null ? manager.placeholderColour : Color.white;
+        return body;
     }
 
     /// <summary>A random point offset within a cell, kept off its edges.</summary>

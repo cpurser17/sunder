@@ -105,7 +105,7 @@ public class CombatBehaviour : MinionBehaviour
     }
 
     private bool Valid(MinionController m) =>
-        m != null && m.IsAlive && !m.IsHeld && CombatSystem.IsEnemy(Minion.Faction, m.Faction) && WithinLeash(m.transform.position);
+        m != null && m.IsTargetable && CombatSystem.IsEnemy(Minion.Faction, m.Faction) && WithinLeash(m.transform.position);
 
     private bool WithinLeash(Vector3 position)
     {

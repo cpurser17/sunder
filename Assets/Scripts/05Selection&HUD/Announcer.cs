@@ -69,6 +69,7 @@ public class Announcer : MonoBehaviour
         ("NotEnoughGold",      "You don't have enough gold.",             Priority.Normal,    5f),
         ("MinionsUnderAttack", "Your minions are under attack!",          Priority.Critical, 20f),
         ("HeartUnderAttack",   "Your Dungeon Heart is under attack!",     Priority.Critical, 20f),
+        ("CallToArmsEnded",    "You can no longer afford your Call to Arms.", Priority.Normal, 10f),
     };
 
     [Header("Delivery")]

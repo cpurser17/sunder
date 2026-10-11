@@ -41,4 +41,5 @@ public abstract class MinionBehaviour : MonoBehaviour
 public enum MinionActivity
 {
     Held, Reporting, Idle, Working, Fighting, Eating, Sleeping, CollectingWages, Sulking, Leaving,
+    Polymorphed, Rallying,
 }

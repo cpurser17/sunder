@@ -290,7 +290,8 @@ public class KeeperHand : MonoBehaviour
 
     private bool IsGrabbable(IHandTarget target) =>
         !IsGone(target) && target.IsAlive && !target.IsHeld &&
-        target.Faction == localPlayer;
+        target.Faction == localPlayer &&
+        !(target is MinionController minion && minion.IsPolymorphed);
 
     /// <summary>
     /// Pauses a minion when the cursor MOVES onto it, once per visit. One
@@ -439,7 +440,7 @@ public class KeeperHand : MonoBehaviour
         foreach (var target in _targets)
         {
             if (target is not MinionController minion || IsGone(target)) continue;
-            if (!minion.IsAlive || minion.IsHeld || minion.Faction != localPlayer) continue;
+            if (!minion.IsTargetable || minion.Faction != localPlayer) continue;
 
             Vector3 d = minion.transform.position - point;
             float sq = d.x * d.x + d.z * d.z;

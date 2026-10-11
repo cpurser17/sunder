@@ -147,6 +147,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<SpellSystem>();
         if (FindAnyObjectByType<SpellCaster>() == null)
             gameObject.AddComponent<SpellCaster>();
+        if (FindAnyObjectByType<RallyPoints>() == null)
+            gameObject.AddComponent<RallyPoints>();
     }
 
     private void Start()
@@ -511,6 +513,7 @@ public class GameManager2D : MonoBehaviour
 
         PaydaySystem.Instance?.Restore(gs.paydays);
         SpellSystem.Instance?.Restore(gs.spellCooldowns);
+        RallyPoints.Instance?.Restore(gs.rallyPoints);
 
         // Minions, chickens, progress and dig marks wait a frame, so every
         // system that sets itself up at scene start (summoner, dig
@@ -729,6 +732,7 @@ public class GameManager2D : MonoBehaviour
         data.goldPiles    = TreasuryManager.Instance?.CapturePiles();
         data.paydays      = PaydaySystem.Instance?.Capture();
         data.spellCooldowns = SpellSystem.Instance?.Capture();
+        data.rallyPoints    = RallyPoints.Instance?.Capture();
 
         // Populate per-faction Dungeon Heart HP.
         data.factionHeartHP = DungeonHeart.Instance != null

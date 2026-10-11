@@ -223,7 +223,7 @@ public class CombatSystem : MonoBehaviour
         float bestSq = range * range;
         foreach (var other in MinionController.All)
         {
-            if (other == null || other == self || !other.IsAlive || other.IsHeld) continue;
+            if (other == null || other == self || !other.IsTargetable) continue;
             if (!IsEnemy(self.Faction, other.Faction)) continue;
 
             Vector3 d = other.transform.position - self.transform.position;

@@ -91,6 +91,7 @@ public class MinionHealthBars : MonoBehaviour
         {
             if (minion == null || !minion.IsAlive) continue;
             if (hideWhenHeld && minion.IsHeld) continue;
+            if (minion.IsPolymorphed) continue;   // a chicken gives nothing away
 
             float fraction = minion.HealthFraction;
             if (onlyWhenHurt && fraction >= 0.999f) continue;

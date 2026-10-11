@@ -9,7 +9,7 @@ public class SmiteEffect : SpellEffect
     public override bool CanTarget(in SpellTarget target)
     {
         var m = target.Minion;
-        return m != null && m.IsAlive && !m.IsHeld && CombatSystem.IsEnemy(target.Caster, m.Faction);
+        return m != null && m.IsTargetable && CombatSystem.IsEnemy(target.Caster, m.Faction);
     }
 
     public override bool Cast(in SpellTarget target)
