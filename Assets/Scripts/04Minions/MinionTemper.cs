@@ -11,6 +11,8 @@ using UnityEngine;
 ///   grievances   lasting anger, one value per cause (unpaid wages,
 ///                exhaustion, no bed…). Each is set and cleared by whatever
 ///                owns that cause; they don't fade on their own.
+/// While Suspended (a Neutral or Enemy-to-all minion — no keeper to be angry
+/// at) anger reads 0 and nothing adds to it; see MinionController.IsKept.
 /// All placeholders until the anger/mood behaviour is designed properly.
 /// Anger is groundwork for the mood system — nothing acts on it yet (later:
 /// fighting other minions, deserting).
@@ -31,11 +33,18 @@ public class MinionTemper
     public MinionTemper(float angerDecayPerSecond) =>
         _angerDecayPerSecond = Mathf.Max(0f, angerDecayPerSecond);
 
+    /// <summary>
+    /// No anger at all while set: it reads 0, grievances can't be raised and
+    /// slaps don't anger it. Cleared when the minion joins a keeper's team.
+    /// </summary>
+    public bool Suspended { get; set; }
+
     /// <summary>Current anger, 0 (calm) to 1 (furious).</summary>
     public float Anger
     {
         get
         {
+            if (Suspended) return 0f;
             float total = SlapAnger;
             foreach (float g in _grievances) total += g;
             return Mathf.Clamp01(total);
@@ -47,8 +56,11 @@ public class MinionTemper
 
     public float GetGrievance(Grievance cause) => _grievances[(int)cause];
 
-    public void SetGrievance(Grievance cause, float value) =>
+    public void SetGrievance(Grievance cause, float value)
+    {
+        if (Suspended) return;
         _grievances[(int)cause] = Mathf.Clamp01(value);
+    }
 
     public void AddGrievance(Grievance cause, float amount) =>
         SetGrievance(cause, GetGrievance(cause) + amount);
@@ -63,8 +75,11 @@ public class MinionTemper
 
     public void ApplySlap(in HandSlap slap)
     {
-        _anger      = Mathf.Clamp01(SlapAnger + slap.AngerGain);
-        _angerSetAt = Time.time;
+        if (!Suspended)
+        {
+            _anger      = Mathf.Clamp01(SlapAnger + slap.AngerGain);
+            _angerSetAt = Time.time;
+        }
 
         _boostMultiplier = Mathf.Max(1f, slap.WorkSpeedMultiplier);
         _boostUntil      = Time.time + slap.BoostDuration;

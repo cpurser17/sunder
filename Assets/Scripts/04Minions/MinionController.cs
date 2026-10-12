@@ -89,8 +89,12 @@ using UnityEngine;
 /// ----
 /// Anger (MinionTemper) sums its causes: slaps, unpaid wages, exhaustion,
 /// no bed, starving, idling. From annoyedAnger it sulks now and then; from
-/// furiousAnger a minion that came through the portal leaves for good. All
-/// placeholder values until the anger behaviours are designed properly.
+/// furiousAnger a creature leaves for good. All placeholder values until the
+/// anger behaviours are designed properly.
+///
+/// Neutral and Enemy-to-all minions have no keeper (IsKept is false): their
+/// hunger doesn't grow and they feel no anger until they join one of the
+/// eight playable teams — recruited on sight, or converted.
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
@@ -435,6 +439,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         _definition  = definition;
         _source      = source == SpawnSource.Recruited ? SpawnSource.Portal : source;
         _agent.SetFaction(owningFaction);
+        _temper.Suspended = !IsKept;
 
         definition?.ApplyTo(gameObject, _agent);
 
@@ -565,7 +570,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private void TickHunger()
     {
-        if (!NeedsFood) return;
+        if (!NeedsFood || !IsKept) return; // Neutral / Enemy to all: hunger waits for a keeper
 
         _hunger = Mathf.Min(1f, _hunger + HungerPerMinute / 60f * Time.deltaTime);
         if (!IsStarving) return;
@@ -945,6 +950,13 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// non-summonable creatures — commanders, the General.
     /// </summary>
     public bool CanAbandon => !IsWorkerFirst && (_definition == null || _definition.summonable);
+
+    /// <summary>
+    /// True while it serves a keeper — one of the eight playable teams, human
+    /// or AI. Neutral and Enemy-to-all minions aren't kept: their hunger and
+    /// anger are suspended until they join a keeper's team.
+    /// </summary>
+    public bool IsKept => FactionTeams.IsPlayable(faction);
 
     /// <summary>Every creature counts against its team's population; workers don't.</summary>
     public bool CountsTowardPopulation => !IsWorkerFirst;
@@ -1347,6 +1359,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         NotifyLeftFaction();
         faction = newFaction;
         _agent.SetFaction(newFaction);
+        _temper.Suspended = !IsKept; // joining a keeper's team starts the clock on hunger and anger
         // A creature now counts against its new team's population by itself
         // (GameManager2D counts live minions) — past the limit if need be.
         // A worker leaves its old side's worker count behind.
