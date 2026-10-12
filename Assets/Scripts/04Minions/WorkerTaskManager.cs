@@ -313,14 +313,14 @@ public class WorkerTaskManager : MonoBehaviour
             return; // a dig-marked tile is not also a claim or reinforce target
         }
 
-        // ── Claim: unclaimed Cave, or an enemy tile, touching our territory ──
+        // ── Claim: unclaimed Cave, neutral or enemy floor, touching our territory ──
         if (IsClaimable(cell))
         {
             into.Add(new DungeonJob(JobType.Claim, cell, cell, workersPerClaim));
             return;
         }
 
-        // ── Reinforce: Stone touching our territory ────────────────────
+        // ── Reinforce: Stone or a Neutral wall touching our territory ──
         if (IsReinforceable(cell))
         {
             foreach (var (dx, dy) in TraversalRules.Orthogonal)
@@ -352,34 +352,42 @@ public class WorkerTaskManager : MonoBehaviour
     };
 
     /// <summary>
-    /// Unclaimed Cave or an unowned portal, or a tile held by another
-    /// faction — in every case only when it touches territory we already hold.
+    /// Unclaimed Cave, or walkable owned-type floor — tunnel, rooms, bridges,
+    /// portals — held by anyone but us: Neutral (Unaligned, e.g. painted that
+    /// way in the level editor), another team, or the Hostile team. In every
+    /// case only when it touches territory we already hold.
+    ///
+    /// Neutral floor is claimed a tile at a time; an enemy room is captured
+    /// whole (see WorkerBehaviour.EnemyRoomOf). Portals re-index on capture,
+    /// so summoning follows the new owner.
     /// </summary>
     private bool IsClaimable(GridCell cell)
     {
         bool unclaimedCave = cell.TileType == TileType.Cave &&
                              cell.Owner    == FactionID.Unaligned;
 
-        // Portals are claimed like floor: an unowned one becomes ours, an
-        // enemy's is captured (Portal re-indexes, so summoning follows).
-        bool unclaimedPortal = cell.TileType == TileType.Portal &&
-                               cell.Owner    == FactionID.Unaligned;
-
         // The Heart is Owned and walkable like a room tile, but never changes
         // hands through claiming — it only falls when its HP reaches 0.
-        bool enemyHeld = cell.Owner != faction &&
-                         cell.Owner != FactionID.Unaligned &&
-                         cell.TileType != TileType.Heart &&
-                         gridManager.GetCategory(cell.TileType) == TileCategory.Owned &&
-                         TraversalRules.CanPathOn(cell.TileType,
-                                                  TraversalCapability.LandOnly, faction);
+        bool othersFloor = cell.Owner != faction &&
+                           cell.TileType != TileType.Heart &&
+                           gridManager.GetCategory(cell.TileType) == TileCategory.Owned &&
+                           TraversalRules.CanPathOn(cell.TileType,
+                                                    TraversalCapability.LandOnly, faction);
 
-        if (!unclaimedCave && !unclaimedPortal && !enemyHeld) return false;
+        if (!unclaimedCave && !othersFloor) return false;
         return TouchesOwnTerritory(cell);
     }
 
-    private bool IsReinforceable(GridCell cell) =>
-        cell.TileType == TileType.Stone && TouchesOwnTerritory(cell);
+    /// <summary>
+    /// Stone, or a Neutral wall (the level editor can paint unowned walls),
+    /// touching our territory — reinforcing either makes it our wall. Another
+    /// team's walls are not reinforceable; they have to be broken some other way.
+    /// </summary>
+    private bool IsReinforceable(GridCell cell)
+    {
+        bool neutralWall = cell.TileType == TileType.Wall && cell.Owner == FactionID.Unaligned;
+        return (cell.TileType == TileType.Stone || neutralWall) && TouchesOwnTerritory(cell);
+    }
 
     /// <summary>
     /// True if the cell orthogonally touches territory this faction holds AND
