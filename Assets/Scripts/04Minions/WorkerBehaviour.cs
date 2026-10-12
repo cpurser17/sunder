@@ -283,7 +283,7 @@ public class WorkerBehaviour : MinionBehaviour
     /// <summary>Returns true when the job finished and the routine should stop.</summary>
     private bool TickClaim()
     {
-        var room = EnemyRoomOf(_job.Target);
+        var room = CapturableRoomOf(_job.Target);
         if (room != null) return TickRoomClaim(room);
 
         _workProgress += workTickInterval * Minion.WorkSpeedMultiplier;
@@ -309,12 +309,13 @@ public class WorkerBehaviour : MinionBehaviour
     }
 
     /// <summary>
-    /// The whole enemy room the target tile belongs to, or null if it isn't
-    /// one (or the room hasn't been measured since it changed).
+    /// The whole room — another team's, Hostile's or Neutral — the target tile
+    /// belongs to, captured all at once; or null if it isn't in one (tunnel,
+    /// portals, or the room hasn't been measured since it changed).
     /// </summary>
-    private DungeonRoom EnemyRoomOf(GridCell cell)
+    private DungeonRoom CapturableRoomOf(GridCell cell)
     {
-        if (cell.Owner == Faction || cell.Owner == FactionID.Unaligned) return null;
+        if (cell.Owner == Faction) return null;
         var room = Grid.GetRoomForCell(cell);
         return room != null && room.TileType == cell.TileType && room.Owner == cell.Owner && room.Cells.Contains(cell)
             ? room : null;

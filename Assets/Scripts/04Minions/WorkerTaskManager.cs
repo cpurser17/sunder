@@ -357,8 +357,8 @@ public class WorkerTaskManager : MonoBehaviour
     /// way in the level editor), another team, or the Hostile team. In every
     /// case only when it touches territory we already hold.
     ///
-    /// Neutral floor is claimed a tile at a time; an enemy room is captured
-    /// whole (see WorkerBehaviour.EnemyRoomOf). Portals re-index on capture,
+    /// Tunnel is claimed a tile at a time; a room is captured whole, Neutral
+    /// or not (see WorkerBehaviour.CapturableRoomOf). Portals re-index on capture,
     /// so summoning follows the new owner.
     /// </summary>
     private bool IsClaimable(GridCell cell)
