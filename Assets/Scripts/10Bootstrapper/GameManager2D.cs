@@ -41,6 +41,11 @@ public class GameManager2D : MonoBehaviour
     [Tooltip("Starting gold used when no level file is found.")]
     [SerializeField] private int    fallbackGold     = 500;
 
+    [Header("Population")]
+    [Tooltip("Population limit for a team whose FactionDefinition doesn't set one " +
+             "(or that has none, e.g. Enemy to all).")]
+    [SerializeField, Min(0)] private int fallbackPopulationLimit = 10;
+
     [Header("Determinism")]
     [Tooltip("Master random seed override for a NEW game (ignored on resume, which " +
              "always restores the seed from the save). 0 = generate one randomly. " +
@@ -105,6 +110,33 @@ public class GameManager2D : MonoBehaviour
     /// <summary>Returns which FactionDefinition the given seat is playing, or null if unassigned.</summary>
     public FactionDefinition GetFactionDefinition(FactionID faction) =>
         _factionDefinitions.TryGetValue(faction, out var def) ? def : null;
+
+    // ── Population ─────────────────────────────────────────────────────
+    // Counted from the minions alive right now rather than kept as a tally,
+    // so every way of joining or leaving a team — summoned, placed in the
+    // level, recruited, converted, killed, dismissed — is covered without
+    // anything having to report in, and a count can never drift.
+    //
+    // Only summoning is limited: anything else that brings a creature onto
+    // a team may push it past the limit, which just stops the portal until
+    // there's room again.
+
+    /// <summary>Population slots the team's creatures fill (workers aren't counted).</summary>
+    public int Population(FactionID faction)
+    {
+        int total = 0;
+        foreach (var minion in MinionController.All)
+            if (minion != null && minion.IsAlive && minion.Faction == faction && minion.CountsTowardPopulation)
+                total += minion.PopulationCost;
+        return total;
+    }
+
+    /// <summary>The team's FactionDefinition limit, or fallbackPopulationLimit.</summary>
+    public int PopulationLimit(FactionID faction)
+    {
+        var def = GetFactionDefinition(faction);
+        return def != null && def.populationLimit > 0 ? def.populationLimit : fallbackPopulationLimit;
+    }
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -606,16 +638,9 @@ public class GameManager2D : MonoBehaviour
             if (data.bedX >= 0 && data.bedY >= 0)
                 LairManager.Instance?.Claim(minion, gridManager.GetCell(data.bedX, data.bedY));
 
-            switch (data.source)
-            {
-                case MinionController.SpawnSource.Portal:
-                case MinionController.SpawnSource.Recruited: // older name for a recruited Portal creature
-                    MinionSummoner.Instance?.NotifyCreatureJoined(data.faction, def);
-                    break;
-                case MinionController.SpawnSource.WorkerSpawner:
-                    WorkerSpawner.GetForFaction(data.faction)?.NotifyWorkerRestored();
-                    break;
-            }
+            // Population needs no restoring — it's counted from live minions.
+            if (data.source == MinionController.SpawnSource.WorkerSpawner)
+                WorkerSpawner.GetForFaction(data.faction)?.NotifyWorkerRestored();
             restored++;
         }
 

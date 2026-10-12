@@ -101,9 +101,10 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>How the minion arrived — decides who is told when it leaves.</summary>
     /// <remarks>
-    /// A Neutral creature recruited on sight becomes Portal, exactly like a
-    /// summoned one. Recruited is a load alias only — a few saves were written
-    /// with it before that — and is read back as Portal. Append only — saves
+    /// Only workers care any more (WorkerSpawner's count, and how a worker
+    /// with no data is recognised): every creature counts against population
+    /// and can be dismissed however it arrived. Recruited is a load alias for
+    /// a few saves written with it, read back as Portal. Append only — saves
     /// store these.
     /// </remarks>
     public enum SpawnSource { Placed, Portal, WorkerSpawner, Recruited }
@@ -938,7 +939,18 @@ public class MinionController : MonoBehaviour, IHandTarget
     }
 
     /// <summary>Only minions that came through the portal can leave by it.</summary>
-    public bool CanAbandon => _source == SpawnSource.Portal;
+    /// <summary>
+    /// Any creature of a summonable type can be dismissed at its portal (or
+    /// walk out when furious), however it joined. Workers can't, nor can
+    /// non-summonable creatures — commanders, the General.
+    /// </summary>
+    public bool CanAbandon => !IsWorkerFirst && (_definition == null || _definition.summonable);
+
+    /// <summary>Every creature counts against its team's population; workers don't.</summary>
+    public bool CountsTowardPopulation => !IsWorkerFirst;
+
+    /// <summary>Population slots it fills (MinionDefinition.populationCost, at least 0).</summary>
+    public int PopulationCost => _definition != null ? Mathf.Max(0, _definition.populationCost) : 1;
 
     /// <summary>Dropped on the portal: leaves the dungeon, freeing its population slot.</summary>
     public void OnAbandon()
@@ -1005,7 +1017,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (faction == FactionID.Unaligned)
         {
             var recruiter = combat.FindVisibleRecruiter(this);
-            if (recruiter != null) JoinOnSight(recruiter.Faction);
+            if (recruiter != null) ConvertTo(recruiter.Faction);
             return;
         }
 
@@ -1216,9 +1228,6 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         switch (_source)
         {
-            case SpawnSource.Portal:
-                MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
-                break;
             case SpawnSource.WorkerSpawner:
                 WorkerSpawner.GetForFaction(faction)?.NotifyWorkerDied();
                 break;
@@ -1230,7 +1239,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// <summary>
     /// Switches this minion to a new faction in place — same GameObject, same
     /// token, just a new owner. Used when a Neutral minion is recruited on
-    /// sight (JoinOnSight), and the one call a future Prison/Torture room
+    /// sight, and the one call a future Prison/Torture room
     /// needs to make when it converts a captured minion.
     ///
     /// Starts its behaviour over, so a creature treks to its new masters'
@@ -1318,25 +1327,6 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (data.polymorphSeconds > 0f) Polymorph(data.polymorphSeconds);
     }
 
-    /// <summary>
-    /// A Neutral minion recruited by the first team it sees. A creature then
-    /// becomes one of that team's like any summoned one: it counts against
-    /// the population (added on top, so it joins even if the team is already
-    /// at or over its limit — the summoner just stops summoning until there's
-    /// room), can be dismissed at the portal, and can walk out if furious. A
-    /// worker joins the team's workers and, like the team's own, isn't part
-    /// of the population.
-    /// </summary>
-    private void JoinOnSight(FactionID team)
-    {
-        bool becomesCreature = !IsWorkerFirst && _source == SpawnSource.Placed;
-        ConvertTo(team);
-        if (!becomesCreature || _dead) return;
-
-        _source = SpawnSource.Portal;
-        MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
-    }
-
     public void ConvertTo(FactionID newFaction)
     {
         if (_dead || newFaction == faction) return;
@@ -1357,10 +1347,10 @@ public class MinionController : MonoBehaviour, IHandTarget
         NotifyLeftFaction();
         faction = newFaction;
         _agent.SetFaction(newFaction);
-        if (_source == SpawnSource.Portal)
-            MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
-        else
-            _source = SpawnSource.Placed; // the new side's worker count never included it
+        // A creature now counts against its new team's population by itself
+        // (GameManager2D counts live minions) — past the limit if need be.
+        // A worker leaves its old side's worker count behind.
+        if (_source == SpawnSource.WorkerSpawner) _source = SpawnSource.Placed;
 
         SwitchTo(IsWorkerFirst ? _worker : _creature);
     }

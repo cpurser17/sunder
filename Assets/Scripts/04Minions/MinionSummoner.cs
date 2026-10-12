@@ -8,7 +8,7 @@ using UnityEngine;
 /// exists it reads GameManager2D.ActiveFactions and, for each active seat,
 /// resolves that seat's FactionDefinition (via GameManager2D.GetFactionDefinition
 /// — assigned per level through FactionSetup.contentFactionId) to get its
-/// roster, population limit, and summon pacing. There is no per-faction
+/// roster and summon pacing. There is no per-faction
 /// prefab or scene object to hand-place, and no shared roster either — every
 /// faction's content is bespoke, authored on its own FactionDefinition asset.
 /// A seat with no FactionDefinition assigned falls back to this component's
@@ -17,7 +17,8 @@ using UnityEngine;
 /// Faction Registry isn't set up.
 ///
 /// On each faction's tick, eligibility is narrowed by four independent gates
-/// — population headroom, mission design (GameManager2D.AllowedMinionIds),
+/// — population headroom (GameManager2D.Population/PopulationLimit: the
+/// portal asks, it doesn't keep its own count), mission design (GameManager2D.AllowedMinionIds),
 /// rooms built, and research completed — then one survivor is picked by
 /// weighted random, the same pattern WorkerTaskManager uses for job selection.
 /// When nothing qualifies, the reason is logged (see ReportNothingEligible)
@@ -56,9 +57,6 @@ public class MinionSummoner : MonoBehaviour
     [Tooltip("Used only for a seat with no FactionDefinition assigned.")]
     [SerializeField] private List<MinionDefinition> defaultRoster = new();
 
-    [Header("Population (fallback)")]
-    [SerializeField] private int defaultPopulationLimit = 10;
-
     [Header("Timing (fallback)")]
     [Tooltip("Average seconds between summons.")]
     [SerializeField] private float defaultBaseSummonInterval = 30f;
@@ -71,11 +69,9 @@ public class MinionSummoner : MonoBehaviour
     {
         public System.Random Rng;
         public List<MinionDefinition> Roster;
-        public int   PopulationLimit;
         public float BaseSummonInterval;
         public Vector2 Jitter;
         public float NextSummonTime;
-        public int   Population;
         /// <summary>Why the last tick found nobody eligible; null after a successful pick.</summary>
         public string LastBlockReason;
     }
@@ -121,7 +117,6 @@ public class MinionSummoner : MonoBehaviour
             {
                 Rng                = new System.Random(GameManager2D.Instance.DeriveFactionSeed(setup.factionId, "MinionSummoner")),
                 Roster              = def != null && def.roster.Count > 0 ? def.roster : defaultRoster,
-                PopulationLimit     = def != null && def.populationLimit > 0 ? def.populationLimit : defaultPopulationLimit,
                 BaseSummonInterval  = def != null && def.baseSummonInterval > 0f ? def.baseSummonInterval : defaultBaseSummonInterval,
                 Jitter              = def != null ? def.summonIntervalJitter : defaultSummonIntervalJitter,
             };
@@ -168,8 +163,9 @@ public class MinionSummoner : MonoBehaviour
     private MinionDefinition PickMinion(FactionID faction, FactionState state)
     {
         _candidates.Clear();
+        int room = PopulationRoom(faction);
         foreach (var def in state.Roster)
-            if (def != null && IsEligible(faction, state, def)) _candidates.Add(def);
+            if (def != null && IsEligible(faction, room, def)) _candidates.Add(def);
 
         if (_candidates.Count == 0)
         {
@@ -201,10 +197,17 @@ public class MinionSummoner : MonoBehaviour
         return _candidates[^1];
     }
 
-    private bool IsEligible(FactionID faction, FactionState state, MinionDefinition def)
+    /// <summary>Population slots free right now (negative when over the limit).</summary>
+    private static int PopulationRoom(FactionID faction)
+    {
+        var gm = GameManager2D.Instance;
+        return gm != null ? gm.PopulationLimit(faction) - gm.Population(faction) : 0;
+    }
+
+    private bool IsEligible(FactionID faction, int populationRoom, MinionDefinition def)
     {
         if (!def.summonable)                         return false;
-        if (state.Population + def.populationCost > state.PopulationLimit) return false;
+        if (def.populationCost > populationRoom)    return false;
         if (!LevelAllows(def))                      return false;
         if (!HasRequiredRooms(faction, def))         return false;
         if (!HasRequiredResearch(faction, def))      return false;
@@ -264,13 +267,14 @@ public class MinionSummoner : MonoBehaviour
         int summonable = 0, population = 0, level = 0, rooms = 0, research = 0;
         var missingRooms    = new SortedSet<string>();
         var missingResearch = new SortedSet<string>();
+        int populationRoom  = PopulationRoom(faction);
 
         foreach (var def in state.Roster)
         {
             if (def == null || !def.summonable) continue;
             summonable++;
 
-            if (state.Population + def.populationCost > state.PopulationLimit) { population++; continue; }
+            if (def.populationCost > populationRoom) { population++; continue; }
             if (!LevelAllows(def)) { level++; continue; }
 
             var room = FirstMissingRoom(faction, def);
@@ -323,7 +327,7 @@ public class MinionSummoner : MonoBehaviour
         }
 
         var go  = Instantiate(prefab, portal.SpawnPoint(faction), Quaternion.identity);
-        go.name = $"{def.minionId}_{faction}_{state.Population}";
+        go.name = $"{def.minionId}_{faction}_{GameManager2D.Instance.Population(faction)}";
 
         var minion = go.GetComponent<MinionController>();
         if (minion == null)
@@ -335,42 +339,9 @@ public class MinionSummoner : MonoBehaviour
         }
 
         minion.Initialise(faction, def, 1, MinionController.SpawnSource.Portal);
-        state.Population += def.populationCost;
 
+        var gm = GameManager2D.Instance;
         Debug.Log($"[MinionSummoner] Summoned {def.minionId} for {faction}. " +
-                  $"Population {state.Population}/{state.PopulationLimit}.");
+                  $"Population {gm.Population(faction)}/{gm.PopulationLimit(faction)}.");
     }
-
-    // ── Population bookkeeping ─────────────────────────────────────────
-
-    /// <summary>
-    /// Frees a population slot for the given faction — called whenever a
-    /// creature leaves its population for any reason: death or abandoning
-    /// (MinionController.Die) or converting to another faction (MinionController.ConvertTo).
-    /// </summary>
-    public void NotifyCreatureRemoved(FactionID faction, MinionDefinition def)
-    {
-        if (!_states.TryGetValue(faction, out var state)) return;
-        int cost = def != null ? def.populationCost : 1;
-        state.Population = Mathf.Max(0, state.Population - cost);
-    }
-
-    /// <summary>
-    /// Claims a population slot for the given faction without going through
-    /// Spawn — used when a creature joins a faction any way other than being
-    /// freshly summoned, e.g. converting from another faction or a Neutral
-    /// minion being recruited. Never refused: it can push the population past
-    /// the limit, which only stops further summoning until there's room.
-    /// </summary>
-    public void NotifyCreatureJoined(FactionID faction, MinionDefinition def)
-    {
-        if (!_states.TryGetValue(faction, out var state)) return;
-        state.Population += def != null ? def.populationCost : 1;
-    }
-
-    public int Population(FactionID faction) =>
-        _states.TryGetValue(faction, out var s) ? s.Population : 0;
-
-    public int PopulationLimit(FactionID faction) =>
-        _states.TryGetValue(faction, out var s) ? s.PopulationLimit : 0;
 }
