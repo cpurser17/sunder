@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Payday. Each faction has its own payday clock: every
+/// Payday. Each keeper's team has its own payday clock: every
 /// interval ± variance seconds of gameplay, every minion of that faction is
 /// owed its Salary (on top of anything still owed) and goes to collect it
 /// (MinionController.OnPayday, WageBehaviour).
@@ -18,6 +18,10 @@ using UnityEngine;
 /// Times are gameplay seconds — they stop while the game is paused. A save
 /// keeps each faction's time to its next payday and how many it has had, so
 /// a resumed game pays out exactly when the original would have.
+///
+/// Only the eight playable teams (FactionTeams.IsPlayable) have paydays.
+/// Enemy to all has no keeper to pay it, so it gets no clock even when it's
+/// an active faction in the level.
 ///
 /// Scene setup: none — GameManager2D adds one if the scene has none. Add it
 /// yourself to tune the numbers.
@@ -97,7 +101,8 @@ public class PaydaySystem : MonoBehaviour
         if (gm == null) return;
 
         var factions = new List<FactionID>();
-        foreach (var setup in gm.ActiveFactions) factions.Add(setup.factionId);
+        foreach (var setup in gm.ActiveFactions)
+            if (FactionTeams.IsPlayable(setup.factionId)) factions.Add(setup.factionId); // no Enemy to all
         if (factions.Count == 0) factions.Add(FactionID.Player);
 
         foreach (var faction in factions)

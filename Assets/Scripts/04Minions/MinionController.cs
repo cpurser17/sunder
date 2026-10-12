@@ -93,8 +93,9 @@ using UnityEngine;
 /// anger behaviours are designed properly.
 ///
 /// Neutral and Enemy-to-all minions have no keeper (IsKept is false): their
-/// hunger doesn't grow and they feel no anger until they join one of the
-/// eight playable teams — recruited on sight, or converted.
+/// hunger and tiredness don't grow and they feel no anger until they join
+/// one of the eight playable teams — recruited on sight, or converted.
+/// Enemy to all has no paydays either (PaydaySystem).
 /// </summary>
 [RequireComponent(typeof(GridAgent))]
 public class MinionController : MonoBehaviour, IHandTarget
@@ -606,7 +607,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     private void TickTiredness()
     {
-        if (!NeedsSleep || _errand == _sleep) return;
+        if (!NeedsSleep || !IsKept || _errand == _sleep) return; // Neutral / Enemy to all: waits for a keeper
 
         bool working = _active == _worker && _worker.enabled && _worker.State == WorkerBehaviour.WorkerState.Working;
         float perSecond = TirednessPerMinute / 60f * (working ? workingTirednessMultiplier : 1f);
@@ -953,8 +954,8 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>
     /// True while it serves a keeper — one of the eight playable teams, human
-    /// or AI. Neutral and Enemy-to-all minions aren't kept: their hunger and
-    /// anger are suspended until they join a keeper's team.
+    /// or AI. Neutral and Enemy-to-all minions aren't kept: their hunger,
+    /// tiredness and anger are suspended until they join a keeper's team.
     /// </summary>
     public bool IsKept => FactionTeams.IsPlayable(faction);
 
