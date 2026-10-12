@@ -710,7 +710,8 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void OnPayday(float angerPerUnpaidSalary)
     {
-        if (_dead || Salary <= 0) return;
+        // No keeper, no wages: a Neutral or Enemy-to-all minion is never owed anything.
+        if (_dead || Salary <= 0 || !IsKept) return;
 
         _owedWages           += Salary;
         _angerPerUnpaidSalary = angerPerUnpaidSalary;
@@ -1319,8 +1320,8 @@ public class MinionController : MonoBehaviour, IHandTarget
         _health               = Mathf.Clamp(data.health > 0f ? data.health : MaxHealth, 1f, MaxHealth);
         _tiredness            = Mathf.Clamp01(data.tiredness);
         _hunger               = Mathf.Clamp01(data.hunger);
-        _owedWages            = Mathf.Max(0, data.owedWages);
-        _missedPaydays        = Mathf.Max(0, data.missedPaydays);
+        _owedWages            = IsKept ? Mathf.Max(0, data.owedWages) : 0;     // no debt without a keeper
+        _missedPaydays        = IsKept ? Mathf.Max(0, data.missedPaydays) : 0;
         _angerPerUnpaidSalary = data.angerPerUnpaidSalary;
 
         _temper.ClearGrievances();

@@ -174,7 +174,8 @@ public class PaydaySystem : MonoBehaviour
         int minions = 0, wages = 0;
         foreach (var minion in new List<MinionController>(MinionController.All))
         {
-            if (minion == null || !minion.IsAlive || minion.Faction != faction || minion.Salary <= 0) continue;
+            if (minion == null || !minion.IsAlive || minion.Faction != faction ||
+                !minion.IsKept || minion.Salary <= 0) continue;
             minions++;
             wages += minion.Salary;
             minion.OnPayday(angerPerUnpaidSalary);
