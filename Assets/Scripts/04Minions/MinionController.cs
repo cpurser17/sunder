@@ -984,13 +984,24 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     // ── Combat ─────────────────────────────────────────────────────────
 
-    /// <summary>Looks around every so often; an enemy in sight starts a fight.</summary>
+    /// <summary>
+    /// Looks around every so often; an enemy in sight starts a fight. A
+    /// Neutral minion has no enemies — instead the first team minion it sees
+    /// (the nearest, if it spots several at once) recruits it to that team.
+    /// </summary>
     private void SenseEnemies()
     {
         if (_inCombat || _held || Time.time < _nextSense) return;
         var combat = CombatSystem.Instance;
         if (combat == null) return;
         _nextSense = Time.time + combat.SenseInterval * (0.75f + 0.5f * Random.value);
+
+        if (faction == FactionID.Unaligned)
+        {
+            var recruiter = combat.FindVisibleRecruiter(this);
+            if (recruiter != null) ConvertTo(recruiter.Faction);
+            return;
+        }
 
         var enemy = combat.FindVisibleEnemy(this, IsIgnoring);
         if (enemy != null) { EnterCombat(enemy); return; }

@@ -23,7 +23,9 @@ public struct AttackProfile
 /// Enemies
 /// -------
 /// Any minion of another faction, and the Hostile team against everyone.
-/// Unaligned minions are neutral. (No alliances yet — IsEnemy is the hook.)
+/// Unaligned minions are neutral: nobody fights them, and the first team
+/// minion one sees recruits it (FindVisibleRecruiter, MinionController).
+/// (No alliances yet — IsEnemy is the hook.)
 ///
 /// Sight (Dungeon Keeper style)
 /// ----------------------------
@@ -213,7 +215,20 @@ public class CombatSystem : MonoBehaviour
     }
 
     /// <summary>The nearest enemy minion the given minion can see, skipping any it's ignoring.</summary>
-    public MinionController FindVisibleEnemy(MinionController self, System.Func<MinionController, bool> ignore = null)
+    public MinionController FindVisibleEnemy(MinionController self, System.Func<MinionController, bool> ignore = null) =>
+        FindNearestVisible(self, other => IsEnemy(self.Faction, other.Faction), ignore);
+
+    /// <summary>
+    /// For a Neutral minion: the nearest minion of any team (Hostile included)
+    /// it can see — the side it will join. Null if it sees none.
+    /// </summary>
+    public MinionController FindVisibleRecruiter(MinionController self) =>
+        FindNearestVisible(self, other => other.Faction != FactionID.Unaligned);
+
+    /// <summary>The nearest targetable minion in sight that passes the filter.</summary>
+    private MinionController FindNearestVisible(MinionController self,
+                                                System.Func<MinionController, bool> filter,
+                                                System.Func<MinionController, bool> ignore = null)
     {
         var from = self.Agent != null ? self.Agent.CurrentCell : null;
         if (from == null) return null;
@@ -224,7 +239,7 @@ public class CombatSystem : MonoBehaviour
         foreach (var other in MinionController.All)
         {
             if (other == null || other == self || !other.IsTargetable) continue;
-            if (!IsEnemy(self.Faction, other.Faction)) continue;
+            if (!filter(other)) continue;
 
             Vector3 d = other.transform.position - self.transform.position;
             float sq = d.x * d.x + d.z * d.z;
