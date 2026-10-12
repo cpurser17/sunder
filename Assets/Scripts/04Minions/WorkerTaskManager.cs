@@ -320,7 +320,7 @@ public class WorkerTaskManager : MonoBehaviour
             return;
         }
 
-        // ── Reinforce: Stone or a Neutral wall touching our territory ──
+        // ── Reinforce: Stone touching our territory ────────────────────
         if (IsReinforceable(cell))
         {
             foreach (var (dx, dy) in TraversalRules.Orthogonal)
@@ -378,16 +378,8 @@ public class WorkerTaskManager : MonoBehaviour
         return TouchesOwnTerritory(cell);
     }
 
-    /// <summary>
-    /// Stone, or a Neutral wall (the level editor can paint unowned walls),
-    /// touching our territory — reinforcing either makes it our wall. Another
-    /// team's walls are not reinforceable; they have to be broken some other way.
-    /// </summary>
-    private bool IsReinforceable(GridCell cell)
-    {
-        bool neutralWall = cell.TileType == TileType.Wall && cell.Owner == FactionID.Unaligned;
-        return (cell.TileType == TileType.Stone || neutralWall) && TouchesOwnTerritory(cell);
-    }
+    private bool IsReinforceable(GridCell cell) =>
+        cell.TileType == TileType.Stone && TouchesOwnTerritory(cell);
 
     /// <summary>
     /// True if the cell orthogonally touches territory this faction holds AND

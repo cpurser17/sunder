@@ -150,6 +150,11 @@ public class GameManager2D : MonoBehaviour
         if (FindAnyObjectByType<RallyPoints>() == null)
             gameObject.AddComponent<RallyPoints>();
 
+        // Walls fall back to Stone once their owner loses the floor beside
+        // them (gameplay only — the level editor leaves painted walls alone).
+        if (FindAnyObjectByType<WallDecay>() == null)
+            gameObject.AddComponent<WallDecay>();
+
         // Fog of war (the level editor has no GameManager2D, so no fog).
         if (FindAnyObjectByType<FogOfWar>() == null)
             gameObject.AddComponent<FogOfWar>();
