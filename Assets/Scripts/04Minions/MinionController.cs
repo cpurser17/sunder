@@ -101,9 +101,10 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>How the minion arrived — decides who is told when it leaves.</summary>
     /// <remarks>
-    /// Recruited: a Neutral creature that joined a team on sight. Counts
-    /// against that team's population like a summoned one, but joins even
-    /// when the population is already full. Append only — saves store these.
+    /// A Neutral creature recruited on sight becomes Portal, exactly like a
+    /// summoned one. Recruited is a load alias only — a few saves were written
+    /// with it before that — and is read back as Portal. Append only — saves
+    /// store these.
     /// </remarks>
     public enum SpawnSource { Placed, Portal, WorkerSpawner, Recruited }
 
@@ -431,7 +432,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         _initialised = true;
         faction      = owningFaction;
         _definition  = definition;
-        _source      = source;
+        _source      = source == SpawnSource.Recruited ? SpawnSource.Portal : source;
         _agent.SetFaction(owningFaction);
 
         definition?.ApplyTo(gameObject, _agent);
@@ -1216,7 +1217,6 @@ public class MinionController : MonoBehaviour, IHandTarget
         switch (_source)
         {
             case SpawnSource.Portal:
-            case SpawnSource.Recruited:
                 MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
                 break;
             case SpawnSource.WorkerSpawner:
@@ -1320,18 +1320,20 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>
     /// A Neutral minion recruited by the first team it sees. A creature then
-    /// counts against that team's population — added on top, so it joins
-    /// even if the team is already at or over its limit (the summoner just
-    /// stops summoning until there's room). A worker joins the team's
-    /// workers and, like the team's own, isn't part of the population.
+    /// becomes one of that team's like any summoned one: it counts against
+    /// the population (added on top, so it joins even if the team is already
+    /// at or over its limit — the summoner just stops summoning until there's
+    /// room), can be dismissed at the portal, and can walk out if furious. A
+    /// worker joins the team's workers and, like the team's own, isn't part
+    /// of the population.
     /// </summary>
     private void JoinOnSight(FactionID team)
     {
-        bool countsAsCreature = !IsWorkerFirst && _source == SpawnSource.Placed;
+        bool becomesCreature = !IsWorkerFirst && _source == SpawnSource.Placed;
         ConvertTo(team);
-        if (!countsAsCreature || _dead) return;
+        if (!becomesCreature || _dead) return;
 
-        _source = SpawnSource.Recruited;
+        _source = SpawnSource.Portal;
         MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
     }
 
@@ -1355,7 +1357,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         NotifyLeftFaction();
         faction = newFaction;
         _agent.SetFaction(newFaction);
-        if (_source == SpawnSource.Portal || _source == SpawnSource.Recruited)
+        if (_source == SpawnSource.Portal)
             MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
         else
             _source = SpawnSource.Placed; // the new side's worker count never included it

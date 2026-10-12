@@ -609,7 +609,7 @@ public class GameManager2D : MonoBehaviour
             switch (data.source)
             {
                 case MinionController.SpawnSource.Portal:
-                case MinionController.SpawnSource.Recruited:
+                case MinionController.SpawnSource.Recruited: // older name for a recruited Portal creature
                     MinionSummoner.Instance?.NotifyCreatureJoined(data.faction, def);
                     break;
                 case MinionController.SpawnSource.WorkerSpawner:
