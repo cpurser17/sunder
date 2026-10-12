@@ -9,8 +9,9 @@ using UnityEngine;
 ///
 /// What a group sees
 /// -----------------
-///   • Every tile it owns, plus the 8 tiles around each — its own walls, but
-///     not past them until it digs there.
+///   • Every tile it owns. Its owned floor (anything but walls) also shows
+///     the 8 tiles around it — so it sees its own walls, but not past them
+///     until it digs there. Walls reveal nothing beyond themselves.
 ///   • What its minions see: within combat's sight range, along lines that
 ///     rock and walls block (CombatSystem.CanSee). A minion in the hand sees
 ///     nothing; one turned into a chicken sees as normal.
@@ -238,13 +239,16 @@ public class FogOfWar : MonoBehaviour, ICellAppearance
         HideUnseenThings();
     }
 
-    /// <summary>Owned tiles, and the ring of tiles round each.</summary>
+    /// <summary>Owned tiles, and the ring of tiles round each owned floor tile (not walls).</summary>
     private void SeeTerritory(Knowledge k)
     {
         for (int y = 0; y < Height; y++)
         for (int x = 0; x < Width; x++)
         {
-            if (!InGroup(_grid.GetCell(x, y).Owner, k.Group)) continue;
+            var cell = _grid.GetCell(x, y);
+            if (!InGroup(cell.Owner, k.Group)) continue;
+            // A wall is seen (it's owned) but shows nothing past itself.
+            if (cell.TileType == TileType.Wall) { k.Next[y * Width + x] = true; continue; }
             for (int dy = -1; dy <= 1; dy++)
             for (int dx = -1; dx <= 1; dx++)
             {
