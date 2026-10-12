@@ -92,6 +92,7 @@ public class MinionHealthBars : MonoBehaviour
             if (minion == null || !minion.IsAlive) continue;
             if (hideWhenHeld && minion.IsHeld) continue;
             if (minion.IsPolymorphed) continue;   // a chicken gives nothing away
+            if (FogOfWar.Instance != null && !FogOfWar.Instance.LocalCanSee(minion)) continue;
 
             float fraction = minion.HealthFraction;
             if (onlyWhenHurt && fraction >= 0.999f) continue;
@@ -135,6 +136,8 @@ public class MinionHealthBars : MonoBehaviour
         if (hearts != null)
             foreach (var heart in hearts.StandingHearts())
             {
+                if (FogOfWar.Instance != null && heart.Faction != localPlayer &&
+                    !FogOfWar.Instance.IsVisible(localPlayer, heart.Centre)) continue;
                 float fraction = heart.MaxHP > 0 ? (float)heart.CurrentHP / heart.MaxHP : 0f;
                 var bar = used < _heartBars.Count ? _heartBars[used] : NewBar(heartSize, _heartBars);
                 if (!Place(bar, heart.Centre + Vector3.up * heartHeight, fraction, heart.Faction)) continue;

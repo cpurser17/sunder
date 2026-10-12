@@ -96,8 +96,9 @@ public class SpellSystem : MonoBehaviour
             case SpellCastOn.OwnTerritory:
                 return target.Cell != null && target.Cell.Owner == target.Caster;
             case SpellCastOn.Visible:
-                // TODO (fog of war): only tiles the caster can see.
-                return target.Spell.targeting == SpellTargeting.None || target.Cell != null;
+                if (target.Spell.targeting == SpellTargeting.None) return true;
+                return target.Cell != null &&
+                       (FogOfWar.Instance == null || FogOfWar.Instance.IsVisible(target.Caster, target.Cell));
             default:
                 return true;
         }

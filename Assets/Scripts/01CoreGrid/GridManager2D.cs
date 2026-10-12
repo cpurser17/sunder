@@ -13,6 +13,11 @@ using UnityEngine;
 /// faction tinting is automatic on every tile write.
 ///
 /// Total GameObjects: 3. Total draw calls: 2. Both constant regardless of map size.
+///
+/// What's drawn can differ from the truth: with an Appearance set (fog of
+/// war), each tile is drawn as the local player knows it — LookOf — and
+/// redrawn when that changes (OnLookChanged). The 3D tiles and the minimap
+/// draw from LookOf too.
 /// </summary>
 public class GridManager2D : MonoBehaviour
 {
@@ -55,6 +60,59 @@ public class GridManager2D : MonoBehaviour
     public event Action<IReadOnlyList<DungeonRoom>> OnRebakeComplete;
     /// <summary>Fired immediately on every tile write, before the debounced rebake.</summary>
     public event Action<GridCell> OnTileChanged;
+
+    /// <summary>Fired when the grid has been (re)built by Initialise.</summary>
+    public event Action OnGridBuilt;
+
+    /// <summary>Fired when how a tile looks to the local player changes without the tile itself changing (fog).</summary>
+    public event Action<GridCell> OnLookChanged;
+
+    private ICellAppearance _appearance;
+
+    /// <summary>
+    /// What decides how tiles look to the local player (FogOfWar). Null =
+    /// every tile as it truly is.
+    /// </summary>
+    public ICellAppearance Appearance
+    {
+        get => _appearance;
+        set
+        {
+            _appearance = value;
+            RefreshAllLooks();
+        }
+    }
+
+    /// <summary>How the local player sees this tile: its type, owner and brightness.</summary>
+    public CellLook LookOf(GridCell cell) =>
+        _appearance != null ? _appearance.LookOf(cell) : new CellLook(cell.TileType, cell.Owner, 1f);
+
+    /// <summary>The tile's drawn colour: its look's colour, darkened by its brightness.</summary>
+    public Color32 ColourOf(GridCell cell)
+    {
+        var look = LookOf(cell);
+        Color32 col = tileRegistry.GetColour(look.Type, look.Owner);
+        if (look.Brightness >= 0.999f) return col;
+        float b = Mathf.Clamp01(look.Brightness);
+        return new Color32((byte)(col.r * b), (byte)(col.g * b), (byte)(col.b * b), col.a);
+    }
+
+    /// <summary>Redraws one tile after its look changed (called by the Appearance).</summary>
+    public void RefreshLook(GridCell cell)
+    {
+        if (cell == null || _baseColours == null) return;
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
+        OnLookChanged?.Invoke(cell);
+    }
+
+    /// <summary>Redraws every tile.</summary>
+    public void RefreshAllLooks()
+    {
+        if (_grid == null || _baseColours == null) return;
+        for (int x = 0; x < width;  x++)
+        for (int y = 0; y < height; y++)
+            RefreshLook(_grid[x, y]);
+    }
 
     // ── Unity lifecycle ────────────────────────────────────────────────
 
@@ -101,6 +159,7 @@ public class GridManager2D : MonoBehaviour
         _roomRegistry.OnRebakeComplete += rooms => OnRebakeComplete?.Invoke(rooms);
 
         ScheduleRebake();
+        OnGridBuilt?.Invoke();
     }
 
     private void LateUpdate()
@@ -171,7 +230,7 @@ public class GridManager2D : MonoBehaviour
             triangles[ti+0] = vi; triangles[ti+1] = vi+2; triangles[ti+2] = vi+1;
             triangles[ti+3] = vi; triangles[ti+4] = vi+3; triangles[ti+5] = vi+2;
 
-            Color32 cellCol = tileRegistry.GetColour(_grid[x, y].TileType, _grid[x, y].Owner);
+            Color32 cellCol = ColourOf(_grid[x, y]);
             _baseColours[vi] = _baseColours[vi+1] =
             _baseColours[vi+2] = _baseColours[vi+3] = cellCol;
 
@@ -309,7 +368,7 @@ public class GridManager2D : MonoBehaviour
     public void SetTileType(GridCell cell, TileType newType, FactionID owner = FactionID.Unaligned)
     {
         cell.SetTileTypeInternal(newType, owner);
-        SetBaseColour(cell.X, cell.Y, tileRegistry.GetColour(newType, owner));
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
         OnTileChanged?.Invoke(cell);
         ScheduleRebake();
     }
@@ -318,7 +377,7 @@ public class GridManager2D : MonoBehaviour
     public void PlaceBridge(GridCell cell, FactionID owner)
     {
         cell.PlaceBridgeInternal(owner);
-        SetBaseColour(cell.X, cell.Y, tileRegistry.GetColour(TileType.Bridge, owner));
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
         OnTileChanged?.Invoke(cell);
         ScheduleRebake();
     }
@@ -327,8 +386,7 @@ public class GridManager2D : MonoBehaviour
     public void RemoveBridge(GridCell cell)
     {
         cell.RemoveBridgeInternal();
-        SetBaseColour(cell.X, cell.Y,
-            tileRegistry.GetColour(cell.TileType, FactionID.Unaligned));
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
         OnTileChanged?.Invoke(cell);
         ScheduleRebake();
     }
@@ -340,7 +398,7 @@ public class GridManager2D : MonoBehaviour
     {
         FactionID owner = cell.Owner;
         cell.SetTileTypeInternal(TileType.Tunnel, owner);
-        SetBaseColour(cell.X, cell.Y, tileRegistry.GetColour(TileType.Tunnel, owner));
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
         OnTileChanged?.Invoke(cell);
         ScheduleRebake();
     }
@@ -349,7 +407,7 @@ public class GridManager2D : MonoBehaviour
     public void SetOwner(GridCell cell, FactionID newOwner)
     {
         cell.SetOwnerInternal(newOwner);
-        SetBaseColour(cell.X, cell.Y, tileRegistry.GetColour(cell.TileType, newOwner));
+        SetBaseColour(cell.X, cell.Y, ColourOf(cell));
         OnTileChanged?.Invoke(cell);
         ScheduleRebake();
     }
@@ -392,3 +450,23 @@ public class GridManager2D : MonoBehaviour
 
 }
 
+
+/// <summary>How a tile looks to the local player — which may not be how it is (fog of war).</summary>
+public readonly struct CellLook
+{
+    public readonly TileType  Type;
+    public readonly FactionID Owner;
+    /// <summary>1 = as lit as normal; less = darkened (explored but not in sight).</summary>
+    public readonly float     Brightness;
+
+    public CellLook(TileType type, FactionID owner, float brightness)
+    {
+        Type = type; Owner = owner; Brightness = brightness;
+    }
+}
+
+/// <summary>Decides how tiles look to the local player (see GridManager2D.Appearance).</summary>
+public interface ICellAppearance
+{
+    CellLook LookOf(GridCell cell);
+}

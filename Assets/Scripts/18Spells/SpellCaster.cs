@@ -210,6 +210,7 @@ public class SpellCaster : MonoBehaviour
         {
             if (m == null || !m.IsTargetable) continue;
             if (own ? m.Faction != localPlayer : !CombatSystem.IsEnemy(localPlayer, m.Faction)) continue;
+            if (FogOfWar.Instance != null && !FogOfWar.Instance.LocalCanSee(m)) continue;   // hidden in the fog
 
             Vector3 pos = m.transform.position;
             float   t   = (pos.y - ray.origin.y) / ray.direction.y;

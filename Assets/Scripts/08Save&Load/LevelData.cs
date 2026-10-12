@@ -132,6 +132,10 @@ public class GameStateSaveData
     // Call to Arms rally points. Null in older saves — none up.
     public System.Collections.Generic.List<RallySaveData> rallyPoints;
 
+    // Fog of war: what each human player remembers of the map. Null in older
+    // saves — they start from the first snapshot.
+    public System.Collections.Generic.List<FogSaveData> fog;
+
     // Every live minion, with its level, needs, wages, bed and anger. Null in
     // older saves — those resume with no minions (bar a new game's placed ones).
     public System.Collections.Generic.List<MinionSaveData> minions;

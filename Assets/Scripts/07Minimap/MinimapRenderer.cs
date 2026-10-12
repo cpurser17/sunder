@@ -82,6 +82,7 @@ public class MinimapRenderer : MonoBehaviour
         if (gridManager != null)
         {
             gridManager.OnTileChanged    -= OnTileChanged;
+            gridManager.OnLookChanged    -= OnTileChanged;
             gridManager.OnRebakeComplete -= _onRebakeComplete;
         }
     }
@@ -118,6 +119,8 @@ public class MinimapRenderer : MonoBehaviour
         // Subscribe to OnTileChanged only once the texture exists.
         gridManager.OnTileChanged -= OnTileChanged; // prevent double-subscribe
         gridManager.OnTileChanged += OnTileChanged;
+        gridManager.OnLookChanged -= OnTileChanged;
+        gridManager.OnLookChanged += OnTileChanged;   // fog of war: drawn as the player knows it
 
         FullRedraw();
         OnTextureReady?.Invoke();
@@ -132,7 +135,7 @@ public class MinimapRenderer : MonoBehaviour
         {
             var cell = gridManager.GetCell(x, y);
             if (cell != null)
-                _texture.SetPixel(x, y, tileRegistry.GetColour(cell.TileType, cell.Owner));
+                _texture.SetPixel(x, y, gridManager.ColourOf(cell));
         }
 
         _texture.Apply();
@@ -144,8 +147,7 @@ public class MinimapRenderer : MonoBehaviour
     private void OnTileChanged(GridCell cell)
     {
         if (_texture == null) return;
-        _texture.SetPixel(cell.X, cell.Y,
-            tileRegistry.GetColour(cell.TileType, cell.Owner));
+        _texture.SetPixel(cell.X, cell.Y, gridManager.ColourOf(cell));
         _dirty = true;
     }
 

@@ -14,6 +14,11 @@ using UnityEngine.EventSystems;
 ///   Gem   — no owner; worker harvests for slow currency, tile never changes;
 ///           marker persists until manually deselected.
 ///
+/// Fog of war: validity is judged on the tile as this faction knows it
+/// (FogOfWar.KnownLook), so unexplored "stone" can be marked. When the tile
+/// comes into sight and turns out not to be diggable (cave, water, an enemy
+/// wall…), its marker is removed silently.
+///
 /// Input
 /// -----
 ///   LMB press/drag — rectangle-select valid tiles; pillar box shown in addBoxColour.
@@ -61,6 +66,7 @@ public class DigSelectionController : MonoBehaviour
     {
         if (_gridManager != null)
             _gridManager.OnTileChanged -= OnTileChanged;
+        if (FogOfWar.Instance != null) FogOfWar.Instance.OnKnowledgeChanged -= OnKnowledgeChanged;
     }
 
     private void Update()
@@ -123,6 +129,7 @@ public class DigSelectionController : MonoBehaviour
         _markerRoot = rootGo.transform;
 
         _gridManager.OnTileChanged += OnTileChanged;
+        if (FogOfWar.Instance != null) FogOfWar.Instance.OnKnowledgeChanged += OnKnowledgeChanged;
         _initialised = true;
     }
 
@@ -263,17 +270,31 @@ public class DigSelectionController : MonoBehaviour
             RemoveCell(cell);
     }
 
+    /// <summary>Fog of war: a marked tile came into sight (or was seen to change) — still diggable?</summary>
+    private void OnKnowledgeChanged(FactionID group, GridCell cell)
+    {
+        if (group != FogOfWar.VisionGroupOf(_faction)) return;
+        OnTileChanged(cell);
+    }
+
     // ── Validation ─────────────────────────────────────────────────────
 
-    private bool IsValidDigTarget(GridCell cell) =>
-        cell.TileType switch
+    private bool IsValidDigTarget(GridCell cell)
+    {
+        // As this faction knows the tile — the truth for a faction without fog.
+        var known = FogOfWar.Instance != null
+            ? FogOfWar.Instance.KnownLook(_faction, cell)
+            : new CellLook(cell.TileType, cell.Owner, 1f);
+
+        return known.Type switch
         {
             TileType.Stone => true,
             TileType.Gold  => true,
             TileType.Gem   => true,
-            TileType.Wall  => cell.Owner == _faction,
+            TileType.Wall  => known.Owner == _faction,
             _              => false,
         };
+    }
 
     // ── Helpers ────────────────────────────────────────────────────────
 

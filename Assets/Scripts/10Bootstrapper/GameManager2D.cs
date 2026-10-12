@@ -149,6 +149,10 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<SpellCaster>();
         if (FindAnyObjectByType<RallyPoints>() == null)
             gameObject.AddComponent<RallyPoints>();
+
+        // Fog of war (the level editor has no GameManager2D, so no fog).
+        if (FindAnyObjectByType<FogOfWar>() == null)
+            gameObject.AddComponent<FogOfWar>();
     }
 
     private void Start()
@@ -189,6 +193,7 @@ public class GameManager2D : MonoBehaviour
             CreateWallet(FactionID.Player, levelDefaultGold);
             CreateResearch(FactionID.Player);
             Announcer.Instance?.SetHumanPlayers(new[] { FactionID.Player });
+            FogOfWar.Instance?.SetTrackedFactions(new[] { FactionID.Player });
             OnWalletsReady?.Invoke();
             return;
         }
@@ -203,6 +208,7 @@ public class GameManager2D : MonoBehaviour
         }
         if (humans.Count == 0) humans.Add(FactionID.Player);
         Announcer.Instance?.SetHumanPlayers(humans);
+        FogOfWar.Instance?.SetTrackedFactions(humans);   // AI sees everything until it has a brain
 
         OnWalletsReady?.Invoke();
     }
@@ -514,6 +520,7 @@ public class GameManager2D : MonoBehaviour
         PaydaySystem.Instance?.Restore(gs.paydays);
         SpellSystem.Instance?.Restore(gs.spellCooldowns);
         RallyPoints.Instance?.Restore(gs.rallyPoints);
+        FogOfWar.Instance?.Restore(gs.fog);
 
         // Minions, chickens, progress and dig marks wait a frame, so every
         // system that sets itself up at scene start (summoner, dig
@@ -733,6 +740,7 @@ public class GameManager2D : MonoBehaviour
         data.paydays      = PaydaySystem.Instance?.Capture();
         data.spellCooldowns = SpellSystem.Instance?.Capture();
         data.rallyPoints    = RallyPoints.Instance?.Capture();
+        data.fog            = FogOfWar.Instance?.Capture();
 
         // Populate per-faction Dungeon Heart HP.
         data.factionHeartHP = DungeonHeart.Instance != null
