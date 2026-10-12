@@ -100,7 +100,12 @@ public class MinionController : MonoBehaviour, IHandTarget
     private static readonly List<MinionController> _all = new();
 
     /// <summary>How the minion arrived — decides who is told when it leaves.</summary>
-    public enum SpawnSource { Placed, Portal, WorkerSpawner }
+    /// <remarks>
+    /// Recruited: a Neutral creature that joined a team on sight. Counts
+    /// against that team's population like a summoned one, but joins even
+    /// when the population is already full. Append only — saves store these.
+    /// </remarks>
+    public enum SpawnSource { Placed, Portal, WorkerSpawner, Recruited }
 
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Identity")]
@@ -999,7 +1004,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (faction == FactionID.Unaligned)
         {
             var recruiter = combat.FindVisibleRecruiter(this);
-            if (recruiter != null) ConvertTo(recruiter.Faction);
+            if (recruiter != null) JoinOnSight(recruiter.Faction);
             return;
         }
 
@@ -1211,6 +1216,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         switch (_source)
         {
             case SpawnSource.Portal:
+            case SpawnSource.Recruited:
                 MinionSummoner.Instance?.NotifyCreatureRemoved(faction, _definition);
                 break;
             case SpawnSource.WorkerSpawner:
@@ -1223,9 +1229,9 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>
     /// Switches this minion to a new faction in place — same GameObject, same
-    /// token, just a new owner. Groundwork for capture/torture-to-convert:
-    /// nothing calls this yet, but when a future Prison room finishes
-    /// converting a captured minion, this is the one call it needs to make.
+    /// token, just a new owner. Used when a Neutral minion is recruited on
+    /// sight (JoinOnSight), and the one call a future Prison/Torture room
+    /// needs to make when it converts a captured minion.
     ///
     /// Starts its behaviour over, so a creature treks to its new masters'
     /// heart before counting as truly theirs, same as a freshly summoned one.
@@ -1312,6 +1318,23 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (data.polymorphSeconds > 0f) Polymorph(data.polymorphSeconds);
     }
 
+    /// <summary>
+    /// A Neutral minion recruited by the first team it sees. A creature then
+    /// counts against that team's population — added on top, so it joins
+    /// even if the team is already at or over its limit (the summoner just
+    /// stops summoning until there's room). A worker joins the team's
+    /// workers and, like the team's own, isn't part of the population.
+    /// </summary>
+    private void JoinOnSight(FactionID team)
+    {
+        bool countsAsCreature = !IsWorkerFirst && _source == SpawnSource.Placed;
+        ConvertTo(team);
+        if (!countsAsCreature || _dead) return;
+
+        _source = SpawnSource.Recruited;
+        MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
+    }
+
     public void ConvertTo(FactionID newFaction)
     {
         if (_dead || newFaction == faction) return;
@@ -1332,7 +1355,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         NotifyLeftFaction();
         faction = newFaction;
         _agent.SetFaction(newFaction);
-        if (_source == SpawnSource.Portal)
+        if (_source == SpawnSource.Portal || _source == SpawnSource.Recruited)
             MinionSummoner.Instance?.NotifyCreatureJoined(faction, _definition);
         else
             _source = SpawnSource.Placed; // the new side's worker count never included it

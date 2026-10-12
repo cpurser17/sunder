@@ -358,7 +358,9 @@ public class MinionSummoner : MonoBehaviour
     /// <summary>
     /// Claims a population slot for the given faction without going through
     /// Spawn — used when a creature joins a faction any way other than being
-    /// freshly summoned, e.g. converting from another faction.
+    /// freshly summoned, e.g. converting from another faction or a Neutral
+    /// minion being recruited. Never refused: it can push the population past
+    /// the limit, which only stops further summoning until there's room.
     /// </summary>
     public void NotifyCreatureJoined(FactionID faction, MinionDefinition def)
     {

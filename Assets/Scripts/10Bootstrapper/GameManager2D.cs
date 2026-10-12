@@ -609,6 +609,7 @@ public class GameManager2D : MonoBehaviour
             switch (data.source)
             {
                 case MinionController.SpawnSource.Portal:
+                case MinionController.SpawnSource.Recruited:
                     MinionSummoner.Instance?.NotifyCreatureJoined(data.faction, def);
                     break;
                 case MinionController.SpawnSource.WorkerSpawner:
