@@ -5,14 +5,17 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 /// <summary>
-/// How one attempt at a mission went, handed to the campaign when it ends.
-/// Stats are free-form names (see MissionStats) so new ones need no change
-/// here; an unlock rule can then ask about any of them.
+/// How one attempt at a mission went: GameSession carries it from the
+/// Gameplay scene back to the Campaign scene, which adds it to the
+/// playthrough's CampaignProgress. Stats are free-form names (see
+/// MissionStats) so new ones need no change here; an unlock rule can then
+/// ask about any of them.
 /// </summary>
 [Serializable]
 public class MissionResult
 {
     public string missionId;
+    public string levelId;
     public bool   won;
     /// <summary>Stat name → value for this attempt, e.g. Kills = 42, MinionsLost = 3.</summary>
     public Dictionary<string, float> stats = new(StringComparer.OrdinalIgnoreCase);

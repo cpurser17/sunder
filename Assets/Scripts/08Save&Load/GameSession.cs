@@ -69,19 +69,4 @@ public class GameSession : MonoBehaviour
     }
 }
 
-/// <summary>
-/// Data passed back to the Overworld Scene after a mission ends.
-/// Extend as campaign mechanics are added.
-/// </summary>
-[System.Serializable]
-public class MissionResult
-{
-    public string  levelId;
-    public bool    success;
-    public int     goldEarned;
-
-    // ── Future ─────────────────────────────────────────────────────────
-    // public int     score;
-    // public float   completionTime;
-    // public List<string> unlockedProvinces;
-}
+// MissionResult — what GameSession carries back — lives with the campaign code (20Campaign/CampaignProgress.cs).

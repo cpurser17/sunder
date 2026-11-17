@@ -74,9 +74,12 @@ public abstract class SpellEffect
     private static void Discover()
     {
         _effects = new Dictionary<string, SpellEffect>(StringComparer.OrdinalIgnoreCase);
-        foreach (var type in typeof(SpellEffect).Assembly.GetTypes())
+        Type[] types;
+        try { types = typeof(SpellEffect).Assembly.GetTypes(); }
+        catch (System.Reflection.ReflectionTypeLoadException e) { types = e.Types; }   // skip any type that won't load
+        foreach (var type in types)
         {
-            if (type.IsAbstract || !typeof(SpellEffect).IsAssignableFrom(type)) continue;
+            if (type == null || type.IsAbstract || !typeof(SpellEffect).IsAssignableFrom(type)) continue;
             var tag = (SpellEffectAttribute)Attribute.GetCustomAttribute(type, typeof(SpellEffectAttribute));
             if (tag == null) continue;
             if (_effects.ContainsKey(tag.Id))

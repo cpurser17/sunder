@@ -69,9 +69,12 @@ public abstract class UnlockCondition
     private static void Discover()
     {
         _byKeyword = new Dictionary<string, UnlockCondition>(StringComparer.OrdinalIgnoreCase);
-        foreach (var type in typeof(UnlockCondition).Assembly.GetTypes())
+        Type[] types;
+        try { types = typeof(UnlockCondition).Assembly.GetTypes(); }
+        catch (System.Reflection.ReflectionTypeLoadException e) { types = e.Types; }   // skip any type that won't load
+        foreach (var type in types)
         {
-            if (type.IsAbstract || !typeof(UnlockCondition).IsAssignableFrom(type)) continue;
+            if (type == null || type.IsAbstract || !typeof(UnlockCondition).IsAssignableFrom(type)) continue;
             var tag = (UnlockConditionAttribute)Attribute.GetCustomAttribute(type, typeof(UnlockConditionAttribute));
             if (tag != null && !_byKeyword.ContainsKey(tag.Keyword))
                 _byKeyword[tag.Keyword] = (UnlockCondition)Activator.CreateInstance(type);

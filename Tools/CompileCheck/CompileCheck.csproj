@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Compile check for the game's scripts outside Unity:  Tools/CompileCheck/check.sh
+    Unity ignores this folder. It compiles everything in Assets/Scripts against
+    Unity 2021.3 reference assemblies (NuGet) plus hand-written stand-ins
+    (Stubs/) for the packages and editor API those don't include. It catches
+    typos and type errors; it is not a substitute for opening the project in Unity.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>UNITY_EDITOR;UNITY_6000_0_OR_NEWER</DefineConstants>
+    <NoWarn>CS0067;CS0108;CS0114;CS0162;CS0168;CS0169;CS0219;CS0414;CS0618;CS0649;CS0659;CS0660;CS0661;CS1998;CS8632;NU1701;NU1603</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- check.sh copies Assets/Scripts here, patching the few Unity 6 calls 2021.3 lacks. -->
+    <Compile Include="obj/src/**/*.cs" />
+    <Compile Include="Stubs/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>
