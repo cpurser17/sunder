@@ -40,15 +40,12 @@ public class CampaignCatalogue : ScriptableObject
     public class NarrationLine
     {
         public MissionMoment   moment;
-        [Tooltip("The place's name at this moment, per language.")]
-        public List<LocalText> names    = new();
         [Tooltip("The narration, per language. Shown as subtitles a sentence at a time; | forces a break.")]
         public List<LocalText> dialogue = new();
         [Tooltip("Optional subtitle start times in seconds, per language, e.g. \"0, 6.5, 12.2\".")]
         public List<LocalText> cues     = new();
         public List<LocalClip> clips    = new();
 
-        public string    NameFor(string language, string fallback)     => TextIn(names, language, fallback);
         public string    DialogueFor(string language, string fallback) => TextIn(dialogue, language, fallback);
         public string    CuesFor(string language, string fallback)     => TextIn(cues, language, fallback);
         public AudioClip ClipFor(string language, string fallback)
@@ -73,6 +70,10 @@ public class CampaignCatalogue : ScriptableObject
         public string      levelId;
         [Tooltip("Unlock rule (see UnlockRule). Blank = available as soon as the campaign is.")]
         public string      requires;
+        [Tooltip("The place's name before the mission, per language (PreName_<lang>).")]
+        public List<LocalText> preNames  = new();
+        [Tooltip("Its name once conquered, per language (PostName_<lang>). Blank = it keeps its pre-mission name.")]
+        public List<LocalText> postNames = new();
         public List<NarrationLine> lines = new();
 
         public NarrationLine Line(MissionMoment moment)
@@ -81,13 +82,13 @@ public class CampaignCatalogue : ScriptableObject
             return null;
         }
 
-        /// <summary>The mission's name: its Intro name, else its id.</summary>
+        /// <summary>The mission's name before it's won: its PreName, else its id.</summary>
         public string NameFor(string language, string fallback) =>
-            Line(MissionMoment.Intro)?.NameFor(language, fallback) is { Length: > 0 } name ? name : id;
+            TextIn(preNames, language, fallback) is { Length: > 0 } name ? name : id;
 
-        /// <summary>What the place is called once conquered: its Outro name, else its mission name.</summary>
+        /// <summary>What the place is called once conquered: its PostName, else its PreName.</summary>
         public string ConqueredNameFor(string language, string fallback) =>
-            Line(MissionMoment.Outro)?.NameFor(language, fallback) is { Length: > 0 } name ? name : NameFor(language, fallback);
+            TextIn(postNames, language, fallback) is { Length: > 0 } name ? name : NameFor(language, fallback);
     }
 
     [System.Serializable]

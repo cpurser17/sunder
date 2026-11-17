@@ -7,13 +7,16 @@ using System.Linq;
 /// goes. Knows nothing about assets — CampaignImporter builds the catalogue
 /// and matches recordings. Problems become warnings naming sheet and row.
 ///
-///   Campaigns        one row per campaign: CampaignID, Name_&lt;lang&gt;, Order, Requires
-///   &lt;ID&gt;_Missions    one row per mission: MissionID, Kind, LevelId, Requires
+///   Campaigns        one row per campaign: CampaignID, CampaignName_&lt;lang&gt;, Order, Requires
+///   &lt;ID&gt;_Missions    one row per mission: MissionID, Kind, LevelId, Requires, then a
+///                    PreName_&lt;lang&gt; / PostName_&lt;lang&gt; pair per language
 ///   &lt;ID&gt;_Endonyms    one row per narrated line: CampaignID, MissionID, Moment,
-///                    Name_&lt;lang&gt;, Dialogue_&lt;lang&gt;, Cues_&lt;lang&gt;
+///                    Dialogue_&lt;lang&gt;, Cues_&lt;lang&gt;
 ///
 /// Notes and any other column are yours and ignored. Endonym rows with no
-/// name or dialogue yet are skipped.
+/// dialogue yet are skipped. Older layouts still read: Name_&lt;lang&gt; on the
+/// Campaigns sheet, and Name_&lt;lang&gt; on Endonyms rows (Intro → PreName,
+/// Outro → PostName) for a mission whose Missions row has none.
 /// </summary>
 public class CampaignWorkbookParser : WorkbookParser
 {
@@ -21,7 +24,7 @@ public class CampaignWorkbookParser : WorkbookParser
     /// <summary>Every language with a Name_/Dialogue_/Cues_ column, in the order first seen.</summary>
     public readonly List<string> Languages = new();
 
-    private static readonly string[] TextPrefixes = { "Name_", "Dialogue_", "Cues_" };
+    private static readonly string[] TextPrefixes = { "CampaignName_", "PreName_", "PostName_", "Dialogue_", "Cues_", "Name_" };
 
     public static CampaignWorkbookParser Parse(XlsxReader book)
     {
@@ -58,7 +61,8 @@ public class CampaignWorkbookParser : WorkbookParser
                     order    = Int(row, "Order", Campaigns.Count + 1),
                     requires = row["Requires"],
                 };
-                campaign.names.AddRange(Texts(row, "Name_"));
+                var names = Texts(row, "CampaignName_");
+                campaign.names.AddRange(names.Count > 0 ? names : Texts(row, "Name_"));   // older layout
                 Campaigns.Add(campaign);
             }
         }
@@ -84,6 +88,7 @@ public class CampaignWorkbookParser : WorkbookParser
         var    table = sheet != null ? XlsxReader.ReadTable(sheet, "MissionID") : null;
         if (table == null) { Warnings.Add($"Campaign {campaign.id} has no {name} sheet (with a MissionID header) — no missions."); return; }
 
+        NoteLanguages(table.Headers);
         foreach (var row in table.Rows)
         {
             string id = row["MissionID"];
@@ -91,13 +96,16 @@ public class CampaignWorkbookParser : WorkbookParser
             if (campaign.Find(id) != null) { Warn(row, $"Duplicate MissionID {id} — skipped (first kept)."); continue; }
 
             var fallbackKind = id.StartsWith("C", StringComparison.OrdinalIgnoreCase) ? MissionKind.Challenge : MissionKind.Story;
-            campaign.missions.Add(new CampaignCatalogue.Mission
+            var mission = new CampaignCatalogue.Mission
             {
                 id       = id,
                 kind     = ParseEnum(row, "Kind", fallbackKind),
                 levelId  = row["LevelId"] ?? $"{campaign.id}_{id}",
                 requires = row["Requires"],
-            });
+            };
+            mission.preNames.AddRange(Texts(row, "PreName_"));
+            mission.postNames.AddRange(Texts(row, "PostName_"));
+            campaign.missions.Add(mission);
         }
     }
 
@@ -113,10 +121,10 @@ public class CampaignWorkbookParser : WorkbookParser
 
         foreach (var row in table.Rows)
         {
-            var names    = Texts(row, "Name_");
+            var oldNames = Texts(row, "Name_");   // older layout: names on the Intro/Outro rows
             var dialogue = Texts(row, "Dialogue_");
             var cues     = Texts(row, "Cues_");
-            if (names.Count == 0 && dialogue.Count == 0) continue;   // not written yet
+            if (oldNames.Count == 0 && dialogue.Count == 0) continue;   // not written yet
 
             string missionId = row["MissionID"];
             string rowCampaign = row["CampaignID"];
@@ -131,6 +139,15 @@ public class CampaignWorkbookParser : WorkbookParser
             { Warn(row, $"Moment '{momentText}' isn't Intro, Outro or Defeat — line skipped."); continue; }
             if (mission.Line(moment) != null) { Warn(row, $"{mission.id} already has a {moment} line — skipped."); continue; }
 
+            if (oldNames.Count > 0)
+            {
+                var into = moment == MissionMoment.Intro ? mission.preNames : moment == MissionMoment.Outro ? mission.postNames : null;
+                if (into == null || into.Count > 0)
+                    Warn(row, "Name_ columns belong on the Missions sheet now (PreName_/PostName_) — this one is ignored.");
+                else into.AddRange(oldNames);
+            }
+            if (dialogue.Count == 0) continue;
+
             foreach (var cue in cues)
             {
                 var said   = dialogue.FirstOrDefault(d => d.language == cue.language)?.text;
@@ -143,7 +160,6 @@ public class CampaignWorkbookParser : WorkbookParser
             }
 
             var line = new CampaignCatalogue.NarrationLine { moment = moment };
-            line.names.AddRange(names);
             line.dialogue.AddRange(dialogue);
             line.cues.AddRange(cues);
             mission.lines.Add(line);
