@@ -1,0 +1,214 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3fd0a18176155f44b3bcf02f0fb9421, type: 3}
+  m_Name: SpellCatalogue
+  m_EditorClassIdentifier: Assembly-CSharp::SpellCatalogue
+  spells:
+  - id: SummonWorker
+    displayName: Summon Worker
+    effect: SummonWorker
+    description: A new worker where you click.
+    targeting: 1
+    castOn: 1
+    cost: 25
+    costPerLevel: 0
+    maxLevel: 1
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 25
+    powerPerLevel: 0
+    radius: 0
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 1
+    buttonColumn: 1
+  - id: Possess
+    displayName: Possess
+    effect: Possess
+    description: Take first-person control of one of your minions.
+    targeting: 3
+    castOn: 1
+    cost: 0
+    costPerLevel: 0
+    maxLevel: 1
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 1
+    buttonColumn: 2
+  - id: Heal
+    displayName: Heal
+    effect: Heal
+    description: Restores health to one of your minions.
+    targeting: 3
+    castOn: 0
+    cost: 50
+    costPerLevel: 50
+    maxLevel: 5
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 30
+    powerPerLevel: 30
+    radius: 0
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 1
+    buttonColumn: 3
+  - id: CallToArms
+    displayName: Call to Arms
+    effect: CallToArms
+    description: Rally point your creatures gather at. Click the button again to
+      call it off.
+    targeting: 1
+    castOn: 1
+    cost: 0
+    costPerLevel: 0
+    maxLevel: 1
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 0
+    powerPerLevel: 0
+    radius: 5
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 5
+    upkeepInterval: 10
+    buttonRow: 1
+    buttonColumn: 4
+  - id: SightOfEvil
+    displayName: Sight of Evil
+    effect: SightOfEvil
+    description: Reveals an area of the map for a while.
+    targeting: 2
+    castOn: 2
+    cost: 100
+    costPerLevel: 50
+    maxLevel: 5
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 0
+    powerPerLevel: 0
+    radius: 3
+    radiusPerLevel: 1
+    duration: 10
+    durationPerLevel: 5
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 2
+    buttonColumn: 1
+  - id: Smite
+    displayName: Smite
+    effect: Smite
+    description: A lightning bolt on an enemy minion.
+    targeting: 4
+    castOn: 1
+    cost: 100
+    costPerLevel: 100
+    maxLevel: 5
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 20
+    powerPerLevel: 20
+    radius: 0
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 2
+    buttonColumn: 2
+  - id: Chicken
+    displayName: Chicken
+    effect: Chicken
+    description: Turns an enemy minion into a harmless chicken for a few seconds.
+    targeting: 4
+    castOn: 1
+    cost: 150
+    costPerLevel: 0
+    maxLevel: 1
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    radiusPerLevel: 0
+    duration: 5
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 2
+    buttonColumn: 3
+  - id: CaveIn
+    displayName: Cave-In
+    effect: CaveIn
+    description: Rocks fall on enemy minions in an area.
+    targeting: 2
+    castOn: 1
+    cost: 150
+    costPerLevel: 100
+    maxLevel: 5
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 15
+    powerPerLevel: 10
+    radius: 1
+    radiusPerLevel: 0.5
+    duration: 0
+    durationPerLevel: 0
+    damageType: 2
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 2
+    buttonColumn: 4
+  - id: DestroyWalls
+    displayName: Destroy Walls
+    effect: DestroyWalls
+    description: Turns an enemy wall back into stone you can dig.
+    targeting: 5
+    castOn: 1
+    cost: 500
+    costPerLevel: 0
+    maxLevel: 1
+    chargeSeconds: 0.5
+    cooldown: 0
+    power: 0
+    powerPerLevel: 0
+    radius: 0
+    radiusPerLevel: 0
+    duration: 0
+    durationPerLevel: 0
+    damageType: 5
+    upkeepGold: 0
+    upkeepInterval: 10
+    buttonRow: 2
+    buttonColumn: 5

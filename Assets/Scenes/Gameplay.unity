@@ -2706,10 +2706,9 @@ MonoBehaviour:
   sellColumn: 1
   summonButton: {fileID: 0}
   spellsTab: {fileID: 0}
-  summonRow: 1
-  summonColumn: 1
   activeColour: {r: 1, g: 0.85, b: 0.1, a: 1}
   normalColour: {r: 1, g: 1, b: 1, a: 1}
+  toggledColour: {r: 1, g: 0.55, b: 0.3, a: 1}
 --- !u!1 &645389627
 GameObject:
   m_ObjectHideFlags: 0
@@ -3218,7 +3217,7 @@ MonoBehaviour:
   hudController: {fileID: 0}
   tileVisualizer: {fileID: 766907802}
   factionRegistry: {fileID: 11400000, guid: 8faf22ae6c439c44087a88947ca55312, type: 2}
-  fallbackLevelId: TestLevel
+  fallbackLevelId: NewLevel3
   fallbackWidth: 20
   fallbackHeight: 20
   fallbackGold: 500
@@ -3326,12 +3325,15 @@ MonoBehaviour:
   heartSize: {x: 110, y: 10}
   onlyWhenHurt: 0
   hideWhenHeld: 1
+  showLevel: 1
+  levelFontSize: 12
   background: {r: 0, g: 0, b: 0, a: 0.65}
   healthy: {r: 0.3, g: 0.85, b: 0.3, a: 1}
   hurt: {r: 0.95, g: 0.85, b: 0.2, a: 1}
   dying: {r: 0.9, g: 0.2, b: 0.15, a: 1}
   ownFaction: {r: 0.35, g: 0.6, b: 1, a: 1}
   otherFaction: {r: 0.85, g: 0.3, b: 0.85, a: 1}
+  levelColour: {r: 1, g: 1, b: 1, a: 1}
   localPlayer: 1
 --- !u!114 &766907806
 MonoBehaviour:
@@ -3384,7 +3386,7 @@ MonoBehaviour:
   lostBedAnger: 0.05
   placeholderColour: {r: 0.55, g: 0.35, b: 0.25, a: 1}
   placeholderSize: {x: 0.6, y: 0.08, z: 0.4}
-  gridManager: {fileID: 0}
+  gridManager: {fileID: 766907797}
 --- !u!114 &766907809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3427,7 +3429,7 @@ MonoBehaviour:
   maxPileRadius: 0.32
   placeholderColour: {r: 1, g: 0.8, b: 0.15, a: 1}
   treasuryType: 7
-  gridManager: {fileID: 0}
+  gridManager: {fileID: 766907797}
 --- !u!114 &766907812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3440,7 +3442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 491cdd31c6c6ebb4fa32e9fdaa1780e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Announcer
-  catalogue: {fileID: 0}
+  catalogue: {fileID: 11400000, guid: 5f8f879d126e3c641a19de28def9e7ad, type: 2}
   language: en
   textHoldSeconds: 4
   gapBetweenLines: 0.5
@@ -5639,10 +5641,7 @@ MonoBehaviour:
   faction: 1
   workerPrefab: {fileID: 5572745984606982514, guid: 1176f2250a805a8439c7d7929f129f32, type: 3}
   gridManager: {fileID: 766907797}
-  mainCamera: {fileID: 330585545}
   spawnEdgeGap: 0.02
-  baseCost: 1
-  costIncrement: 0
 --- !u!1 &1402920406
 GameObject:
   m_ObjectHideFlags: 0

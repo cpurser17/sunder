@@ -174,6 +174,30 @@ MonoBehaviour:
   placedLevel: 1
   fallbackMaxHealth: 100
   angerDecayPerSecond: 0.02
+  sleepThreshold: 0.7
+  fallbackTirednessPerMinute: 0.1
+  workingTirednessMultiplier: 1.5
+  exhaustedAngerPerMinute: 0.1
+  exhaustedStatMultiplier: 0.75
+  hungerThreshold: 0.7
+  snackThreshold: 0.3
+  snackReach: 1.5
+  fallbackHungerPerMinute: 0.08
+  workerEatBelowHealth: 0.5
+  foodRetrySeconds: 10
+  starvingAngerPerMinute: 0.1
+  starvingDamagePerMinute: 0.05
+  starvingStatMultiplier: 0.75
+  recoverBelowHealth: 0.3
+  recoverUntilHealth: 0.9
+  assignedNeedThreshold: 0.2
+  idleSleepThreshold: 0.3
+  idleAngerPerMinute: 0.03
+  workCalmPerMinute: 0.06
+  annoyedAnger: 0.5
+  sulkChancePerMinute: 0.5
+  furiousAnger: 0.9
+  leaveRetrySeconds: 30
   dropAffinityDuration: 30
   gridManager: {fileID: 0}
 --- !u!114 &4709328470852819425
@@ -190,6 +214,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorkerBehaviour
   damagePerSecond: 20
   claimDuration: 2
+  roomClaimSecondsPerTile: 4
   reinforceDuration: 3
   workTickInterval: 0.25
   wallGap: 0.02
@@ -197,7 +222,7 @@ MonoBehaviour:
   depositDuration: 1
   treasuryRoomType: 7
   earlyDepositChancePerSecond: 0.08
-  depositRetryInterval: 3
+  pileSearchInterval: 1
   jobRequestInterval: 0.25
 --- !u!114 &6772557842048617600
 MonoBehaviour:
@@ -212,3 +237,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreatureBehaviour
   reportRetryInterval: 1
+  idleRecheckSeconds: 10
+  wanderPause: {x: 2, y: 5}
+  wanderRange: 5
