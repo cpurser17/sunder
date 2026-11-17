@@ -95,7 +95,37 @@ public static class SaveLoadSystem
 
     // ── Level I/O ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Loads a level by id. A campaign mission's level comes only from the
+    /// campaign catalogue (packed with the game, linked by Sunder > Import
+    /// Campaigns) — a custom level with the same id never stands in for it.
+    /// Anything else: the player's CustomLevels first, then StreamingAssets/Levels.
+    /// </summary>
     public static LevelData LoadLevel(string levelId)
+    {
+        var campaigns = CampaignCatalogue.Load();
+        if (campaigns != null && campaigns.TryFindByLevel(levelId, out var campaign, out var mission))
+        {
+            if (mission.level == null)
+            {
+                Debug.LogError($"[SaveLoadSystem] Campaign {campaign.id} {mission.id} has no level file yet — put it at " +
+                               $"Assets/Levels/Campaigns/{campaign.id}/{levelId}.json and run Sunder > Import Campaigns.");
+                return null;
+            }
+            var level = ParseLevel(mission.level.text, levelId);
+            if (level != null) Debug.Log($"[SaveLoadSystem] Loaded campaign level '{levelId}' ({campaign.id} {mission.id}).");
+            return level;
+        }
+
+        return LoadLevelFile(levelId);
+    }
+
+    /// <summary>
+    /// Loads a level file the level editor saved — CustomLevels first, then
+    /// StreamingAssets/Levels — ignoring the campaign. For the level editor,
+    /// which works on files; play goes through LoadLevel.
+    /// </summary>
+    public static LevelData LoadLevelFile(string levelId)
     {
         string path = LevelPath(levelId);
         if (!File.Exists(path))
@@ -103,16 +133,21 @@ public static class SaveLoadSystem
             Debug.LogError($"[SaveLoadSystem] Level not found: {path}");
             return null;
         }
+        var data = ParseLevel(File.ReadAllText(path), levelId);
+        if (data != null) Debug.Log($"[SaveLoadSystem] Loaded level '{levelId}'.");
+        return data;
+    }
+
+    /// <summary>Reads a level from its JSON text. Null (with an error logged) if it can't be read.</summary>
+    public static LevelData ParseLevel(string json, string levelIdForErrors)
+    {
         try
         {
-            var data = JsonConvert.DeserializeObject<LevelData>(
-                File.ReadAllText(path), LevelSettings);
-            Debug.Log($"[SaveLoadSystem] Loaded level '{levelId}'.");
-            return data;
+            return JsonConvert.DeserializeObject<LevelData>(json, LevelSettings);
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveLoadSystem] Failed to parse level '{levelId}': {e.Message}");
+            Debug.LogError($"[SaveLoadSystem] Failed to parse level '{levelIdForErrors}': {e.Message}");
             return null;
         }
     }

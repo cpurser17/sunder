@@ -15,6 +15,11 @@ public enum MissionKind { Story, Challenge }
 ///
 /// Text and audio are per language; anything missing in the language asked
 /// for falls back to defaultLanguage (the workbook's first language).
+///
+/// Each mission links its level file from Assets/Levels/Campaigns/
+/// &lt;CampaignID&gt;/&lt;LevelId&gt;.json, so campaign levels are packed with the
+/// game and always come from here — never from the player's custom levels
+/// (see SaveLoadSystem.LoadLevel).
 /// </summary>
 [CreateAssetMenu(menuName = "Sunder/Campaign Catalogue", fileName = "CampaignCatalogue")]
 public class CampaignCatalogue : ScriptableObject
@@ -68,6 +73,8 @@ public class CampaignCatalogue : ScriptableObject
         public MissionKind kind = MissionKind.Story;
         [Tooltip("The level file the mission plays.")]
         public string      levelId;
+        [Tooltip("That level, from Assets/Levels/Campaigns/<CampaignID>/<LevelId>.json. Null until the file exists and is imported.")]
+        public TextAsset   level;
         [Tooltip("Unlock rule (see UnlockRule). Blank = available as soon as the campaign is.")]
         public string      requires;
         [Tooltip("The place's name before the mission, per language (PreName_<lang>).")]
@@ -122,6 +129,35 @@ public class CampaignCatalogue : ScriptableObject
             if (c != null && string.Equals(c.id, campaignId, System.StringComparison.OrdinalIgnoreCase)) return c;
         return null;
     }
+
+    [System.NonSerialized] private Dictionary<string, (Campaign campaign, Mission mission)> _byLevel;
+
+    /// <summary>Forgets cached lookups — the importer calls this after rebuilding the catalogue.</summary>
+    public void ForgetLookups() => _byLevel = null;
+
+    /// <summary>The campaign mission that plays this level id, if any (whether or not its file exists yet).</summary>
+    public bool TryFindByLevel(string levelId, out Campaign campaign, out Mission mission)
+    {
+        campaign = null; mission = null;
+        if (string.IsNullOrEmpty(levelId)) return false;
+        if (_byLevel == null)
+        {
+            _byLevel = new Dictionary<string, (Campaign, Mission)>(System.StringComparer.OrdinalIgnoreCase);
+            foreach (var c in campaigns)
+                if (c != null)
+                    foreach (var m in c.missions)
+                        if (m != null && !string.IsNullOrEmpty(m.levelId) && !_byLevel.ContainsKey(m.levelId))
+                            _byLevel[m.levelId] = (c, m);
+        }
+        if (!_byLevel.TryGetValue(levelId, out var found)) return false;
+        campaign = found.campaign; mission = found.mission;
+        return true;
+    }
+
+    /// <summary>True if a campaign mission plays this level id — the level editor won't save over one in a build.</summary>
+    public bool IsCampaignLevel(string levelId) => TryFindByLevel(levelId, out _, out _);
+
+    private void OnValidate() => ForgetLookups();
 
     private static CampaignCatalogue _loaded;
 

@@ -218,7 +218,9 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void LoadLevel(string levelId)
     {
-        var data = SaveLoadSystem.LoadLevel(levelId);
+        // The file as saved — even if its id is a campaign mission's (the
+        // campaign itself only ever plays its packed copy).
+        var data = SaveLoadSystem.LoadLevelFile(levelId);
         if (data == null || data.grid == null || data.grid.cells == null)
         {
             SetStatus($"Couldn't load '{levelId}' — see the console.", error: true);
@@ -1247,6 +1249,21 @@ public partial class LevelEditorController : MonoBehaviour
             return false;
         }
 
+        // Campaign missions are the game's own: a finished game never saves
+        // under one of their ids. (While making the game, saving under one is
+        // fine — move the file into its campaign folder to use it.)
+        CampaignCatalogue.Campaign campaign = null;
+        CampaignCatalogue.Mission  mission  = null;
+        var campaigns = CampaignCatalogue.Load();
+        bool campaignId = campaigns != null &&
+                          campaigns.TryFindByLevel(_level.levelId, out campaign, out mission);
+        if (campaignId && !Application.isEditor)
+        {
+            SetStatus($"'{_level.levelId}' is a campaign mission's id — choose another for your level.", error: true);
+            _modal = Modal.LevelSettings;
+            return false;
+        }
+
         var data   = BuildLevelData();
         string dir = toBuiltIn ? SaveLoadSystem.BuiltInLevelsRoot : SaveLoadSystem.CustomLevelsRoot;
         if (!SaveLoadSystem.SaveLevelTo(data, dir))
@@ -1257,8 +1274,11 @@ public partial class LevelEditorController : MonoBehaviour
 
         _dirty = false;
         _warnings = Validate();
+        string note = campaignId
+            ? $" To use it as {campaign.id} {mission.id}, move it to Assets/Levels/Campaigns/{campaign.id}/ and run Sunder > Import Campaigns."
+            : "";
         SetStatus($"Saved '{data.levelId}' to {Path.Combine(dir, data.levelId + ".json")}" +
-                  (_warnings.Count > 0 ? $" — {_warnings.Count} warning(s)." : "."));
+                  (_warnings.Count > 0 ? $" — {_warnings.Count} warning(s)." : ".") + note);
         if (_warnings.Count > 0) _modal = Modal.Warnings;
         return true;
     }
@@ -1275,6 +1295,7 @@ public partial class LevelEditorController : MonoBehaviour
 
         GameplaySceneArgs.Clear();
         GameplaySceneArgs.LevelId   = _level.levelId;
+        GameplaySceneArgs.LevelFromFile = true;   // the file just saved, not a campaign's packed copy
         GameplaySceneArgs.IsNewGame = true;
         SceneManager.LoadScene(gameplaySceneName);
     }

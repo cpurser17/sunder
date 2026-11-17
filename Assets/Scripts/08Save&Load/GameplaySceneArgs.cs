@@ -20,6 +20,10 @@ public static class GameplaySceneArgs
 
     // ── Level to load ──────────────────────────────────────────────────
     public static string LevelId      = null;   // null = use Inspector default
+    // Play the level file as saved, even if its id is a campaign mission's
+    // (the level editor's play-test). Otherwise a campaign id plays the
+    // campaign's packed copy.
+    public static bool   LevelFromFile = false;
 
     // ── Mode ──────────────────────────────────────────────────────────
     public static bool   IsNewGame    = true;   // false = load existing save
@@ -32,6 +36,7 @@ public static class GameplaySceneArgs
         BranchId     = "branch_0";
         SaveIndex    = -1;
         LevelId      = null;
+        LevelFromFile = false;
         IsNewGame    = true;
         LoadAutosave = false;
     }

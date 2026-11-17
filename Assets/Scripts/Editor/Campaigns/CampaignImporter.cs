@@ -15,14 +15,24 @@ using UnityEngine;
 ///     Assets/Audio/Endonymy/&lt;language&gt;/&lt;CampaignID&gt;_&lt;MissionID&gt;_&lt;Moment&gt;.wav   (any audio format)
 ///
 /// e.g. Assets/Audio/Endonymy/en/04U_M20_Intro.wav. A line with no
-/// recording yet just shows its subtitles. Re-import after adding
-/// recordings or editing the workbook.
+/// recording yet just shows its subtitles.
+///
+/// Each mission's level is linked from
+///
+///     Assets/Levels/Campaigns/&lt;CampaignID&gt;/&lt;LevelId&gt;.json
+///
+/// — a level saved in the level editor, renamed and moved there. Linked
+/// levels are packed with the game, and the campaign only ever plays these
+/// (never a custom level of the same id). The importer checks each level's
+/// own id and that its human player plays the campaign's faction.
+///
+/// Re-import after adding levels or recordings, or editing the workbook.
 /// </summary>
 public static class CampaignImporter
 {
     private const string DefaultWorkbookPath = "Assets/Data/Campaigns.xlsx";
     private const string AudioRoot           = "Assets/Audio/Endonymy";
-    private const string LevelsRoot          = "Assets/StreamingAssets/Levels";
+    private const string LevelsRoot          = "Assets/Levels/Campaigns";
     private const string OutputPath          = "Assets/Resources/" + CampaignCatalogue.ResourcePath + ".asset";
 
     [MenuItem("Sunder/Import Campaigns", priority = 14)]
@@ -55,7 +65,8 @@ public static class CampaignImporter
             foreach (var mission in campaign.missions)
             {
                 missions++;
-                if (!File.Exists(Path.Combine(LevelsRoot, mission.levelId + ".json"))) noLevel++;
+                mission.level = LinkLevel(campaign, mission, warnings);
+                if (mission.level == null) noLevel++;
 
                 foreach (var line in mission.lines)
                 {
@@ -73,14 +84,61 @@ public static class CampaignImporter
                 }
             }
 
+        WarnAboutStrayLevels(data, warnings);
+
         var catalogue = LoadOrCreateCatalogue();
         catalogue.defaultLanguage = data.Languages.Count > 0 ? data.Languages[0] : "en";
         catalogue.campaigns.Clear();
         catalogue.campaigns.AddRange(data.Campaigns);
+        catalogue.ForgetLookups();
 
         EditorUtility.SetDirty(catalogue);
         AssetDatabase.SaveAssets();
         Report(workbookPath, data.Campaigns.Count, missions, lines, recorded, unrecorded, noLevel, warnings);
+    }
+
+    /// <summary>The mission's level file, checked: its own id, and that its human player plays this campaign's faction.</summary>
+    private static TextAsset LinkLevel(CampaignCatalogue.Campaign campaign, CampaignCatalogue.Mission mission, List<string> warnings)
+    {
+        string path  = $"{LevelsRoot}/{campaign.id}/{mission.levelId}.json";
+        var    asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+        if (asset == null) return null;
+
+        var level = SaveLoadSystem.ParseLevel(asset.text, mission.levelId);
+        if (level == null)
+        {
+            warnings.Add($"{campaign.id} {mission.id}: {path} isn't a level file the game can read — not linked.");
+            return null;
+        }
+        if (!string.Equals(level.levelId, mission.levelId, StringComparison.OrdinalIgnoreCase))
+            warnings.Add($"{campaign.id} {mission.id}: {path} was saved as '{level.levelId}' — fine to play, but its id inside " +
+                         $"doesn't match its name (open it in the level editor and set its id to {mission.levelId}).");
+
+        var human = level.factions?.Find(f => f != null && f.isHuman);
+        if (human == null)
+            warnings.Add($"{campaign.id} {mission.id}: {path} has no human player.");
+        else if (!string.Equals(human.contentFactionId, campaign.id, StringComparison.OrdinalIgnoreCase))
+            warnings.Add($"{campaign.id} {mission.id}: the human player in {path} plays " +
+                         $"'{(string.IsNullOrEmpty(human.contentFactionId) ? "no faction" : human.contentFactionId)}', not {campaign.id}.");
+        return asset;
+    }
+
+    /// <summary>Level files in the campaign folders that no mission uses — usually a misnamed or misplaced file.</summary>
+    private static void WarnAboutStrayLevels(CampaignWorkbookParser data, List<string> warnings)
+    {
+        if (!AssetDatabase.IsValidFolder(LevelsRoot)) return;
+        foreach (var guid in AssetDatabase.FindAssets("t:TextAsset", new[] { LevelsRoot }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+            string folder = Path.GetFileName(Path.GetDirectoryName(path));
+            string id     = Path.GetFileNameWithoutExtension(path);
+            var campaign  = data.Campaigns.Find(c => string.Equals(c.id, folder, StringComparison.OrdinalIgnoreCase));
+            if (campaign == null)
+                warnings.Add($"{path}: not in a campaign's folder (Assets/Levels/Campaigns/<CampaignID>/) — not used.");
+            else if (!campaign.missions.Exists(m => string.Equals(m.levelId, id, StringComparison.OrdinalIgnoreCase)))
+                warnings.Add($"{path}: no {campaign.id} mission has LevelId '{id}' — not used.");
+        }
     }
 
     private static IEnumerable<string> Languages(CampaignWorkbookParser data, Dictionary<string, Dictionary<string, AudioClip>> clips)
@@ -139,7 +197,7 @@ public static class CampaignImporter
         sb.AppendLine($"[Campaigns] Imported {path}");
         sb.AppendLine($"  {campaigns} campaign(s), {missions} mission(s), {lines} narration line(s) written");
         sb.AppendLine($"  {recorded} recording(s) found, {unrecorded} line(s) not recorded yet");
-        sb.AppendLine($"  {noLevel} mission(s) whose level file isn't in {LevelsRoot} yet");
+        sb.AppendLine($"  {missions - noLevel} level(s) linked; {noLevel} mission(s) with no level in {LevelsRoot}/<CampaignID>/ yet");
         if (warnings.Count > 0)
         {
             sb.AppendLine($"  {warnings.Count} warning(s):");
@@ -151,7 +209,7 @@ public static class CampaignImporter
         EditorUtility.DisplayDialog("Campaigns",
             $"Campaigns: {campaigns}\nMissions: {missions}\nNarration lines: {lines}\n" +
             $"Recordings found: {recorded}  (not recorded yet: {unrecorded})\n" +
-            $"Missions without a level file yet: {noLevel}\nWarnings: {warnings.Count}\n\n" +
+            $"Levels linked: {missions - noLevel}  (missions without one yet: {noLevel})\nWarnings: {warnings.Count}\n\n" +
             "Full details are in the Console.", "OK");
     }
 }

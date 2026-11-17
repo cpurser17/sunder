@@ -57,6 +57,7 @@ public class GameManager2D : MonoBehaviour
     private string        _activeBranchId;
     private int           _activeSaveIndex;
     private string        _activeLevelId;
+    private bool          _levelFromFile;   // play-testing a level file (see GameplaySceneArgs.LevelFromFile)
     private bool          _loadedFromAutosave;
     private bool          _loadedFromBranchTip;
     private List<FactionSetup> _activeFactions = new();
@@ -278,6 +279,7 @@ public class GameManager2D : MonoBehaviour
         _activeLevelId   = GameplaySceneArgs.LevelId ?? fallbackLevelId;
         bool isNewGame   = GameplaySceneArgs.IsNewGame;
         bool loadAuto    = GameplaySceneArgs.LoadAutosave;
+        _levelFromFile   = GameplaySceneArgs.LevelFromFile;
 
         GameplaySceneArgs.Clear();
         EnsureSlotInitialised();
@@ -324,7 +326,7 @@ public class GameManager2D : MonoBehaviour
         _activeSaveIndex     = -1;
         MasterSeed           = debugFixedSeed != 0 ? debugFixedSeed : GenerateRandomMasterSeed();
 
-        var level = SaveLoadSystem.LoadLevel(levelId);
+        var level = _levelFromFile ? SaveLoadSystem.LoadLevelFile(levelId) : SaveLoadSystem.LoadLevel(levelId);
         if (level == null)
         {
             Debug.LogWarning($"[GameManager2D] Level '{levelId}' not found. " +
@@ -448,7 +450,7 @@ public class GameManager2D : MonoBehaviour
     /// </summary>
     private void LoadLevelMeta(string levelId)
     {
-        var level = SaveLoadSystem.LoadLevel(levelId);
+        var level = _levelFromFile ? SaveLoadSystem.LoadLevelFile(levelId) : SaveLoadSystem.LoadLevel(levelId);
         _activeFactions  = level?.factions        ?? new List<FactionSetup>();
         AllowedMinionIds = level?.allowedMinionIds ?? new List<string>();
         RebuildFactionDefinitions();
