@@ -81,6 +81,8 @@ public class CampaignCatalogue : ScriptableObject
         public List<LocalText> preNames  = new();
         [Tooltip("Its name once conquered, per language (PostName_<lang>). Blank = it keeps its pre-mission name.")]
         public List<LocalText> postNames = new();
+        [Tooltip("The briefing shown before the mission, per language (Briefing_<lang>).")]
+        public List<LocalText> briefings = new();
         public List<NarrationLine> lines = new();
 
         public NarrationLine Line(MissionMoment moment)
@@ -92,6 +94,9 @@ public class CampaignCatalogue : ScriptableObject
         /// <summary>The mission's name before it's won: its PreName, else its id.</summary>
         public string NameFor(string language, string fallback) =>
             TextIn(preNames, language, fallback) is { Length: > 0 } name ? name : id;
+
+        /// <summary>The mission briefing, or null if none is written.</summary>
+        public string BriefingFor(string language, string fallback) => TextIn(briefings, language, fallback);
 
         /// <summary>What the place is called once conquered: its PostName, else its PreName.</summary>
         public string ConqueredNameFor(string language, string fallback) =>
@@ -122,6 +127,8 @@ public class CampaignCatalogue : ScriptableObject
 
     public string         defaultLanguage = "en";
     public List<Campaign> campaigns       = new();
+    [Tooltip("The project's Faction Registry, found by the importer — for faction names and data outside the Gameplay scene.")]
+    public FactionRegistry factionRegistry;
 
     public Campaign Find(string campaignId)
     {

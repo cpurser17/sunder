@@ -134,3 +134,12 @@ namespace UnityEditor
         public float spritePixelsPerUnit { get; set; }
     }
 }
+
+namespace UnityEditor
+{
+    public static class EditorApplication
+    {
+        public static bool isPlaying { get; set; }
+        public static bool isPaused { get; set; }
+    }
+}

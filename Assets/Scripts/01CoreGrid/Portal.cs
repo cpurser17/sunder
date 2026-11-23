@@ -97,6 +97,14 @@ public class Portal : MonoBehaviour
     public GridCell CellOf(FactionID faction) =>
         _ready && _cells.TryGetValue(faction, out var list) && list.Count > 0 ? list[0] : null;
 
+    /// <summary>Every portal tile, whoever owns it.</summary>
+    public IEnumerable<GridCell> AllCells()
+    {
+        if (!_ready) yield break;
+        foreach (var list in _cells.Values)
+            foreach (var cell in list) yield return cell;
+    }
+
     public Vector3 SpawnPoint(FactionID faction)
     {
         var cell = CellOf(faction);

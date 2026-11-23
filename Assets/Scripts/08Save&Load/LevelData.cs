@@ -67,8 +67,14 @@ public class LevelData
     // are fleshed out. Null/empty in older levels.
     public List<TrapDoorPlacement> trapsAndDoors = new();
 
+    // ── Win conditions ─────────────────────────────────────────────────
+    // Every one must be met to win (set in the level editor's Level
+    // settings). Empty/null = destroy every enemy Dungeon Heart. Losing your
+    // own heart is always a loss.
+    [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public List<WinCondition> winConditions = new();
+
     // ── Future extension slots ─────────────────────────────────────────
-    // public List<ObjectiveData>    objectives;
     // public OverworldLevelMetaData overworldMeta;
 }
 
@@ -183,6 +189,7 @@ public class MinionPlacement
     public int       level = 1;
     public float     x;                  // grid units
     public float     y;                  // grid units
+    public bool      isLord;             // the lord of the land — defeating him can be a win condition
 
     public MinionPlacement Clone() => (MinionPlacement)MemberwiseClone();
 }

@@ -224,6 +224,8 @@ public class MinionController : MonoBehaviour, IHandTarget
     private ChickenFormBehaviour _chickenForm;
     private bool              _inCombat;
     private bool              _polymorphed;
+    private bool              _departed;   // left by the portal (or dismissed) rather than killed
+    private bool              _deserting;  // its team's heart fell: it's leaving by the nearest portal
     private float             _polymorphUntil;
     private float             _polymorphHealth;
     private GameObject        _chickenBody;
@@ -476,6 +478,11 @@ public class MinionController : MonoBehaviour, IHandTarget
     private void StartDueErrand()
     {
         if (_held || _fleeing || _inCombat) return;
+        if (_deserting)
+        {
+            if (_errand != _leave) { DropErrand(); StartErrand(_leave); }
+            return;
+        }
         if (TryRally()) return;
         if (_errand != null) return;
 
@@ -547,6 +554,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     {
         if (_dead) return;
         Debug.Log($"[MinionController] {name} ({_definition?.displayName}) has left the {faction} dungeon.");
+        _departed = true;   // left, not lost
         Die();
     }
 
@@ -958,7 +966,34 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// or AI. Neutral and Enemy-to-all minions aren't kept: their hunger,
     /// tiredness and anger are suspended until they join a keeper's team.
     /// </summary>
-    public bool IsKept => FactionTeams.IsPlayable(faction);
+    public bool IsKept => FactionTeams.IsPlayable(faction) && !_deserting;
+
+    /// <summary>
+    /// Its team's Dungeon Heart has fallen: it heads for the nearest portal,
+    /// whoever owns it, and leaves the dungeon — above every other job (later,
+    /// below only being a prisoner). It's nobody's enemy and nobody to join;
+    /// its own keeper's hand can't move it. Spells still affect it.
+    /// </summary>
+    public bool IsDeserting => _deserting;
+
+    /// <summary>The lord of the land: defeating him can be a mission's win condition (see MissionDirector).</summary>
+    public bool IsLord { get; private set; }
+
+    /// <summary>Makes this minion the lord of the land (a level's placed lord, or one a trigger spawns).</summary>
+    public void MarkAsLord() => IsLord = true;
+
+    public void BeginDeserting()
+    {
+        if (_dead || _deserting) return;
+        _deserting        = true;
+        _fleeing          = false;
+        _temper.Suspended = true;
+        PauseActive();
+        DropCombat();
+        DropErrand();
+        _ignoreUntil.Clear();
+        StartErrand(_leave);   // waits if it's held or a chicken; StartDueErrand starts it after
+    }
 
     /// <summary>Every creature counts against its team's population; workers don't.</summary>
     public bool CountsTowardPopulation => !IsWorkerFirst;
@@ -970,6 +1005,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     public void OnAbandon()
     {
         if (_dead || !CanAbandon) return;
+        _departed = true;   // dismissed, not lost
         Die();
     }
 
@@ -1010,7 +1046,12 @@ public class MinionController : MonoBehaviour, IHandTarget
         Announcer.Announce(faction, "MinionsUnderAttack", transform.position);
         TakeDamage(amount);
 
-        if (_dead) { CombatSystem.Instance?.AwardKill(attacker, this); return; }
+        if (_dead)
+        {
+            CombatSystem.Instance?.AwardKill(attacker, this);
+            if (attacker != null) MatchStats.Add(attacker.Faction, MissionStats.Kills);
+            return;
+        }
         if (attacker != null && attacker.IsAlive) EnterCombat(attacker);
     }
 
@@ -1023,7 +1064,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     private void SenseEnemies()
     {
-        if (_inCombat || _held || Time.time < _nextSense) return;
+        if (_inCombat || _held || _deserting || Time.time < _nextSense) return;
         var combat = CombatSystem.Instance;
         if (combat == null) return;
         _nextSense = Time.time + combat.SenseInterval * (0.75f + 0.5f * Random.value);
@@ -1049,7 +1090,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// </summary>
     public void EnterCombat(MinionController enemy, bool fight = false)
     {
-        if (_dead || _polymorphed || enemy == null || !CombatSystem.IsEnemy(faction, enemy.Faction)) return;
+        if (_dead || _polymorphed || _deserting || enemy == null || !CombatSystem.IsEnemy(faction, enemy.Faction)) return;
         bool fights = fight || !IsWorkerFirst;
 
         if (_inCombat) { _combat.Engage(enemy, fights); return; }
@@ -1232,6 +1273,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (_active != null) { _active.Deactivate(); _active.enabled = false; }
         _dead = true;
         LairManager.Instance?.Release(this);
+        if (!_departed) MatchStats.Add(faction, MissionStats.MinionsLost);
 
         NotifyLeftFaction();
         Destroy(gameObject, 0.1f);
@@ -1299,6 +1341,8 @@ public class MinionController : MonoBehaviour, IHandTarget
             bedY                 = bed != null ? bed.Y : -1,
             carryingGold         = _worker != null ? _worker.CarryingGold : 0,
             polymorphSeconds     = PolymorphSecondsLeft,
+            deserting            = _deserting,
+            isLord               = IsLord,
         };
     }
 
@@ -1339,6 +1383,8 @@ public class MinionController : MonoBehaviour, IHandTarget
         }
 
         if (data.polymorphSeconds > 0f) Polymorph(data.polymorphSeconds);
+        if (data.deserting) BeginDeserting();
+        if (data.isLord) MarkAsLord();
     }
 
     public void ConvertTo(FactionID newFaction)
@@ -1359,6 +1405,8 @@ public class MinionController : MonoBehaviour, IHandTarget
         LairManager.Instance?.Release(this);
 
         NotifyLeftFaction();
+        if (FactionTeams.IsPlayable(newFaction)) MatchStats.Add(newFaction, MissionStats.CreaturesRecruited);
+        _deserting = false;   // a team with a heart again
         faction = newFaction;
         _agent.SetFaction(newFaction);
         _temper.Suspended = !IsKept; // joining a keeper's team starts the clock on hunger and anger

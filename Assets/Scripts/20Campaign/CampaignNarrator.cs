@@ -12,7 +12,7 @@ using UnityEngine.UI;
 ///
 ///   CampaignNarrator.Play("04U", "M20", MissionMoment.Intro);
 ///
-/// Click or Escape skips. A line with no recording shows its subtitles for
+/// Escape, or a click off the UI, skips. A line with no recording shows its subtitles for
 /// as long as they take to read. Runs on unscaled time.
 ///
 /// Scene setup: none — Play() creates one if the scene has none. Add it
@@ -122,7 +122,11 @@ public class CampaignNarrator : MonoBehaviour
     {
         if (!_playing) return;
 
-        if (skipOnClick && (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Escape))) { Stop(); return; }
+        // Escape, or a click that isn't on the UI (browsing the mission list doesn't cut a line off).
+        bool clickOffUi = Input.GetMouseButtonDown(0) &&
+                          (UnityEngine.EventSystems.EventSystem.current == null ||
+                           !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject());
+        if (skipOnClick && (clickOffUi || Input.GetKeyDown(KeyCode.Escape))) { Stop(); return; }
 
         float t = Time.unscaledTime - _startedAt;
         if (Time.unscaledTime >= _endsAt) { Stop(); return; }

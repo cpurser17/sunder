@@ -58,6 +58,9 @@ public class GameManager2D : MonoBehaviour
     private int           _activeSaveIndex;
     private string        _activeLevelId;
     private bool          _levelFromFile;   // play-testing a level file (see GameplaySceneArgs.LevelFromFile)
+    private MissionOrigin _origin;
+    private string        _campaignId, _missionId;
+    private string        _playerFactionId; // the faction the human plays, if not the level's
     private bool          _loadedFromAutosave;
     private bool          _loadedFromBranchTip;
     private List<FactionSetup> _activeFactions = new();
@@ -188,6 +191,12 @@ public class GameManager2D : MonoBehaviour
         if (FindAnyObjectByType<WallDecay>() == null)
             gameObject.AddComponent<WallDecay>();
 
+        // The mission itself: its objectives and end, and the match stats.
+        if (FindAnyObjectByType<MatchStats>() == null)
+            gameObject.AddComponent<MatchStats>();
+        if (FindAnyObjectByType<MissionDirector>() == null)
+            gameObject.AddComponent<MissionDirector>();
+
         // Fog of war (the level editor has no GameManager2D, so no fog).
         if (FindAnyObjectByType<FogOfWar>() == null)
             gameObject.AddComponent<FogOfWar>();
@@ -280,6 +289,10 @@ public class GameManager2D : MonoBehaviour
         bool isNewGame   = GameplaySceneArgs.IsNewGame;
         bool loadAuto    = GameplaySceneArgs.LoadAutosave;
         _levelFromFile   = GameplaySceneArgs.LevelFromFile;
+        _origin          = GameplaySceneArgs.Origin;
+        _campaignId      = GameplaySceneArgs.CampaignId;
+        _missionId       = GameplaySceneArgs.MissionId;
+        _playerFactionId = GameplaySceneArgs.PlayerFactionId;
 
         GameplaySceneArgs.Clear();
         EnsureSlotInitialised();
@@ -337,16 +350,19 @@ public class GameManager2D : MonoBehaviour
             RebuildFactionDefinitions();
             gridManager.Initialise(fallbackWidth, fallbackHeight);
             InitialiseWallets(null, fallbackGold);
+            BeginMission(null);
             return;
         }
 
         _activeLevelId   = level.levelId;
         _activeFactions  = level.factions        ?? new List<FactionSetup>();
+        ApplyPlayerFaction();
         AllowedMinionIds = level.allowedMinionIds ?? new List<string>();
         RebuildFactionDefinitions();
         SaveLoadSystem.ApplyGrid(gridManager, level.grid);
         InitialiseWallets(_activeFactions, level.startingGold);
         SpawnPlacedMinions(level.minions);
+        BeginMission(level);
 
         Debug.Log($"[GameManager2D] Started '{level.displayName}' " +
                   $"with {_activeFactions.Count} faction(s).");
@@ -434,6 +450,7 @@ public class GameManager2D : MonoBehaviour
                 continue;
             }
             minion.Initialise(p.factionId, def, Mathf.Max(1, p.level), MinionController.SpawnSource.Placed);
+            if (p.isLord) minion.MarkAsLord();
             spawned++;
         }
 
@@ -452,8 +469,28 @@ public class GameManager2D : MonoBehaviour
     {
         var level = _levelFromFile ? SaveLoadSystem.LoadLevelFile(levelId) : SaveLoadSystem.LoadLevel(levelId);
         _activeFactions  = level?.factions        ?? new List<FactionSetup>();
+        ApplyPlayerFaction();
         AllowedMinionIds = level?.allowedMinionIds ?? new List<string>();
         RebuildFactionDefinitions();
+        BeginMission(level);
+    }
+
+    /// <summary>
+    /// Playing one faction's campaign as another: the chosen faction takes the
+    /// human seat. Every other seat plays whoever the level says.
+    /// </summary>
+    private void ApplyPlayerFaction()
+    {
+        if (string.IsNullOrEmpty(_playerFactionId)) return;
+        foreach (var setup in _activeFactions)
+            if (setup != null && setup.isHuman) setup.contentFactionId = _playerFactionId;
+    }
+
+    /// <summary>The level is in: start the objectives and the match stats.</summary>
+    private void BeginMission(LevelData level)
+    {
+        MatchStats.Instance?.Begin();
+        MissionDirector.Instance?.Begin(level, _origin, _campaignId, _missionId);
     }
 
     /// <summary>
@@ -823,6 +860,9 @@ public class GameManager2D : MonoBehaviour
     private void OnFactionEliminated(FactionID faction)
     {
         Debug.Log($"[GameManager2D] Faction {faction} eliminated — Dungeon Heart destroyed.");
-        // TODO: win/loss screen, AI shutdown, session end.
+        // Its minions desert: they make for the nearest portal and leave. (The
+        // mission's win or loss is MissionDirector's.)
+        foreach (var minion in new List<MinionController>(MinionController.All))
+            if (minion != null && minion.IsAlive && minion.Faction == faction) minion.BeginDeserting();
     }
 }

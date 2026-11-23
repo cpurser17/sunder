@@ -127,6 +127,7 @@ public class SpellSystem : MonoBehaviour
         // Paid once it has worked: gold can't simply be handed back, as it
         // may have come from the reserve.
         if (!EffectFor(target.Spell).Cast(target)) return false;
+        MatchStats.Add(target.Caster, MissionStats.SpellsCast);
         if (cost > 0) wallet.TrySpend(cost);
 
         if (target.Spell.cooldown > 0f)

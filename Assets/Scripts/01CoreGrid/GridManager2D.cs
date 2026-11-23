@@ -64,6 +64,9 @@ public class GridManager2D : MonoBehaviour
     /// <summary>Fired when the grid has been (re)built by Initialise.</summary>
     public event Action OnGridBuilt;
 
+    /// <summary>True while Initialise is building the grid — its OnTileChanged calls are the load, not play.</summary>
+    public bool IsBuilding { get; private set; }
+
     /// <summary>Fired when how a tile looks to the local player changes without the tile itself changing (fog).</summary>
     public event Action<GridCell> OnLookChanged;
 
@@ -151,7 +154,9 @@ public class GridManager2D : MonoBehaviour
         width  = newWidth;
         height = newHeight;
 
-        BuildGrid(cellData);
+        IsBuilding = true;
+        try { BuildGrid(cellData); }
+        finally { IsBuilding = false; }
 
         // Replace the room registry with one sized to the new grid.
         _roomRegistry = new RoomRegistry(_grid, width, height, tileRegistry, cellSize);

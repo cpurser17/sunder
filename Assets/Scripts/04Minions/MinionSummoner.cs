@@ -339,6 +339,7 @@ public class MinionSummoner : MonoBehaviour
         }
 
         minion.Initialise(faction, def, 1, MinionController.SpawnSource.Portal);
+        MatchStats.Add(faction, MissionStats.CreaturesAttracted);
 
         var gm = GameManager2D.Instance;
         Debug.Log($"[MinionSummoner] Summoned {def.minionId} for {faction}. " +

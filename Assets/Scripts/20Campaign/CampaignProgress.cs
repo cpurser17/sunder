@@ -26,12 +26,38 @@ public class MissionResult
 /// <summary>Stat names the game records in a MissionResult. The importer warns about any other name a rule uses.</summary>
 public static class MissionStats
 {
-    public const string Kills       = "Kills";
-    public const string MinionsLost = "MinionsLost";
-    public const string GoldMined   = "GoldMined";
-    public const string Seconds     = "Seconds";
+    public const string Kills              = "Kills";
+    public const string MinionsLost        = "MinionsLost";
+    public const string GoldMined          = "GoldMined";
+    public const string GoldSpent          = "GoldSpent";
+    public const string TerritoryClaimed   = "TerritoryClaimed";
+    public const string CreaturesAttracted = "CreaturesAttracted";
+    public const string CreaturesRecruited = "CreaturesRecruited";
+    public const string SpellsCast         = "SpellsCast";
+    public const string HeartHealthLeft    = "HeartHealthLeft";
+    public const string Seconds            = "Seconds";
 
-    public static readonly string[] Known = { Kills, MinionsLost, GoldMined, Seconds };
+    public static readonly string[] Known =
+    {
+        Kills, MinionsLost, GoldMined, GoldSpent, TerritoryClaimed,
+        CreaturesAttracted, CreaturesRecruited, SpellsCast, HeartHealthLeft, Seconds,
+    };
+
+    /// <summary>How a stat reads on the results screen.</summary>
+    public static string Label(string stat) => stat switch
+    {
+        Kills              => "Kills",
+        MinionsLost        => "Minions lost",
+        GoldMined          => "Gold mined",
+        GoldSpent          => "Gold spent",
+        TerritoryClaimed   => "Territory claimed",
+        CreaturesAttracted => "Creatures attracted",
+        CreaturesRecruited => "Creatures recruited",
+        SpellsCast         => "Spells cast",
+        HeartHealthLeft    => "Heart health left",
+        Seconds            => "Time",
+        _                  => stat,
+    };
 
     public static bool IsKnown(string stat) =>
         Array.Exists(Known, s => string.Equals(s, stat, StringComparison.OrdinalIgnoreCase));
@@ -60,6 +86,10 @@ public class CampaignProgress : IUnlockState
     }
 
     public string campaignId;
+    /// <summary>The faction the player plays — the campaign's own by default (CampaignID), or another they chose.</summary>
+    public string playerFactionId;
+    /// <summary>When this playthrough was last played (ISO 8601), for Continue and Load Game.</summary>
+    public string lastPlayed;
     public List<string> completed = new();
     /// <summary>Attempts per mission, won or lost.</summary>
     public Dictionary<string, int> attempts = new(StringComparer.OrdinalIgnoreCase);
@@ -161,8 +191,13 @@ public class CampaignProgress : IUnlockState
         return new CampaignProgress(campaignId);
     }
 
+    /// <summary>The slot's progress if it has any, else null (an empty slot).</summary>
+    public static CampaignProgress TryLoad(int slot) =>
+        File.Exists(PathFor(slot)) ? Load(slot, null) : null;
+
     public void Save(int slot)
     {
+        lastPlayed = DateTime.UtcNow.ToString("o");
         string path = PathFor(slot);
         Directory.CreateDirectory(Path.GetDirectoryName(path));
         File.WriteAllText(path, JsonConvert.SerializeObject(this, Formatting.Indented));

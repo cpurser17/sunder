@@ -1,10 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// An anger job: a furious minion walks out — to its faction's portal, and
-/// gone for good. Only minions that came through the portal can leave this
-/// way. If it can't reach the portal it gives up for now (and sulks later,
-/// angrier still). The player is told it's leaving.
+/// Walking out of the dungeon for good, through a portal.
+///
+///   An anger job: a furious minion heads for its own faction's portal. Only
+///   minions that came through the portal leave this way. If it can't reach
+///   it, it gives up for now (and sulks later, angrier still). The player is
+///   told it's leaving.
+///
+///   Deserting (its team's heart has fallen — MinionController.IsDeserting):
+///   any minion heads for the nearest portal it can reach, whoever owns it,
+///   and never gives up. Nobody is told.
 /// </summary>
 public class LeaveBehaviour : MinionBehaviour
 {
@@ -48,9 +55,16 @@ public class LeaveBehaviour : MinionBehaviour
             return;
         }
 
-        if (Time.time > _giveUpAt) { Minion.EndErrand(this); return; }
+        bool deserting = Minion.IsDeserting;
+        if (!deserting && Time.time > _giveUpAt) { Minion.EndErrand(this); return; }
         if (Time.time < _nextTry) return;
         _nextTry = Time.time + retrySeconds;
+
+        if (deserting)
+        {
+            _heading = HeadForNearestPortal();
+            return;
+        }
 
         var portal = Portal.Instance != null ? Portal.Instance.CellOf(Minion.Faction) : null;
         if (portal == null || !Agent.SetDestination(portal)) return;
@@ -61,5 +75,19 @@ public class LeaveBehaviour : MinionBehaviour
             _announced = true;
             Announcer.Announce(Minion.Faction, "MinionLeaving");
         }
+    }
+
+    /// <summary>Sets off for the nearest portal (of any owner) it can find a way to. False if none.</summary>
+    private bool HeadForNearestPortal()
+    {
+        if (Portal.Instance == null) return false;
+        var candidates = new List<GridCell>(Portal.Instance.AllCells());
+        Vector3 here = transform.position;
+        var grid = Minion.Grid;
+        candidates.Sort((a, b) =>
+            (grid.CellToWorld(a.X, a.Y) - here).sqrMagnitude.CompareTo((grid.CellToWorld(b.X, b.Y) - here).sqrMagnitude));
+        foreach (var cell in candidates)
+            if (Agent.SetDestination(cell)) return true;
+        return false;
     }
 }

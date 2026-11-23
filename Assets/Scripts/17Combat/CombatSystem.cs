@@ -238,7 +238,8 @@ public class CombatSystem : MonoBehaviour
         float bestSq = range * range;
         foreach (var other in MinionController.All)
         {
-            if (other == null || other == self || !other.IsTargetable) continue;
+            // Deserters aren't anyone's enemy (or anyone to join): they're leaving.
+            if (other == null || other == self || !other.IsTargetable || other.IsDeserting) continue;
             if (!filter(other)) continue;
 
             Vector3 d = other.transform.position - self.transform.position;

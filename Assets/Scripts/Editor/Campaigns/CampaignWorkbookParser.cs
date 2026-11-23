@@ -9,7 +9,7 @@ using System.Linq;
 ///
 ///   Campaigns        one row per campaign: CampaignID, CampaignName_&lt;lang&gt;, Order, Requires
 ///   &lt;ID&gt;_Missions    one row per mission: MissionID, Kind, LevelId, Requires, then a
-///                    PreName_&lt;lang&gt; / PostName_&lt;lang&gt; pair per language
+///                    PreName_&lt;lang&gt; / PostName_&lt;lang&gt; / Briefing_&lt;lang&gt; per language
 ///   &lt;ID&gt;_Endonyms    one row per narrated line: CampaignID, MissionID, Moment,
 ///                    Dialogue_&lt;lang&gt;, Cues_&lt;lang&gt;
 ///
@@ -24,7 +24,7 @@ public class CampaignWorkbookParser : WorkbookParser
     /// <summary>Every language with a Name_/Dialogue_/Cues_ column, in the order first seen.</summary>
     public readonly List<string> Languages = new();
 
-    private static readonly string[] TextPrefixes = { "CampaignName_", "PreName_", "PostName_", "Dialogue_", "Cues_", "Name_" };
+    private static readonly string[] TextPrefixes = { "CampaignName_", "PreName_", "PostName_", "Briefing_", "Dialogue_", "Cues_", "Name_" };
 
     public static CampaignWorkbookParser Parse(XlsxReader book)
     {
@@ -105,6 +105,7 @@ public class CampaignWorkbookParser : WorkbookParser
             };
             mission.preNames.AddRange(Texts(row, "PreName_"));
             mission.postNames.AddRange(Texts(row, "PostName_"));
+            mission.briefings.AddRange(Texts(row, "Briefing_"));
             campaign.missions.Add(mission);
         }
     }

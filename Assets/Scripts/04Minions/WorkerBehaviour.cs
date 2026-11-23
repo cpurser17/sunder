@@ -370,7 +370,9 @@ public class WorkerBehaviour : MinionBehaviour
         if (wealthTile)
         {
             int space = maxCarryCapacity - _carryingGold;
-            _carryingGold += cell.ExtractWealth(damage, space);
+            int mined = cell.ExtractWealth(damage, space);
+            _carryingGold += mined;
+            MatchStats.Add(Minion.Faction, MissionStats.GoldMined, mined);
         }
 
         var  def            = Grid.GetDefinition(cell.TileType);

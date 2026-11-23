@@ -73,6 +73,7 @@ public partial class LevelEditorController : MonoBehaviour
     {
         public GameObject     Root;
         public SpriteRenderer Disc;
+        public SpriteRenderer LordRing;   // shown for the lord of the land
     }
     private readonly List<MinionPlacement> _minions = new();
     private readonly List<Marker>          _markers = new(); // parallel to _minions
@@ -102,6 +103,7 @@ public partial class LevelEditorController : MonoBehaviour
     private FactionDefinition _minionFaction;
     private MinionDefinition  _minionDef;
     private int               _minionLevel = 1;
+    private bool              _placeAsLord;        // next minion placed is the lord of the land
 
     private TrapDoorKind       _trapDoorKind = TrapDoorKind.Trap;
     private TrapDoorDefinition _trapDoorDef;
@@ -165,6 +167,15 @@ public partial class LevelEditorController : MonoBehaviour
     private void OnDestroy()
     {
         if (gridManager != null) gridManager.OnTileChanged -= OnTileChanged;
+    }
+
+    /// <summary>Back from a play-test: reopen the level that was being tested.</summary>
+    private void Start()
+    {
+        if (MissionReturn.Origin != MissionOrigin.LevelEditor || string.IsNullOrEmpty(MissionReturn.LevelId)) return;
+        string levelId = MissionReturn.LevelId;
+        MissionReturn.Clear();
+        LoadLevel(levelId);
     }
 
     private void Update()
@@ -232,6 +243,7 @@ public partial class LevelEditorController : MonoBehaviour
 
         _level = data;
         _level.allowedMinionIds ??= new List<string>();
+        _level.winConditions    ??= new List<WinCondition>();
 
         ResetTeams();
         foreach (var setup in data.factions ?? new List<FactionSetup>())
@@ -738,7 +750,13 @@ public partial class LevelEditorController : MonoBehaviour
             level            = Mathf.Clamp(_minionLevel, 1, Mathf.Max(1, _minionDef.maxLevel)),
             x                = local.x / gridManager.CellSize,
             y                = local.z / gridManager.CellSize,
+            isLord           = _placeAsLord,
         });
+
+        // One lord of the land: placing a new one takes the title from any other.
+        if (_placeAsLord)
+            for (int i = 0; i < _minions.Count - 1; i++)
+                if (_minions[i].isLord) { _minions[i].isLord = false; RefreshMarker(i); }
 
         ActivateTeam(_team);
         _dirty = true;
@@ -821,13 +839,26 @@ public partial class LevelEditorController : MonoBehaviour
             token.sortingOrder = 11;
         }
 
-        var marker = new Marker { Root = root, Disc = disc };
+        var ring = new GameObject("Lord").AddComponent<SpriteRenderer>();
+        ring.transform.SetParent(root.transform, false);
+        ring.transform.localPosition = Vector3.down * 0.01f;
+        ring.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        ring.transform.localScale    = Vector3.one * 1.05f * cell;
+        ring.sprite       = _discSprite;
+        ring.color        = new Color(1f, 0.8f, 0.2f, 1f);
+        ring.sortingOrder = 9;
+
+        var marker = new Marker { Root = root, Disc = disc, LordRing = ring };
         disc.color = TeamColour(p.factionId);
+        ring.enabled = p.isLord;
         return marker;
     }
 
-    private void RefreshMarker(int index) =>
+    private void RefreshMarker(int index)
+    {
         _markers[index].Disc.color = TeamColour(_minions[index].factionId);
+        if (_markers[index].LordRing != null) _markers[index].LordRing.enabled = _minions[index].isLord;
+    }
 
     /// <summary>A soft-edged white circle, one world unit across, tinted per team.</summary>
     private static Sprite BuildDiscSprite()
@@ -1229,6 +1260,22 @@ public partial class LevelEditorController : MonoBehaviour
         if (stranded > 0) warnings.Add($"{stranded} minion(s) are standing inside solid rock or liquid.");
         if (unknown  > 0) warnings.Add($"{unknown} minion(s) aren't in the Faction Registry and won't spawn.");
 
+        bool enemyHeart = false;
+        foreach (var pair in heartTiles)
+            if (pair.Key != FactionID.Unaligned && _teams.TryGetValue(pair.Key, out var team) && team != null && !team.isHuman)
+                enemyHeart = true;
+        if (System.Linq.Enumerable.Contains(WinConditions.Of(_level), WinCondition.DestroyEnemyHearts) && !enemyHeart)
+            warnings.Add("A win condition is to destroy every enemy Dungeon Heart, but no non-human team has a heart — " +
+                         "the mission can't be won that way.");
+
+        bool lordPlaced = _minions.Exists(p => p.isLord);
+        var conditions = WinConditions.Of(_level);
+        if (System.Linq.Enumerable.Contains(conditions, WinCondition.DefeatLord) && !lordPlaced)
+            warnings.Add("A win condition is to defeat the lord of the land, but no placed minion is the lord — " +
+                         "the mission can't be won until one appears.");
+        if (lordPlaced && !System.Linq.Enumerable.Contains(conditions, WinCondition.DefeatLord))
+            warnings.Add("A lord of the land is placed, but defeating him isn't a win condition (Level settings).");
+
         return warnings;
     }
 
@@ -1296,6 +1343,7 @@ public partial class LevelEditorController : MonoBehaviour
         GameplaySceneArgs.Clear();
         GameplaySceneArgs.LevelId   = _level.levelId;
         GameplaySceneArgs.LevelFromFile = true;   // the file just saved, not a campaign's packed copy
+        GameplaySceneArgs.Origin        = MissionOrigin.LevelEditor;   // Finish comes back here
         GameplaySceneArgs.IsNewGame = true;
         SceneManager.LoadScene(gameplaySceneName);
     }

@@ -326,6 +326,7 @@ public partial class LevelEditorController
             if (GUILayout.Button("+", GUILayout.Width(26))) _minionLevel++;
             _minionLevel = Mathf.Clamp(_minionLevel, 1, Mathf.Max(1, _minionDef.maxLevel));
             GUILayout.EndHorizontal();
+            _placeAsLord = GUILayout.Toggle(_placeAsLord, " Place as the lord of the land (gold ring)");
         }
 
         GUILayout.Space(4f);
@@ -643,6 +644,17 @@ public partial class LevelEditorController
         GUILayout.Label("Default starting gold", GUILayout.Width(150));
         _level.startingGold = Mathf.Max(0, IntField("levelGold", _level.startingGold, GUILayout.Width(90)));
         GUILayout.EndHorizontal();
+
+        GUILayout.Label("Win conditions (all must be met; none ticked = destroy every enemy heart)", _header);
+        _level.winConditions ??= new List<WinCondition>();
+        foreach (WinCondition c in System.Enum.GetValues(typeof(WinCondition)))
+        {
+            bool on  = _level.winConditions.Contains(c);
+            bool now = GUILayout.Toggle(on, " " + WinConditions.Describe(c));
+            if (now == on) continue;
+            if (now) _level.winConditions.Add(c); else _level.winConditions.Remove(c);
+            _dirty = true;
+        }
 
         GUILayout.Label("Allowed minion ids (comma-separated, empty = all)", _header);
         string allowed = GUILayout.TextField(_allowedText);

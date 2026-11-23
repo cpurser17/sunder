@@ -63,6 +63,7 @@ public class FactionWallet : MonoBehaviour
         if (amount > fromReserve)
             TreasuryManager.Instance?.WithdrawAnywhere(Faction, amount - fromReserve);
 
+        MatchStats.Add(Faction, MissionStats.GoldSpent, amount);
         Report();
         return true;
     }

@@ -32,6 +32,7 @@ public class CaveInEffect : SpellEffect
 
             float multiplier = m.Definition != null ? m.Definition.DamageTakenMultiplier(target.Spell.damageType) : 1f;
             m.TakeDamage(power * multiplier, null);
+            if (!m.IsAlive) MatchStats.Add(target.Caster, MissionStats.Kills);
         }
 
         RockFall.Spawn(target.Point, radius, grid.CellSize);

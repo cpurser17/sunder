@@ -49,6 +49,12 @@ public class MinionSaveData
 
     /// <summary>Seconds left as a chicken (the Chicken spell), or 0.</summary>
     public float polymorphSeconds;
+
+    /// <summary>Its team's heart had fallen and it was leaving the dungeon.</summary>
+    public bool deserting;
+
+    /// <summary>The lord of the land.</summary>
+    public bool isLord;
 }
 
 /// <summary>A chicken in a save (world x, z).</summary>

@@ -90,11 +90,20 @@ public static class CampaignImporter
         catalogue.defaultLanguage = data.Languages.Count > 0 ? data.Languages[0] : "en";
         catalogue.campaigns.Clear();
         catalogue.campaigns.AddRange(data.Campaigns);
+        catalogue.factionRegistry = FindFactionRegistry(warnings);
         catalogue.ForgetLookups();
 
         EditorUtility.SetDirty(catalogue);
         AssetDatabase.SaveAssets();
         Report(workbookPath, data.Campaigns.Count, missions, lines, recorded, unrecorded, noLevel, warnings);
+    }
+
+    private static FactionRegistry FindFactionRegistry(List<string> warnings)
+    {
+        var guids = AssetDatabase.FindAssets("t:FactionRegistry");
+        if (guids.Length == 0) { warnings.Add("No Faction Registry asset found — the New Game screen can't name factions."); return null; }
+        if (guids.Length > 1) warnings.Add($"{guids.Length} Faction Registry assets — using {AssetDatabase.GUIDToAssetPath(guids[0])}.");
+        return AssetDatabase.LoadAssetAtPath<FactionRegistry>(AssetDatabase.GUIDToAssetPath(guids[0]));
     }
 
     /// <summary>The mission's level file, checked: its own id, and that its human player plays this campaign's faction.</summary>
