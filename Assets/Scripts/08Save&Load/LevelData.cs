@@ -74,6 +74,11 @@ public class LevelData
     [Newtonsoft.Json.JsonProperty(ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public List<WinCondition> winConditions = new();
 
+    // ── Gates ──────────────────────────────────────────────────────────
+    // Where teams' minions arrive during the mission, and when (see
+    // GatePlacement). Placed in the level editor. Null/empty in older levels.
+    public List<GatePlacement> gates = new();
+
     // ── Future extension slots ─────────────────────────────────────────
     // public OverworldLevelMetaData overworldMeta;
 }
@@ -141,6 +146,11 @@ public class GameStateSaveData
     // Fog of war: what each human player remembers of the map. Null in older
     // saves — they start from the first snapshot.
     public System.Collections.Generic.List<FogSaveData> fog;
+
+    // Gates: each deployment's progress, and the gates' mission clock. Null in
+    // older saves — the gates start over.
+    public System.Collections.Generic.List<GateSaveData> gates;
+    public float gateSeconds;
 
     // Every live minion, with its level, needs, wages, bed and anger. Null in
     // older saves — those resume with no minions (bar a new game's placed ones).

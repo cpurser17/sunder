@@ -112,7 +112,7 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// a few saves written with it, read back as Portal. Append only — saves
     /// store these.
     /// </remarks>
-    public enum SpawnSource { Placed, Portal, WorkerSpawner, Recruited }
+    public enum SpawnSource { Placed, Portal, WorkerSpawner, Recruited, Gate }
 
     // ── Inspector ──────────────────────────────────────────────────────
     [Header("Identity")]
@@ -982,6 +982,11 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// <summary>Makes this minion the lord of the land (a level's placed lord, or one a trigger spawns).</summary>
     public void MarkAsLord() => IsLord = true;
 
+    /// <summary>The gate deployment that sent it, if any — for "when this squad is defeated" triggers.</summary>
+    public string SquadId { get; private set; }
+
+    public void JoinSquad(string deploymentId) => SquadId = deploymentId;
+
     public void BeginDeserting()
     {
         if (_dead || _deserting) return;
@@ -1343,6 +1348,7 @@ public class MinionController : MonoBehaviour, IHandTarget
             polymorphSeconds     = PolymorphSecondsLeft,
             deserting            = _deserting,
             isLord               = IsLord,
+            squadId              = SquadId,
         };
     }
 
@@ -1385,6 +1391,7 @@ public class MinionController : MonoBehaviour, IHandTarget
         if (data.polymorphSeconds > 0f) Polymorph(data.polymorphSeconds);
         if (data.deserting) BeginDeserting();
         if (data.isLord) MarkAsLord();
+        if (!string.IsNullOrEmpty(data.squadId)) JoinSquad(data.squadId);
     }
 
     public void ConvertTo(FactionID newFaction)

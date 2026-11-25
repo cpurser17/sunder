@@ -187,8 +187,8 @@ public partial class LevelEditorController
         }
 
         GUILayout.Space(8f);
-        GUILayout.Label("Tool   (1-5)", _header);
-        var tool = (Tool)GUILayout.Toolbar((int)_tool, new[] { "Tiles", "Heart", "Minions", "Traps", "Owner" });
+        GUILayout.Label("Tool   (1-6)", _header);
+        var tool = (Tool)GUILayout.Toolbar((int)_tool, new[] { "Tiles", "Heart", "Minions", "Traps", "Owner", "Gates" });
         if (tool != _tool) Defer(() => _tool = tool);
         GUILayout.Space(4f);
 
@@ -221,7 +221,11 @@ public partial class LevelEditorController
                 _brushMinions = GUILayout.Toggle(_brushMinions, " Minions");
                 GUILayout.EndHorizontal();
                 GUILayout.Label("Paints the selected team onto owned tiles (tunnel, walls, rooms, " +
-                                "hearts…) and minions. Terrain and liquid are never owned.", _small);
+                                "hearts…) and minions. Terrain and liquid are never owned. Gates keep their team.", _small);
+                break;
+            case Tool.Gates:
+                PlaceRemoveRow();
+                DrawGatePanel();
                 break;
         }
 
@@ -231,6 +235,7 @@ public partial class LevelEditorController
         else if (_tool == Tool.Minions && !_removeMode) DrawMinionPalette();
         else if (_tool == Tool.TrapsDoors && !_removeMode) DrawTrapDoorPalette();
         else if (_tool == Tool.Heart)                   DrawHeartSummary();
+        else if (_tool == Tool.Gates)                   DrawGateMinionPicker();
         GUILayout.EndScrollView();
 
         GUILayout.EndArea();
@@ -461,6 +466,7 @@ public partial class LevelEditorController
             var pos = new Vector2(screen.x / _uiScale, (Screen.height - screen.y) / _uiScale - 14f);
             GUI.Label(new Rect(pos.x - 40f, pos.y, 80f, 16f), t.Data.typeId, _mapLabel);
         }
+        DrawGateLabels(cam);
         foreach (var p in _minions)
         {
             Vector3 screen = cam.WorldToScreenPoint(PlacementWorld(p) - new Vector3(0f, 0f, 0.4f * cell));

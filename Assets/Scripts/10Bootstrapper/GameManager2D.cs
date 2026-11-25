@@ -33,6 +33,9 @@ public class GameManager2D : MonoBehaviour
     [SerializeField] private TileVisualizer3D      tileVisualizer;
     [SerializeField] private FactionRegistry       factionRegistry;
 
+    /// <summary>The Faction Registry the level's minions are looked up in.</summary>
+    public FactionRegistry Factions => factionRegistry;
+
     [Header("Editor Fallback")]
     [Tooltip("Level ID used when entering Play mode directly without a scene flow.")]
     [SerializeField] private string fallbackLevelId  = "level_01";
@@ -196,6 +199,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<MatchStats>();
         if (FindAnyObjectByType<MissionDirector>() == null)
             gameObject.AddComponent<MissionDirector>();
+        if (FindAnyObjectByType<GateSystem>() == null)
+            gameObject.AddComponent<GateSystem>();
 
         // Fog of war (the level editor has no GameManager2D, so no fog).
         if (FindAnyObjectByType<FogOfWar>() == null)
@@ -491,6 +496,7 @@ public class GameManager2D : MonoBehaviour
     {
         MatchStats.Instance?.Begin();
         MissionDirector.Instance?.Begin(level, _origin, _campaignId, _missionId);
+        GateSystem.Instance?.Begin(level);
     }
 
     /// <summary>
@@ -597,6 +603,10 @@ public class GameManager2D : MonoBehaviour
         SpellSystem.Instance?.Restore(gs.spellCooldowns);
         RallyPoints.Instance?.Restore(gs.rallyPoints);
         FogOfWar.Instance?.Restore(gs.fog);
+        var fallenHearts = new List<FactionID>();
+        if (gs.factionHeartHP != null)
+            foreach (var pair in gs.factionHeartHP) if (pair.Value <= 0) fallenHearts.Add(pair.Key);
+        GateSystem.Instance?.Restore(gs.gates, gs.gateSeconds, fallenHearts);
 
         // Minions, chickens, progress and dig marks wait a frame, so every
         // system that sets itself up at scene start (summoner, dig
@@ -811,6 +821,8 @@ public class GameManager2D : MonoBehaviour
         data.spellCooldowns = SpellSystem.Instance?.Capture();
         data.rallyPoints    = RallyPoints.Instance?.Capture();
         data.fog            = FogOfWar.Instance?.Capture();
+        data.gates          = GateSystem.Instance?.Capture();
+        data.gateSeconds    = GateSystem.Instance != null ? GateSystem.Instance.Seconds : 0f;
 
         // Populate per-faction Dungeon Heart HP.
         data.factionHeartHP = DungeonHeart.Instance != null

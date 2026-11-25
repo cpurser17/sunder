@@ -34,7 +34,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public partial class LevelEditorController : MonoBehaviour
 {
-    public enum Tool { Tiles, Heart, Minions, TrapsDoors, Ownership }
+    public enum Tool { Tiles, Heart, Minions, TrapsDoors, Ownership, Gates }
 
     private const int HeartSize = 3;
 
@@ -126,6 +126,7 @@ public partial class LevelEditorController : MonoBehaviour
         public GridSaveData          Grid;
         public List<MinionPlacement> Minions;
         public List<TrapDoorPlacement> TrapsDoors;
+        public List<GatePlacement>     Gates;
     }
     private readonly LinkedList<Snapshot> _undo = new();
     private readonly Stack<Snapshot>      _redo = new();
@@ -249,6 +250,7 @@ public partial class LevelEditorController : MonoBehaviour
         ResetTeams();
         ClearMinions();
         ClearTrapsDoors();
+        ClearGates();
         BeginEditing();
         SetStatus($"Created a {width}x{height} level.");
     }
@@ -287,6 +289,7 @@ public partial class LevelEditorController : MonoBehaviour
         foreach (var t in data.trapsAndDoors ?? new List<TrapDoorPlacement>())
             if (t != null) AddTrapDoor(t.Clone());
         SyncAllTrapDoors(); // an older or hand-edited file may disagree with its tiles
+        LoadGates(data.gates);
 
         BeginEditing();
         SetStatus($"Loaded '{levelId}' ({data.grid.width}x{data.grid.height}, " +
@@ -379,6 +382,11 @@ public partial class LevelEditorController : MonoBehaviour
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 valid = CanHoldTrapDoor(gridManager.GetCell(_hoverX, _hoverY), out _);
                 break;
+            case Tool.Gates:
+                cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
+                valid = _removeMode ? GateAt(_hoverX, _hoverY) != null
+                                    : GateAt(_hoverX, _hoverY) != null || CanHoldGate(gridManager.GetCell(_hoverX, _hoverY));
+                break;
             case Tool.Heart:
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 break;
@@ -435,6 +443,10 @@ public partial class LevelEditorController : MonoBehaviour
 
             case Tool.Minions:
                 RunSingleEdit(() => PlaceMinion(_hoverWorld));
+                break;
+
+            case Tool.Gates:
+                RunSingleEdit(() => _removeMode ? RemoveGateAt(_hoverX, _hoverY) : ClickGate(_hoverX, _hoverY));
                 break;
 
             case Tool.Heart:
@@ -1132,6 +1144,7 @@ public partial class LevelEditorController : MonoBehaviour
             Grid       = SaveLoadSystem.CaptureGrid(gridManager),
             Minions    = minions,
             TrapsDoors = CloneTrapsDoors(),
+            Gates      = CloneGates(),
         };
     }
 
@@ -1143,6 +1156,7 @@ public partial class LevelEditorController : MonoBehaviour
         foreach (var p in snapshot.Minions) AddMinion(p.Clone());
         ClearTrapsDoors();
         foreach (var t in snapshot.TrapsDoors) AddTrapDoor(t.Clone());
+        LoadGates(snapshot.Gates);
         _dirty = true;
     }
 
@@ -1192,6 +1206,7 @@ public partial class LevelEditorController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha3)) _tool = Tool.Minions;
         if (Input.GetKeyDown(KeyCode.Alpha4)) _tool = Tool.TrapsDoors;
         if (Input.GetKeyDown(KeyCode.Alpha5)) _tool = Tool.Ownership;
+        if (Input.GetKeyDown(KeyCode.Alpha6)) _tool = Tool.Gates;
         if (Input.GetKeyDown(KeyCode.R))      _removeMode = !_removeMode;
         if (Input.GetKeyDown(KeyCode.LeftBracket))  _brushSize = Mathf.Max(1, _brushSize - 2);
         if (Input.GetKeyDown(KeyCode.RightBracket)) _brushSize = Mathf.Min(MaxBrush, _brushSize + 2);
@@ -1219,6 +1234,7 @@ public partial class LevelEditorController : MonoBehaviour
         foreach (var p in _minions) _level.minions.Add(p.Clone());
         SyncAllTrapDoors();
         _level.trapsAndDoors = CloneTrapsDoors();
+        _level.gates         = CloneGates();
         _level.allowedMinionIds ??= new List<string>();
         return _level;
     }
@@ -1294,11 +1310,13 @@ public partial class LevelEditorController : MonoBehaviour
             warnings.Add("A win condition is to destroy every enemy Dungeon Heart, but no non-human team has a heart — " +
                          "the mission can't be won that way.");
 
-        bool lordPlaced = _minions.Exists(p => p.isLord);
+        ValidateGates(warnings);
+
+        bool lordPlaced = AnyLord();
         var conditions = WinConditions.Of(_level);
         if (System.Linq.Enumerable.Contains(conditions, WinCondition.DefeatLord) && !lordPlaced)
             warnings.Add("A win condition is to defeat the lord of the land, but no placed minion is the lord — " +
-                         "the mission can't be won until one appears.");
+                         "the mission can't be won until one appears (place one, or put one in a gate's squad).");
         if (lordPlaced && !System.Linq.Enumerable.Contains(conditions, WinCondition.DefeatLord))
             warnings.Add("A lord of the land is placed, but defeating him isn't a win condition (Level settings).");
 

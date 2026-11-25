@@ -55,6 +55,9 @@ public class MinionSaveData
 
     /// <summary>The lord of the land.</summary>
     public bool isLord;
+
+    /// <summary>The gate deployment that sent it, if any.</summary>
+    public string squadId;
 }
 
 /// <summary>A chicken in a save (world x, z).</summary>
