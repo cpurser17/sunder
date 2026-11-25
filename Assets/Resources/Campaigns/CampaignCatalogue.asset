@@ -1,0 +1,5656 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b8b22c1e89c61e4995891570e05d928, type: 3}
+  m_Name: CampaignCatalogue
+  m_EditorClassIdentifier: Assembly-CSharp::CampaignCatalogue
+  defaultLanguage: en
+  campaigns:
+  - id: 01U
+    order: 1
+    requires: 
+    names:
+    - language: en
+      text: Hades
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 01U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames:
+      - language: en
+        text: Tiryns
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 01U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames:
+      - language: en
+        text: Nemea
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 01U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames:
+      - language: en
+        text: The Lerna Marshes
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 01U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames:
+      - language: en
+        text: The Stymphalian Marshes
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 01U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames:
+      - language: en
+        text: Dodona
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 01U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames:
+      - language: en
+        text: Delphi
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 01U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames:
+      - language: en
+        text: Olympia
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 01U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames:
+      - language: en
+        text: Aulis
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 01U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames:
+      - language: en
+        text: Troy
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 01U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames:
+      - language: en
+        text: The Clashing Rocks
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 01U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames:
+      - language: en
+        text: Colchis
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 01U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames:
+      - language: en
+        text: The Lion Gate
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 01U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames:
+      - language: en
+        text: Eleusis
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 01U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames:
+      - language: en
+        text: Marathon
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 01U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames:
+      - language: en
+        text: Thermopylae
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 01U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames:
+      - language: en
+        text: Salamis
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 01U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames:
+      - language: en
+        text: The Necromanteion of Ephyra
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 01U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames:
+      - language: en
+        text: Cape Tainaron
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 01U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames:
+      - language: en
+        text: The Labyrinth of Knossos
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 01U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames:
+      - language: en
+        text: Mount Olympus
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 01U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 01U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 01U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 02U
+    order: 2
+    requires: 
+    names:
+    - language: en
+      text: Hel
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 02U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 02U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 02U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 02U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 02U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 02U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 02U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 02U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 02U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 02U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 02U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 02U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 02U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 02U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 02U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 02U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 02U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 02U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 02U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 02U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 02U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 02U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 02U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 03U
+    order: 3
+    requires: 
+    names:
+    - language: en
+      text: Osiris
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 03U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 03U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 03U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 03U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 03U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 03U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 03U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 03U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 03U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 03U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 03U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 03U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 03U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 03U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 03U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 03U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 03U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 03U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 03U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 03U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 03U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 03U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 03U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 04U
+    order: 4
+    requires: 
+    names:
+    - language: en
+      text: Ereshkigal
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 04U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 04U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 04U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 04U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 04U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 04U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 04U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 04U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 04U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 04U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 04U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 04U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 04U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 04U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 04U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 04U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 04U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 04U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 04U_M19
+      level: {fileID: 4900000, guid: b1b312a384a5f024b9ccf1c29288280b, type: 3}
+      requires: 
+      preNames:
+      - language: en
+        text: Hanging Gardens
+      postNames:
+      - language: en
+        text: Hanging Gardens
+      briefings: []
+      lines:
+      - moment: 0
+        dialogue:
+        - language: en
+          text: "Stealing Nitrogen, nutrients, and minerals from the ground, and
+            warmth from the sun itself\u2014merely to provide a shade-filled grove
+            and bushels of fruits and nuts\u2014the Hanging Gardens is a veritable
+            cornacopea of primordial theft sold off to fill the air with noxious
+            Oxygen and satisfy a sweet tooth."
+        cues: []
+        clips: []
+      - moment: 1
+        dialogue:
+        - language: en
+          text: The desicated corpses of your enemies now hang from the archways
+            as an aerial breeding ground for maggots, mites, and the plagues they
+            carry. Ironically the Hanging Gardens remains an apt name, we decided
+            to keep it.
+        cues: []
+        clips: []
+    - id: M20
+      kind: 0
+      levelId: 04U_M20
+      level: {fileID: 0}
+      requires: 
+      preNames:
+      - language: en
+        text: The Tower of Babel
+      postNames:
+      - language: en
+        text: The Pit
+      briefings: []
+      lines:
+      - moment: 0
+        dialogue:
+        - language: en
+          text: The Tower of Babel. A ridiculous monument to arrogance, a vanglorious
+            attempt to elevate themselves to the heavens, and a failure to recognise
+            that all they have built themselves is further to fall.
+        cues: []
+        clips: []
+    - id: C01
+      kind: 1
+      levelId: 04U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 04U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 04U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 05U
+    order: 5
+    requires: 
+    names:
+    - language: en
+      text: Izanami
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 05U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 05U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 05U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 05U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 05U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 05U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 05U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 05U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 05U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 05U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 05U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 05U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 05U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 05U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 05U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 05U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 05U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 05U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 05U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 05U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 05U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 05U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 05U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 06U
+    order: 6
+    requires: 
+    names:
+    - language: en
+      text: Supay
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 06U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 06U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 06U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 06U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 06U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 06U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 06U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 06U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 06U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 06U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 06U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 06U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 06U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 06U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 06U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 06U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 06U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 06U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 06U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 06U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 06U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 06U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 06U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 07U
+    order: 7
+    requires: 
+    names:
+    - language: en
+      text: Yan Wang
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 07U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 07U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 07U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 07U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 07U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 07U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 07U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 07U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 07U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 07U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 07U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 07U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 07U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 07U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 07U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 07U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 07U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 07U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 07U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 07U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 07U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 07U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 07U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 08U
+    order: 8
+    requires: 
+    names:
+    - language: en
+      text: Veles
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 08U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 08U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 08U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 08U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 08U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 08U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 08U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 08U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 08U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 08U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 08U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 08U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 08U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 08U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 08U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 08U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 08U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 08U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 08U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 08U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 08U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 08U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 08U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 09U
+    order: 9
+    requires: 
+    names:
+    - language: en
+      text: Aita
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 09U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 09U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 09U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 09U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 09U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 09U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 09U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 09U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 09U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 09U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 09U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 09U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 09U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 09U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 09U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 09U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 09U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 09U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 09U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 09U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 09U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 09U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 09U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 10U
+    order: 10
+    requires: 
+    names:
+    - language: en
+      text: Mictlantecuhli
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 10U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 10U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 10U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 10U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 10U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 10U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 10U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 10U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 10U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 10U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 10U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 10U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 10U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 10U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 10U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 10U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 10U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 10U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 10U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 10U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 10U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 10U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 10U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 11U
+    order: 11
+    requires: 
+    names:
+    - language: en
+      text: Hun-Came
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 11U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 11U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 11U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 11U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 11U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 11U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 11U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 11U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 11U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 11U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 11U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 11U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 11U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 11U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 11U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 11U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 11U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 11U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 11U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 11U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 11U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 11U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 11U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 12U
+    order: 12
+    requires: 
+    names:
+    - language: en
+      text: Erlik
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 12U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 12U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 12U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 12U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 12U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 12U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 12U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 12U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 12U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 12U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 12U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 12U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 12U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 12U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 12U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 12U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 12U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 12U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 12U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 12U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 12U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 12U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 12U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 13U
+    order: 13
+    requires: 
+    names:
+    - language: en
+      text: Touni
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 13U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 13U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 13U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 13U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 13U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 13U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 13U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 13U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 13U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 13U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 13U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 13U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 13U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 13U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 13U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 13U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 13U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 13U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 13U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 13U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 13U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 13U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 13U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 14U
+    order: 14
+    requires: 
+    names:
+    - language: en
+      text: Guayota
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 14U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 14U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 14U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 14U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 14U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 14U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 14U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 14U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 14U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 14U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 14U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 14U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 14U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 14U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 14U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 14U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 14U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 14U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 14U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 14U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 14U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 14U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 14U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 15U
+    order: 15
+    requires: 
+    names:
+    - language: en
+      text: Arawn
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 15U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 15U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 15U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 15U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 15U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 15U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 15U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 15U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 15U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 15U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 15U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 15U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 15U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 15U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 15U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 15U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 15U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 15U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 15U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 15U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 15U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 15U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 15U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 16U
+    order: 16
+    requires: 
+    names:
+    - language: en
+      text: Mari
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 16U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 16U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 16U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 16U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 16U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 16U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 16U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 16U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 16U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 16U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 16U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 16U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 16U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 16U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 16U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 16U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 16U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 16U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 16U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 16U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 16U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 16U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 16U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 17U
+    order: 17
+    requires: 
+    names:
+    - language: en
+      text: The Great Serpent
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 17U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 17U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 17U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 17U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 17U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 17U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 17U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 17U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 17U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 17U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 17U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 17U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 17U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 17U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 17U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 17U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 17U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 17U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 17U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 17U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 17U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 17U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 17U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 18U
+    order: 18
+    requires: 
+    names:
+    - language: en
+      text: Yama
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 18U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 18U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 18U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 18U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 18U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 18U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 18U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 18U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 18U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 18U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 18U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 18U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 18U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 18U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 18U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 18U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 18U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 18U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 18U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 18U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 18U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 18U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 18U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 19U
+    order: 19
+    requires: 
+    names:
+    - language: en
+      text: Maquetaurie Guayaba
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 19U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 19U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 19U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 19U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 19U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 19U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 19U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 19U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 19U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 19U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 19U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 19U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 19U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 19U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 19U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 19U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 19U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 19U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 19U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 19U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 19U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 19U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 19U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 20U
+    order: 20
+    requires: 
+    names:
+    - language: en
+      text: Jiibayaabooz
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 20U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 20U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 20U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 20U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 20U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 20U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 20U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 20U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 20U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 20U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 20U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 20U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 20U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 20U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 20U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 20U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 20U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 20U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 20U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 20U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 20U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 20U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 20U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 21U
+    order: 21
+    requires: 
+    names:
+    - language: en
+      text: Gaunab
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 21U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 21U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 21U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 21U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 21U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 21U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 21U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 21U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 21U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 21U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 21U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 21U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 21U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 21U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 21U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 21U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 21U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 21U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 21U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 21U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 21U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 21U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 21U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 22U
+    order: 22
+    requires: 
+    names:
+    - language: en
+      text: Unkulunkulu
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 22U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 22U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 22U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 22U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 22U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 22U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 22U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 22U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 22U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 22U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 22U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 22U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 22U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 22U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 22U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 22U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 22U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 22U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 22U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 22U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 22U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 22U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 22U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 23U
+    order: 23
+    requires: 
+    names:
+    - language: en
+      text: Samedi
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 23U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 23U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 23U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 23U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 23U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 23U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 23U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 23U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 23U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 23U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 23U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 23U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 23U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 23U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 23U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 23U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 23U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 23U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 23U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 23U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 23U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 23U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 23U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 24U
+    order: 24
+    requires: 
+    names:
+    - language: en
+      text: Iku
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 24U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 24U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 24U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 24U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 24U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 24U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 24U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 24U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 24U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 24U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 24U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 24U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 24U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 24U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 24U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 24U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 24U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 24U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 24U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 24U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 24U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 24U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 24U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 25U
+    order: 25
+    requires: 
+    names:
+    - language: en
+      text: Wuluwaid
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 25U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 25U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 25U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 25U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 25U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 25U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 25U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 25U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 25U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 25U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 25U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 25U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 25U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 25U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 25U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 25U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 25U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 25U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 25U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 25U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 25U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 25U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 25U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  - id: 26U
+    order: 26
+    requires: 
+    names:
+    - language: en
+      text: Mot
+    missions:
+    - id: M01
+      kind: 0
+      levelId: 26U_M01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M02
+      kind: 0
+      levelId: 26U_M02
+      level: {fileID: 0}
+      requires: Complete(M01)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M03
+      kind: 0
+      levelId: 26U_M03
+      level: {fileID: 0}
+      requires: Complete(M02)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M04
+      kind: 0
+      levelId: 26U_M04
+      level: {fileID: 0}
+      requires: Complete(M03)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M05
+      kind: 0
+      levelId: 26U_M05
+      level: {fileID: 0}
+      requires: Complete(M04)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M06
+      kind: 0
+      levelId: 26U_M06
+      level: {fileID: 0}
+      requires: Complete(M05)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M07
+      kind: 0
+      levelId: 26U_M07
+      level: {fileID: 0}
+      requires: Complete(M06)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M08
+      kind: 0
+      levelId: 26U_M08
+      level: {fileID: 0}
+      requires: Complete(M07)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M09
+      kind: 0
+      levelId: 26U_M09
+      level: {fileID: 0}
+      requires: Complete(M08)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M10
+      kind: 0
+      levelId: 26U_M10
+      level: {fileID: 0}
+      requires: Complete(M09)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M11
+      kind: 0
+      levelId: 26U_M11
+      level: {fileID: 0}
+      requires: Complete(M10)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M12
+      kind: 0
+      levelId: 26U_M12
+      level: {fileID: 0}
+      requires: Complete(M11)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M13
+      kind: 0
+      levelId: 26U_M13
+      level: {fileID: 0}
+      requires: Complete(M12)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M14
+      kind: 0
+      levelId: 26U_M14
+      level: {fileID: 0}
+      requires: Complete(M13)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M15
+      kind: 0
+      levelId: 26U_M15
+      level: {fileID: 0}
+      requires: Complete(M14)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M16
+      kind: 0
+      levelId: 26U_M16
+      level: {fileID: 0}
+      requires: Complete(M15)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M17
+      kind: 0
+      levelId: 26U_M17
+      level: {fileID: 0}
+      requires: Complete(M16)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M18
+      kind: 0
+      levelId: 26U_M18
+      level: {fileID: 0}
+      requires: Complete(M17)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M19
+      kind: 0
+      levelId: 26U_M19
+      level: {fileID: 0}
+      requires: Complete(M18)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: M20
+      kind: 0
+      levelId: 26U_M20
+      level: {fileID: 0}
+      requires: Complete(M19)
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C01
+      kind: 1
+      levelId: 26U_C01
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C02
+      kind: 1
+      levelId: 26U_C02
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+    - id: C03
+      kind: 1
+      levelId: 26U_C03
+      level: {fileID: 0}
+      requires: 
+      preNames: []
+      postNames: []
+      briefings: []
+      lines: []
+  factionRegistry: {fileID: 11400000, guid: 8faf22ae6c439c44087a88947ca55312, type: 2}
