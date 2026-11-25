@@ -179,6 +179,9 @@ public class MissionDirector : MonoBehaviour
             MissionOrigin.Skirmish    => Application.CanStreamedLevelBeLoaded(SceneNames.Skirmish) ? SceneNames.Skirmish : SceneNames.Start,
             _                         => SceneNames.Start,
         };
+        Debug.Log($"[MissionDirector] Finish: back to {scene} (started from {_origin}" +
+                  (_origin == MissionOrigin.Campaign ? $", {_campaignId} {_missionId}" : "") +
+                  $", {(Result != null && Result.won ? "won" : "lost")}).");
         if (!Application.CanStreamedLevelBeLoaded(scene))
         {
             Debug.LogWarning($"[MissionDirector] Scene '{scene}' isn't in Build Settings — staying here.");

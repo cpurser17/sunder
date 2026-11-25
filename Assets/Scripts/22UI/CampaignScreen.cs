@@ -56,6 +56,16 @@ public class CampaignScreen : MonoBehaviour
         Select(back ?? FirstAvailable(), playIntro: back == null);
     }
 
+    /// <summary>Escape: skips the narration if a line is playing, else back to the main menu.</summary>
+    private void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+        var narrator = CampaignNarrator.Instance;
+        if (CampaignNarrator.SkippedFrame == Time.frameCount) return;        // that press skipped a line
+        if (narrator != null && narrator.IsPlaying) { narrator.Stop(); return; }
+        BackToMenu();
+    }
+
     // ── Coming back from a mission ─────────────────────────────────────
 
     /// <summary>A mission just played: add its result, save, and play its Outro or Defeat line. Returns that mission.</summary>
@@ -78,8 +88,9 @@ public class CampaignScreen : MonoBehaviour
         CampaignSession.Save();
 
         var mission = _campaign.Find(result.missionId);
-        if (mission != null)
-            CampaignNarrator.Play(_campaign.id, mission.id, result.won ? MissionMoment.Outro : MissionMoment.Defeat);
+        var moment  = result.won ? MissionMoment.Outro : MissionMoment.Defeat;
+        Debug.Log($"[CampaignScreen] Back from {_campaign.id} {result.missionId}: {(result.won ? "won" : "lost")} — playing its {moment} line.");
+        if (mission != null) CampaignNarrator.Play(_campaign.id, mission.id, moment);
         return mission;
     }
 

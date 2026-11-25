@@ -41,6 +41,9 @@ public class CampaignNarrator : MonoBehaviour
     public event Action<string, string, MissionMoment> OnLineFinished;
 
     public bool IsPlaying => _playing;
+
+    /// <summary>The frame Escape last skipped a line — so the same press doesn't also leave the screen.</summary>
+    public static int SkippedFrame { get; private set; } = -1;
     public string Language { get => language; set => language = value; }
 
     private AudioSource     _voice;
@@ -68,12 +71,18 @@ public class CampaignNarrator : MonoBehaviour
         Stop();
         var cat = catalogue != null ? catalogue : CampaignCatalogue.Load();
         var line = cat?.Find(campaignId)?.Find(missionId)?.Line(moment);
-        if (line == null) return false;
+        if (line == null)
+        {
+            Debug.Log($"[CampaignNarrator] {campaignId} {missionId} has no {moment} line yet (no dialogue in the Campaigns workbook).");
+            return false;
+        }
 
         string fallback = cat.defaultLanguage;
         string dialogue = line.DialogueFor(language, fallback);
         var    clip     = line.ClipFor(language, fallback);
         if (string.IsNullOrWhiteSpace(dialogue) && clip == null) return false;
+        Debug.Log($"[CampaignNarrator] Playing {campaignId} {missionId} {moment}" +
+                  (clip != null ? $" ({clip.name})." : " (no recording — subtitles only)."));
 
         float clipSeconds = clip != null ? clip.length : 0f;
         _cues = Subtitles.Time(dialogue, clipSeconds, line.CuesFor(language, fallback));
@@ -126,7 +135,12 @@ public class CampaignNarrator : MonoBehaviour
         bool clickOffUi = Input.GetMouseButtonDown(0) &&
                           (UnityEngine.EventSystems.EventSystem.current == null ||
                            !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject());
-        if (skipOnClick && (clickOffUi || Input.GetKeyDown(KeyCode.Escape))) { Stop(); return; }
+        if (skipOnClick && (clickOffUi || Input.GetKeyDown(KeyCode.Escape)))
+        {
+            if (Input.GetKeyDown(KeyCode.Escape)) SkippedFrame = Time.frameCount;
+            Stop();
+            return;
+        }
 
         float t = Time.unscaledTime - _startedAt;
         if (Time.unscaledTime >= _endsAt) { Stop(); return; }

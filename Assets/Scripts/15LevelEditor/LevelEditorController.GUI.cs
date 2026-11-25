@@ -25,6 +25,8 @@ public partial class LevelEditorController
     private List<string> _warnings = new();
     private string       _confirmMessage;
     private System.Action _confirmAction;
+    private string        _confirmTitle  = "Unsaved changes";
+    private string        _confirmButton = "Discard";
     private string       _allowedText = "";
     private readonly Dictionary<string, string> _intBuffers = new();
 
@@ -135,6 +137,7 @@ public partial class LevelEditorController
         GUILayout.BeginArea(new Rect(rect.x + 6f, rect.y + 5f, rect.width - 12f, rect.height - 6f));
         GUILayout.BeginHorizontal();
 
+        if (GUILayout.Button("Main Menu", GUILayout.Width(85))) Defer(() => RequestDiscard(GoToMainMenu));
         if (GUILayout.Button("New / Load", GUILayout.Width(90))) Defer(() => RequestDiscard(OpenStart));
         if (GUILayout.Button("Save", GUILayout.Width(60)))        Defer(() => Save(toBuiltIn: false));
 #if UNITY_EDITOR
@@ -496,7 +499,7 @@ public partial class LevelEditorController
                 GUILayout.Window(4, rect, WarningsWindow, "Saved — with warnings");
                 break;
             case Modal.Confirm:
-                GUILayout.Window(5, rect, ConfirmWindow, "Unsaved changes");
+                GUILayout.Window(5, rect, ConfirmWindow, _confirmTitle);
                 break;
         }
     }
@@ -518,9 +521,34 @@ public partial class LevelEditorController
     private void RequestDiscard(System.Action action)
     {
         if (!_editing || !_dirty) { action(); return; }
-        _confirmMessage = "This level has unsaved changes. Discard them?";
+        Confirm("Unsaved changes", "This level has unsaved changes. Discard them?", "Discard", action);
+    }
+
+    private void Confirm(string title, string message, string button, System.Action action)
+    {
+        _confirmTitle   = title;
+        _confirmMessage = message;
+        _confirmButton  = button;
         _confirmAction  = action;
         _modal          = Modal.Confirm;
+    }
+
+    /// <summary>Back to the Start scene's main menu — asking first, about unsaved work if there is any.</summary>
+    private void ConfirmLeave()
+    {
+        if (!_editing) { GoToMainMenu(); return; }   // nothing open to lose (and the start window always shows)
+        if (_dirty) RequestDiscard(GoToMainMenu);
+        else Confirm("Main menu", "Leave the level editor for the main menu?", "Leave", GoToMainMenu);
+    }
+
+    private void GoToMainMenu()
+    {
+        if (!Application.CanStreamedLevelBeLoaded(SceneNames.Start))
+        {
+            SetStatus($"The {SceneNames.Start} scene isn't in Build Settings.", error: true);
+            return;
+        }
+        UnityEngine.SceneManagement.SceneManager.LoadScene(SceneNames.Start);
     }
 
     private void StartWindow(int id)
@@ -555,11 +583,11 @@ public partial class LevelEditorController
         GUILayout.Label("Built-in levels come from StreamingAssets/Levels, your own from " +
                         "CustomLevels in the persistent data folder.", _small);
 
-        if (_editing)
-        {
-            GUILayout.Space(8f);
-            if (GUILayout.Button("Cancel")) Defer(() => _modal = Modal.None);
-        }
+        GUILayout.Space(8f);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Main Menu")) Defer(() => RequestDiscard(GoToMainMenu));
+        if (_editing && GUILayout.Button("Cancel")) Defer(() => _modal = Modal.None);
+        GUILayout.EndHorizontal();
 
         GUILayout.Space(4f);
         GUILayout.Label(_status, _statusIsError ? _statusError : _small);
@@ -685,7 +713,7 @@ public partial class LevelEditorController
     {
         GUILayout.Label(_confirmMessage, _small);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Discard"))
+        if (GUILayout.Button(_confirmButton))
         {
             var action = _confirmAction;
             Defer(() =>

@@ -169,6 +169,30 @@ public partial class LevelEditorController : MonoBehaviour
         if (gridManager != null) gridManager.OnTileChanged -= OnTileChanged;
     }
 
+    /// <summary>
+    /// Escape: closes an open window (a confirmation is cancelled); with
+    /// none open, heads back to the main menu (asking first).
+    /// </summary>
+    private void Back()
+    {
+        switch (_modal)
+        {
+            case Modal.None:
+                ConfirmLeave();
+                break;
+            case Modal.Start:
+                if (!_editing) ConfirmLeave(); else _modal = Modal.None;
+                break;
+            case Modal.Confirm:
+                _confirmAction = null;
+                _modal = _editing ? Modal.None : Modal.Start;
+                break;
+            default:
+                _modal = Modal.None;
+                break;
+        }
+    }
+
     /// <summary>Back from a play-test: reopen the level that was being tested.</summary>
     private void Start()
     {
@@ -180,6 +204,8 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape)) { Back(); return; }
+
         if (!_editing || _modal != Modal.None)
         {
             ClearHighlights();

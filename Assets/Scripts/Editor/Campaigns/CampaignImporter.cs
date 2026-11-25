@@ -14,7 +14,8 @@ using UnityEngine;
 ///
 ///     Assets/Audio/Endonymy/&lt;language&gt;/&lt;CampaignID&gt;_&lt;MissionID&gt;_&lt;Moment&gt;.wav   (any audio format)
 ///
-/// e.g. Assets/Audio/Endonymy/en/04U_M20_Intro.wav. A line with no
+/// e.g. Assets/Audio/Endonymy/en/04U_M20_Intro.wav — or with the language
+/// on the end too, 04U_M20_Intro_en.wav (see LocalisedAudio). A line with no
 /// recording yet just shows its subtitles.
 ///
 /// Each mission's level is linked from
@@ -58,7 +59,7 @@ public static class CampaignImporter
 
         var data     = CampaignWorkbookParser.Parse(book);
         var warnings = new List<string>(data.Warnings);
-        var clips    = FindClips();
+        var clips    = FindClips(warnings);
 
         int missions = 0, lines = 0, recorded = 0, unrecorded = 0, noLevel = 0;
         foreach (var campaign in data.Campaigns)
@@ -157,28 +158,9 @@ public static class CampaignImporter
         foreach (var l in clips.Keys)     if (seen.Add(l)) yield return l;
     }
 
-    /// <summary>Language folder → clip name → clip, from Assets/Audio/Endonymy/&lt;language&gt;/.</summary>
-    private static Dictionary<string, Dictionary<string, AudioClip>> FindClips()
-    {
-        var result = new Dictionary<string, Dictionary<string, AudioClip>>(StringComparer.OrdinalIgnoreCase);
-        if (!AssetDatabase.IsValidFolder(AudioRoot)) return result;
-
-        foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { AudioRoot }))
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            string rel  = path.Substring(AudioRoot.Length).TrimStart('/');
-            int slash   = rel.IndexOf('/');
-            if (slash <= 0) continue;   // must sit in a language folder
-
-            string lang = rel.Substring(0, slash).ToLowerInvariant();
-            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-            if (clip == null) continue;
-            if (!result.TryGetValue(lang, out var byName))
-                result[lang] = byName = new Dictionary<string, AudioClip>(StringComparer.OrdinalIgnoreCase);
-            byName[Path.GetFileNameWithoutExtension(path)] = clip;
-        }
-        return result;
-    }
+    /// <summary>Language folder → recording name → clip (see LocalisedAudio: the _&lt;language&gt; suffix is optional).</summary>
+    private static Dictionary<string, Dictionary<string, AudioClip>> FindClips(List<string> warnings) =>
+        LocalisedAudio.Index(AudioRoot, warnings);
 
     private static CampaignCatalogue LoadOrCreateCatalogue()
     {

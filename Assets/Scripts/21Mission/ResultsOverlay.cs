@@ -37,6 +37,12 @@ public class ResultsOverlay : MonoBehaviour
         if (_instance == this) _instance = null;
     }
 
+    /// <summary>Escape minimises the results (back to the dungeon); the button brings them back.</summary>
+    private void Update()
+    {
+        if (_window != null && _window.gameObject.activeSelf && Input.GetKeyDown(KeyCode.Escape)) Minimise();
+    }
+
     // ── Open / minimise ────────────────────────────────────────────────
 
     private void Open()

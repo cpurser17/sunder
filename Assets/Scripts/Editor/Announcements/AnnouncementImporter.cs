@@ -16,7 +16,8 @@ using UnityEngine;
 ///     Assets/Audio/Announcer/&lt;language&gt;/&lt;Id&gt;_&lt;Variant&gt;.wav   (any audio format)
 ///
 /// e.g. Assets/Audio/Announcer/en/LairTooSmall_1.wav, LairTooSmall_2.wav,
-/// LairTooSmall_Rare.ogg. A line with no recording yet just shows its text.
+/// LairTooSmall_Rare.ogg — or with the language on the end too,
+/// LairTooSmall_1_en.wav (see LocalisedAudio). A line with no recording yet just shows its text.
 /// Re-import after adding recordings or editing the workbook.
 /// </summary>
 public static class AnnouncementImporter
@@ -48,7 +49,7 @@ public static class AnnouncementImporter
 
         var data     = AnnouncementWorkbookParser.Parse(book);
         var warnings = new List<string>(data.Warnings);
-        var clips    = FindClips();
+        var clips    = FindClips(warnings);
 
         var catalogue = LoadOrCreateCatalogue();
         catalogue.defaultLanguage = data.Languages.Count > 0 ? data.Languages[0] : "en";
@@ -89,28 +90,9 @@ public static class AnnouncementImporter
         Report(workbookPath, data.Announcements.Count, lines, found, missing, warnings);
     }
 
-    /// <summary>Language folder → clip name → clip, from Assets/Audio/Announcer/&lt;language&gt;/.</summary>
-    private static Dictionary<string, Dictionary<string, AudioClip>> FindClips()
-    {
-        var result = new Dictionary<string, Dictionary<string, AudioClip>>(StringComparer.OrdinalIgnoreCase);
-        if (!AssetDatabase.IsValidFolder(AudioRoot)) return result;
-
-        foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { AudioRoot }))
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            string rel  = path.Substring(AudioRoot.Length).TrimStart('/');
-            int slash   = rel.IndexOf('/');
-            if (slash <= 0) continue;   // must sit in a language folder
-
-            string lang = rel.Substring(0, slash).ToLowerInvariant();
-            var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
-            if (clip == null) continue;
-            if (!result.TryGetValue(lang, out var byName))
-                result[lang] = byName = new Dictionary<string, AudioClip>(StringComparer.OrdinalIgnoreCase);
-            byName[Path.GetFileNameWithoutExtension(path)] = clip;
-        }
-        return result;
-    }
+    /// <summary>Language folder → recording name → clip (see LocalisedAudio: the _&lt;language&gt; suffix is optional).</summary>
+    private static Dictionary<string, Dictionary<string, AudioClip>> FindClips(List<string> warnings) =>
+        LocalisedAudio.Index(AudioRoot, warnings);
 
     private static AnnouncementCatalogue LoadOrCreateCatalogue()
     {

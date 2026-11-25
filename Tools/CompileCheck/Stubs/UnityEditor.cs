@@ -24,6 +24,7 @@ namespace UnityEditor
         public static string GetAssetPath(UnityEngine.Object asset) => "";
         public static T GetBuiltinExtraResource<T>(string path) where T : UnityEngine.Object => null;
         public static bool IsValidFolder(string path) => false;
+        public static string[] GetSubFolders(string path) => new string[0];
         public static T LoadAssetAtPath<T>(string path) where T : UnityEngine.Object => null;
         public static UnityEngine.Object LoadAssetAtPath(string path, Type type) => null;
         public static void SaveAssets() { }
