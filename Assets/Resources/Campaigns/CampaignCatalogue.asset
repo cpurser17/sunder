@@ -887,7 +887,9 @@ MonoBehaviour:
             cornacopea of primordial theft sold off to fill the air with noxious
             Oxygen and satisfy a sweet tooth."
         cues: []
-        clips: []
+        clips:
+        - language: en
+          clip: {fileID: 8300000, guid: f5e9ed655143f5d489f72ab5b17d20cb, type: 3}
       - moment: 1
         dialogue:
         - language: en
@@ -896,7 +898,9 @@ MonoBehaviour:
             carry. Ironically the Hanging Gardens remains an apt name, we decided
             to keep it.
         cues: []
-        clips: []
+        clips:
+        - language: en
+          clip: {fileID: 8300000, guid: 2dfbe41420d332441a47505998115800, type: 3}
     - id: M20
       kind: 0
       levelId: 04U_M20
