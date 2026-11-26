@@ -176,6 +176,8 @@ public partial class LevelEditorController : MonoBehaviour
     /// </summary>
     private void Back()
     {
+        if (_popup != null) { ClosePopup(); return; }
+        if (_dragGate != null) { CancelGateDrag(); return; }
         switch (_modal)
         {
             case Modal.None:
@@ -382,6 +384,10 @@ public partial class LevelEditorController : MonoBehaviour
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 valid = CanHoldTrapDoor(gridManager.GetCell(_hoverX, _hoverY), out _);
                 break;
+            case Tool.Gates when _dragGate != null:
+                cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
+                valid = CanDropGate(_hoverX, _hoverY);
+                break;
             case Tool.Gates:
                 cells = new[] { gridManager.GetCell(_hoverX, _hoverY) };
                 valid = _removeMode ? GateAt(_hoverX, _hoverY) != null
@@ -423,6 +429,13 @@ public partial class LevelEditorController : MonoBehaviour
             return;
         }
 
+        if (_dragGate != null)
+        {
+            if (Input.GetMouseButton(0)) ContinueGateDrag();
+            else EndGateDrag();
+            return;
+        }
+
         if (!pointerFree || !_hasHover || !Input.GetMouseButtonDown(0)) return;
 
         switch (_tool)
@@ -443,6 +456,10 @@ public partial class LevelEditorController : MonoBehaviour
 
             case Tool.Minions:
                 RunSingleEdit(() => PlaceMinion(_hoverWorld));
+                break;
+
+            case Tool.Gates when !_removeMode && GateAt(_hoverX, _hoverY) != null:
+                BeginGateDrag(GateAt(_hoverX, _hoverY));
                 break;
 
             case Tool.Gates:
@@ -1169,7 +1186,7 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void Undo()
     {
-        if (_stroking || _undo.Count == 0) return;
+        if (_stroking || _dragGate != null || _undo.Count == 0) return;
         _redo.Push(CaptureSnapshot());
         var snapshot = _undo.Last.Value;
         _undo.RemoveLast();
@@ -1179,7 +1196,7 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void Redo()
     {
-        if (_stroking || _redo.Count == 0) return;
+        if (_stroking || _dragGate != null || _redo.Count == 0) return;
         _undo.AddLast(CaptureSnapshot());
         RestoreSnapshot(_redo.Pop());
         SetStatus("Redone.");

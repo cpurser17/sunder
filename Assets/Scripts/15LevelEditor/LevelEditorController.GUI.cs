@@ -48,7 +48,7 @@ public partial class LevelEditorController
 
     private bool IsPointerOverGui()
     {
-        if (_modal != Modal.None) return true;
+        if (_modal != Modal.None || _popup != null) return true;
         var p = new Vector2(Input.mousePosition.x / _uiScale,
                             (Screen.height - Input.mousePosition.y) / _uiScale);
         foreach (var r in _guiRects)
@@ -67,14 +67,22 @@ public partial class LevelEditorController
 
         _guiRects.Clear();
         if (!_editing) _modal = Modal.Start;
+        if (!_editing || _modal != Modal.None || !GateEditorOpen) _popup = null;
+        BeginPopupInput();
 
         if (_editing)
         {
             DrawMinionLabels();
             DrawTopBar(new Rect(0f, 0f, w, TopBarHeight));
             DrawToolPanel(new Rect(0f, TopBarHeight, PanelWidth, h - TopBarHeight - StatusHeight));
+            if (GateEditorOpen)
+            {
+                float gw = Mathf.Min(GatePanelWidth, Mathf.Max(320f, w - PanelWidth - 200f));
+                DrawGateEditor(new Rect(w - gw, TopBarHeight, gw, h - TopBarHeight - StatusHeight));
+            }
             DrawStatusBar(new Rect(0f, h - StatusHeight, w, StatusHeight));
         }
+        DrawPopup(w, h);
 
         if (_modal != Modal.None) DrawModal(w, h);
 
