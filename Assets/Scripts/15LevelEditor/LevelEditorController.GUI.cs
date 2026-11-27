@@ -97,6 +97,7 @@ public partial class LevelEditorController
             _deferred = null;
             actions();
         }
+        if (_editing) RecordGatePanelEdit();
     }
 
     private void EnsureStyles()

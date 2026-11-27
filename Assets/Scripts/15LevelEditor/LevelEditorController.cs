@@ -1180,6 +1180,7 @@ public partial class LevelEditorController : MonoBehaviour
     private void PushUndo(Snapshot before)
     {
         _undo.AddLast(before);
+        ResyncGateBaseline();
         while (_undo.Count > maxUndoSteps) _undo.RemoveFirst();
         _redo.Clear();
     }

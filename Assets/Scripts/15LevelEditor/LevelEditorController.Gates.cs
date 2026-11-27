@@ -220,6 +220,7 @@ public partial class LevelEditorController
         _gateMarkers.Clear();
         _gates.Clear();
         SelectGate(null);
+        ResyncGateBaseline();
     }
 
     private void RefreshGateMarker(GatePlacement gate)
@@ -247,6 +248,47 @@ public partial class LevelEditorController
         if (gates == null) return;
         foreach (var g in gates) if (g != null) AddGate(g.Clone());
         if (selectedId != null) _selectedGate = _gates.Find(g => g.id == selectedId);
+        ResyncGateBaseline();
+    }
+
+    // ── Undo for panel edits ───────────────────────────────────────────
+    // Panel edits change the gates directly, so after each GUI event the
+    // gates are compared with how they were; a difference becomes an undo
+    // step. Typing in one text field is one step until something else is done.
+
+    private string              _gatesBaseline;
+    private List<GatePlacement> _gatesBaselineCopy;
+    private int                 _gateTypingControl;
+
+    private string GatesJson() => Newtonsoft.Json.JsonConvert.SerializeObject(_gates);
+
+    /// <summary>The gates as they are now are the baseline (after any undo step, load or undo).</summary>
+    private void ResyncGateBaseline()
+    {
+        _gatesBaseline     = GatesJson();
+        _gatesBaselineCopy = CloneGates();
+        _gateTypingControl = 0;
+    }
+
+    private void RecordGatePanelEdit()
+    {
+        var type = Event.current.type;
+        if (type == EventType.Layout || type == EventType.Repaint || _gatesBaseline == null) return;
+        string now = GatesJson();
+        if (now == _gatesBaseline) return;
+
+        // Only keystrokes merge: a button click while a field has focus is its own step.
+        int typing = type == EventType.KeyDown ? GUIUtility.keyboardControl : 0;
+        bool sameTyping = typing != 0 && typing == _gateTypingControl;
+        if (!sameTyping)
+        {
+            var before = CaptureSnapshot();
+            before.Gates = _gatesBaselineCopy;
+            PushUndo(before);
+        }
+        _gatesBaseline     = now;
+        _gatesBaselineCopy = CloneGates();
+        _gateTypingControl = typing;
     }
 
     private void ClearGateBuffers()
