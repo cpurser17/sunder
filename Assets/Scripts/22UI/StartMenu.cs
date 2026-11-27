@@ -231,13 +231,20 @@ public class StartMenu : MonoBehaviour
             {
                 if (def == null || string.IsNullOrEmpty(def.factionContentId)) continue;
                 if (!def.factionContentId.EndsWith("U", System.StringComparison.OrdinalIgnoreCase)) continue;   // Underworld factions
-                string name = string.IsNullOrWhiteSpace(def.displayName) || def.displayName == def.factionContentId
-                    ? def.factionContentId : $"{def.displayName} ({def.factionContentId})";
-                list.Add((def.factionContentId, name));
+                list.Add((def.factionContentId, FactionName(def.factionContentId, def.displayName)));
             }
         if (list.Count == 0)
-            foreach (var c in _catalogue.campaigns) list.Add((c.id, c.id));
+            foreach (var c in _catalogue.campaigns) list.Add((c.id, FactionName(c.id, null)));
         return list;
+    }
+
+    /// <summary>The faction's display name; with none set, its campaign's name; the id after either.</summary>
+    private string FactionName(string id, string displayName)
+    {
+        string name = displayName;
+        if (string.IsNullOrWhiteSpace(name) || name == id)
+            name = _catalogue.Find(id)?.NameFor(CampaignSession.Language, _catalogue.defaultLanguage);
+        return string.IsNullOrWhiteSpace(name) || name == id ? id : $"{name} ({id})";
     }
 
     private string FirstFaction()

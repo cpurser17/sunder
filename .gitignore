@@ -82,3 +82,6 @@ crashlytics-build.properties
 # MacOS
 .DS_Store
 **/.DS_Store
+
+# Excel lock files (open workbooks)
+~$*
