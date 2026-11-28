@@ -13,6 +13,7 @@ namespace UnityEngine.EventSystems
         public InputButton button;
         public Vector2 position;
         public Vector2 delta;
+        public Vector2 scrollDelta;
         public int clickCount;
         public GameObject pointerEnter;
     }
@@ -53,6 +54,14 @@ namespace UnityEngine.UI
         public void SetAllDirty() { }
         public void SetVerticesDirty() { }
         public void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale) { }
+        protected virtual void OnPopulateMesh(VertexHelper vh) { }
+    }
+    public class VertexHelper
+    {
+        public int currentVertCount => 0;
+        public void Clear() { }
+        public void AddVert(Vector3 position, Color32 color, Vector4 uv0) { }
+        public void AddTriangle(int idx0, int idx1, int idx2) { }
     }
     public class MaskableGraphic : Graphic { public bool maskable { get; set; } }
     public class Image : MaskableGraphic

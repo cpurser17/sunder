@@ -35,7 +35,8 @@ public class DungeonRoom
         get
         {
             if (Definition == null) return 0;
-            float capacity = Cells.Count * Definition.capacityPerTile;
+            float perTile  = FactionModifiers.Get(Owner, ModifierTarget.Room, TileType.ToString(), ModifierStats.Capacity, Definition.capacityPerTile);
+            float capacity = Cells.Count * perTile;
             if (Definition.capacityScalesWithEfficiency) capacity *= Efficiency;
             return (int)(capacity + 0.0001f); // tolerance: 9 × 500 × 0.68 must give 3060, not 3059
         }

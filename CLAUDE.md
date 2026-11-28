@@ -10,6 +10,7 @@ by hand in Excel; changes to them come only from the user's own commits.
 - `Assets/Data/Announcements.xlsx`
 - `Assets/Data/SpellData.xlsx`
 - `Assets/Data/Campaigns.xlsx`
+- `Assets/Data/Research.xlsx`
 
 Only edit one when the user explicitly asks for that edit in the conversation.
 If code needs a new column or sheet, change the parser/importer to tolerate its

@@ -16,7 +16,7 @@ public class HealEffect : SpellEffect
 
     public override bool Cast(in SpellTarget target)
     {
-        target.Minion.Heal(target.Spell.PowerAt(target.Level));
+        target.Minion.Heal(target.Power);
         KeeperHand.Instance?.HoldStill(target.Minion);
         return true;
     }

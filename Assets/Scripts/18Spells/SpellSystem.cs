@@ -68,7 +68,8 @@ public class SpellSystem : MonoBehaviour
     public int CostOf(FactionID caster, SpellDefinition spell, int level)
     {
         var effect = EffectFor(spell);
-        return effect != null ? Mathf.Max(0, effect.Cost(caster, spell, spell.Clamp(level))) : spell.CostAt(level);
+        int cost = effect != null ? Mathf.Max(0, effect.Cost(caster, spell, spell.Clamp(level))) : spell.CostAt(level);
+        return SpellStats.Cost(caster, spell, cost);
     }
 
     public float CooldownLeft(FactionID caster, SpellDefinition spell) =>
@@ -84,6 +85,7 @@ public class SpellSystem : MonoBehaviour
     {
         var effect = EffectFor(target.Spell);
         if (effect == null) return false;
+        if (SpellStats.Locked(target.Caster, target.Spell)) return false;   // not researched yet
         if (CooldownLeft(target.Caster, target.Spell) > 0f) return false;
         if (!InCastRange(target)) return false;
         return effect.CanTarget(target);
@@ -130,10 +132,11 @@ public class SpellSystem : MonoBehaviour
         MatchStats.Add(target.Caster, MissionStats.SpellsCast);
         if (cost > 0) wallet.TrySpend(cost);
 
-        if (target.Spell.cooldown > 0f)
+        float cooldown = SpellStats.Cooldown(target.Caster, target.Spell);
+        if (cooldown > 0f)
         {
             if (!_readyAt.TryGetValue(target.Caster, out var byId)) _readyAt[target.Caster] = byId = new();
-            byId[target.Spell.id] = Time.time + target.Spell.cooldown;
+            byId[target.Spell.id] = Time.time + cooldown;
         }
         return true;
     }

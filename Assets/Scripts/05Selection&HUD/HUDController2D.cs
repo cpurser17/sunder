@@ -161,7 +161,42 @@ public class HUDController2D : MonoBehaviour
         GameManager2D.OnWalletsReady -= ConnectWallet;
     }
 
-    private void Update() => RefreshSpellLabels();
+    private void Update()
+    {
+        RefreshSpellLabels();
+        RefreshRoomButtons();
+    }
+
+    private readonly Dictionary<Button, int> _shownRoomCost = new();
+
+    /// <summary>
+    /// Rooms and spells that research hasn't unlocked yet can't be chosen
+    /// (their buttons are disabled, so their hotkeys do nothing either), and
+    /// room prices follow research changes.
+    /// </summary>
+    private void RefreshRoomButtons()
+    {
+        var tiles = Tiles;
+        foreach (var entry in buyButtonEntries)
+        {
+            if (entry?.button == null) continue;
+            bool locked = FactionModifiers.Locked(localPlayer, UnlockKind.Room, entry.tileType.ToString());
+            if (entry.button.interactable == locked) entry.button.interactable = !locked;
+
+            var def = tiles?.GetDefinition(entry.tileType);
+            if (def == null || !def.playerBuildable || selectionController == null) continue;
+            int cost = selectionController.RoomCost(entry.tileType);
+            if (_shownRoomCost.TryGetValue(entry.button, out int shown) && shown == cost) continue;
+            _shownRoomCost[entry.button] = cost;
+            var label = entry.button.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = ButtonLabel(def, cost);
+        }
+        foreach (var pair in _spellButtons)
+        {
+            bool locked = SpellStats.Locked(localPlayer, pair.Value.Spell);
+            if (pair.Key.interactable == locked) pair.Key.interactable = !locked;
+        }
+    }
 
     private void ConnectWallet()
     {
@@ -448,9 +483,11 @@ public class HUDController2D : MonoBehaviour
     }
 
     /// <summary>"Library (60g)", plus the hotkey slot in small print when it has one.</summary>
-    private static string ButtonLabel(TileDefinition def)
+    private static string ButtonLabel(TileDefinition def) => ButtonLabel(def, def.buyCost);
+
+    private static string ButtonLabel(TileDefinition def, int cost)
     {
-        string text = def.buyCost > 0 ? $"{def.tileName} ({def.buyCost}g)" : def.tileName;
+        string text = cost > 0 ? $"{def.tileName} ({cost}g)" : def.tileName;
         return text + SlotSuffix(def.buttonRow, def.buttonColumn);
     }
 

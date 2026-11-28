@@ -16,7 +16,7 @@ public class SmiteEffect : SpellEffect
     {
         var m = target.Minion;
         float multiplier = m.Definition != null ? m.Definition.DamageTakenMultiplier(target.Spell.damageType) : 1f;
-        m.TakeDamage(target.Spell.PowerAt(target.Level) * multiplier, null);
+        m.TakeDamage(target.Power * multiplier, null);
         if (!m.IsAlive) MatchStats.Add(target.Caster, MissionStats.Kills);
         return true;
     }

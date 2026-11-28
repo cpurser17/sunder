@@ -14,6 +14,28 @@ public struct SpellTarget
     public Vector3          Point;
     /// <summary>The minion aimed at, for minion-targeted spells.</summary>
     public MinionController Minion;
+
+    // The spell's numbers at this level, after the caster's research changes.
+    public float Power    => SpellStats.Power(Caster, Spell, Level);
+    public float Radius   => SpellStats.Radius(Caster, Spell, Level);
+    public float Duration => SpellStats.Duration(Caster, Spell, Level);
+}
+
+/// <summary>A spell's numbers for a caster — the SpellData values, after that team's research changes (FactionModifiers).</summary>
+public static class SpellStats
+{
+    public static float Power(FactionID caster, SpellDefinition spell, int level) =>
+        FactionModifiers.Get(caster, ModifierTarget.Spell, spell.id, ModifierStats.Power, spell.PowerAt(level));
+    public static float Radius(FactionID caster, SpellDefinition spell, int level) =>
+        FactionModifiers.Get(caster, ModifierTarget.Spell, spell.id, ModifierStats.Radius, spell.RadiusAt(level));
+    public static float Duration(FactionID caster, SpellDefinition spell, int level) =>
+        FactionModifiers.Get(caster, ModifierTarget.Spell, spell.id, ModifierStats.Duration, spell.DurationAt(level));
+    public static float Cooldown(FactionID caster, SpellDefinition spell) =>
+        UnityEngine.Mathf.Max(0f, FactionModifiers.Get(caster, ModifierTarget.Spell, spell.id, ModifierStats.Cooldown, spell.cooldown));
+    public static int Cost(FactionID caster, SpellDefinition spell, int baseCost) =>
+        UnityEngine.Mathf.Max(0, FactionModifiers.GetInt(caster, ModifierTarget.Spell, spell.id, ModifierStats.Cost, baseCost));
+    public static bool Locked(FactionID caster, SpellDefinition spell) =>
+        spell != null && FactionModifiers.Locked(caster, UnlockKind.Spell, spell.id);
 }
 
 /// <summary>Names the spell effect a class implements — the Effect column in the SpellData workbook.</summary>

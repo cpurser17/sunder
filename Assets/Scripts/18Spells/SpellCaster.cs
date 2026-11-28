@@ -282,7 +282,7 @@ public class SpellCaster : MonoBehaviour
     {
         if (_ring == null || _armed == null) return;
         int level = _charging ? _level : 1;
-        float tiles = _armed.RadiusAt(level);
+        float tiles = SpellStats.Radius(localPlayer, _armed, level);
         var target = TargetUnderCursor(level);
         if (tiles <= 0f || target.Cell == null || (PointerOverUI() && !_charging)) { ShowRing(false); return; }
 

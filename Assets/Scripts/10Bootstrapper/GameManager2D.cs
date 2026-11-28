@@ -201,6 +201,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<MissionDirector>();
         if (FindAnyObjectByType<GateSystem>() == null)
             gameObject.AddComponent<GateSystem>();
+        if (FindAnyObjectByType<ResearchScreen>() == null)
+            gameObject.AddComponent<ResearchScreen>();
 
         // Fog of war (the level editor has no GameManager2D, so no fog).
         if (FindAnyObjectByType<FogOfWar>() == null)

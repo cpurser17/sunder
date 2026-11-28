@@ -192,6 +192,8 @@ public class CampaignWorkbookParser : WorkbookParser
             else if (campaign.Find(id) == null)
                 Warnings.Add($"{where}: Requires '{text}' names mission {id}, which isn't in {campaign.id}.");
         }
+        foreach (var keyword in rule.KeywordsNotFor(research: false))
+            Warnings.Add($"{where}: Requires '{text}' uses {keyword}(…), which is for research nodes, not campaigns — it never holds here.");
         foreach (var stat in rule.StatsReferenced())
             if (!MissionStats.IsKnown(stat))
                 Warnings.Add($"{where}: Requires '{text}' uses the stat '{stat}', which the game doesn't record yet " +

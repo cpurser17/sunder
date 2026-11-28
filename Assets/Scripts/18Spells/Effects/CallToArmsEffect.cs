@@ -17,7 +17,7 @@ public class CallToArmsEffect : SpellEffect
     public override bool Cast(in SpellTarget target)
     {
         var spell = target.Spell;
-        RallyPoints.Instance.Set(target.Caster, target.Point, spell.RadiusAt(target.Level),
+        RallyPoints.Instance.Set(target.Caster, target.Point, target.Radius,
                                  spell.upkeepGold, spell.upkeepInterval);
         return true;
     }

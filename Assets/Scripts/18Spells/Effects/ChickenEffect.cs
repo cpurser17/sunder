@@ -10,9 +10,9 @@ public class ChickenEffect : SpellEffect
     {
         var m = target.Minion;
         return m != null && m.IsTargetable && CombatSystem.IsEnemy(target.Caster, m.Faction) &&
-               target.Spell.DurationAt(target.Level) > 0f;
+               target.Duration > 0f;
     }
 
     public override bool Cast(in SpellTarget target) =>
-        target.Minion.Polymorph(target.Spell.DurationAt(target.Level));
+        target.Minion.Polymorph(target.Duration);
 }

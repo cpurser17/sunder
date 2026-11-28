@@ -246,9 +246,11 @@ public class MinionSummoner : MonoBehaviour
     /// <summary>The first required research the faction hasn't completed, or null.</summary>
     private string FirstMissingResearch(FactionID faction, MinionDefinition def)
     {
+        var research = GameManager2D.Instance?.GetResearch(faction);
+        if (research != null && research.Modifiers.IsLocked(UnlockKind.Minion, def.minionId))
+            return research.Web?.Unlocking(UnlockKind.Minion, def.minionId)?.Id ?? "research";
         if (def.requiredResearchIds.Count == 0) return null;
 
-        var research = GameManager2D.Instance?.GetResearch(faction);
         foreach (var id in def.requiredResearchIds)
             if (research == null || !research.HasResearch(id)) return id;
         return null;

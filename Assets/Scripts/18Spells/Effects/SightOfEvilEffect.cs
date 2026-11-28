@@ -9,15 +9,15 @@ public class SightOfEvilEffect : SpellEffect
 {
     public override bool CanTarget(in SpellTarget target) =>
         FogOfWar.Instance != null && target.Cell != null &&
-        target.Spell.RadiusAt(target.Level) > 0f && target.Spell.DurationAt(target.Level) > 0f;
+        target.Radius > 0f && target.Duration > 0f;
 
     public override bool Cast(in SpellTarget target)
     {
         var grid = GameManager2D.Instance != null ? GameManager2D.Instance.Grid : null;
         if (grid == null) return false;
         FogOfWar.Instance.RevealCircle(target.Caster, target.Point,
-                                       target.Spell.RadiusAt(target.Level) * grid.CellSize,
-                                       target.Spell.DurationAt(target.Level));
+                                       target.Radius * grid.CellSize,
+                                       target.Duration);
         return true;
     }
 }

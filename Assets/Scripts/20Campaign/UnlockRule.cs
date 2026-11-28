@@ -45,6 +45,12 @@ public abstract class UnlockCondition
     /// <summary>Stat names among the arguments, so the importer can check the game records them.</summary>
     public virtual IEnumerable<string> StatsReferenced(IReadOnlyList<string> args) { yield break; }
 
+    /// <summary>Research ids among the arguments, so the research importer can check they exist.</summary>
+    public virtual IEnumerable<string> ResearchReferenced(IReadOnlyList<string> args) { yield break; }
+
+    /// <summary>True for conditions about a mission in progress (research web rules), false for campaign progress.</summary>
+    public virtual bool ForResearch => false;
+
     protected static bool Compare(float a, string op, float b) => op switch
     {
         ">=" => a >= b, "<=" => a <= b, ">" => a > b, "<" => a < b,
@@ -127,6 +133,7 @@ public class UnlockRule
     private sealed class Leaf : Node
     {
         public UnlockCondition Condition;
+        public string          Keyword;
         public List<string>    Args = new();
         public string          Op;
         public float           Value;
@@ -167,6 +174,20 @@ public class UnlockRule
     {
         foreach (var leaf in _leaves)
             foreach (var id in leaf.Condition.MissionsReferenced(leaf.Args)) yield return id;
+    }
+
+    /// <summary>Every research id the rule mentions.</summary>
+    public IEnumerable<string> ResearchReferenced()
+    {
+        foreach (var leaf in _leaves)
+            foreach (var id in leaf.Condition.ResearchReferenced(leaf.Args)) yield return id;
+    }
+
+    /// <summary>The keywords the rule uses that belong to the other kind of rule (campaign vs research).</summary>
+    public IEnumerable<string> KeywordsNotFor(bool research)
+    {
+        foreach (var leaf in _leaves)
+            if (leaf.Condition.ForResearch != research) yield return leaf.Keyword;
     }
 
     /// <summary>Every stat name the rule mentions.</summary>
@@ -217,7 +238,7 @@ public class UnlockRule
         var condition = UnlockCondition.Find(keyword);
         if (condition == null) throw new FormatException($"unknown condition \"{keyword}\"");
 
-        var leaf = new Leaf { Condition = condition };
+        var leaf = new Leaf { Condition = condition, Keyword = keyword };
         if (Peek == "(")
         {
             _pos++;

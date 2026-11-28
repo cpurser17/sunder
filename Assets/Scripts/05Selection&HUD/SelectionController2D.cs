@@ -61,6 +61,11 @@ public class SelectionController2D : MonoBehaviour
     public InteractionMode ActiveMode     { get; set; } = InteractionMode.None;
     public TileType        ActiveTileType { get; set; } = TileType.Treasury;
 
+    /// <summary>The price of one tile of a room for this player, after research (FactionModifiers).</summary>
+    public int RoomCost(TileType type) =>
+        UnityEngine.Mathf.Max(0, FactionModifiers.GetInt(localPlayer, ModifierTarget.Room, type.ToString(), ModifierStats.Cost,
+                                                         gridManager.GetBuyCost(type)));
+
     // ── Drag state ─────────────────────────────────────────────────────
     private bool _dragging;
     private int  _startX, _startY, _currentX, _currentY;
@@ -185,7 +190,7 @@ public class SelectionController2D : MonoBehaviour
     private (int cost, bool regionValid) PreviewBuy()
     {
         var buildable = BuildableCells();
-        int cost = buildable.Count * gridManager.GetBuyCost(ActiveTileType);
+        int cost = buildable.Count * RoomCost(ActiveTileType);
         Color col = Wallet.Gold >= cost ? ColCanAfford : ColCannotAfford;
 
         // Cells that will be built in the afford colour; the rest dimmed, so
@@ -305,7 +310,7 @@ public class SelectionController2D : MonoBehaviour
         if (targets.Count == 0) return;
 
         // All or nothing: if the whole selection can't be afforded, nothing is built.
-        int total = targets.Count * gridManager.GetBuyCost(ActiveTileType);
+        int total = targets.Count * RoomCost(ActiveTileType);
         if (!Wallet.TrySpend(total))
         {
             Announcer.Announce(localPlayer, "NotEnoughGold");

@@ -116,7 +116,7 @@ public class TreasuryManager : MonoBehaviour
         var def = Grid.GetDefinition(treasuryType);
         if (def == null) return 0;
 
-        float capacity = def.capacityPerTile;
+        float capacity = FactionModifiers.Get(cell.Owner, ModifierTarget.Room, def.tileType.ToString(), ModifierStats.Capacity, def.capacityPerTile);
         if (def.capacityScalesWithEfficiency)
         {
             var room = cell.RoomId >= 0 ? Grid.GetRoomForCell(cell) : null;

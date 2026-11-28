@@ -796,7 +796,7 @@ public class MinionController : MonoBehaviour, IHandTarget
 
     /// <summary>This minion's value for a stat at its current level (0 with no data).</summary>
     public float GetStat(MinionStat stat) =>
-        (_definition != null ? _definition.GetStat(stat, _level) : 0f) * Exhaustion(stat);
+        Researched(stat, _definition != null ? _definition.GetStat(stat, _level) : 0f) * Exhaustion(stat);
 
     /// <summary>
     /// A stat at the current level if the data has a row for it, otherwise
@@ -804,7 +804,19 @@ public class MinionController : MonoBehaviour, IHandTarget
     /// the workbook is filled in.
     /// </summary>
     public float GetStatOr(MinionStat stat, float fallback) =>
-        (_definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback) * Exhaustion(stat);
+        Researched(stat, _definition != null && _definition.TryGetAuthoredStat(stat, _level, out float v) ? v : fallback) * Exhaustion(stat);
+
+    private static readonly string[] StatNames = System.Enum.GetNames(typeof(MinionStat));
+
+    /// <summary>A stat after its team's research (and other) changes — see FactionModifiers.</summary>
+    private float Researched(MinionStat stat, float value)
+    {
+        var mods = FactionModifiers.Of(faction);
+        if (mods == null || !mods.HasMinionChanges) return value;
+        int i = (int)stat;
+        return mods.Apply(ModifierTarget.Minion, _definition != null ? _definition.minionId : null,
+                          i >= 0 && i < StatNames.Length ? StatNames[i] : stat.ToString(), value);
+    }
 
     /// <summary>The penalty on a stat: exhausted and/or starving multiply performance stats down; others are untouched.</summary>
     private float Exhaustion(MinionStat stat)

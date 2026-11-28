@@ -75,6 +75,17 @@ public class FactionProgressSaveData
     public float researchPoints;
     public float manufacturePoints;
     public float prayerPoints;
+    /// <summary>Points put into each research node not yet finished. Null in older saves.</summary>
+    public List<ResearchProgressSaveData> researchProgress;
+    /// <summary>The research queue, in order. Null in older saves.</summary>
+    public List<string> researchQueue;
+}
+
+[System.Serializable]
+public class ResearchProgressSaveData
+{
+    public string id;
+    public float  points;
 }
 
 /// <summary>One cell, by grid coordinates — e.g. a dig mark.</summary>

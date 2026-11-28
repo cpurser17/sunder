@@ -169,6 +169,16 @@ public class Announcer : MonoBehaviour
     /// <summary>Gives a warning to a faction's player, if it's human. Safe to call for anyone, any time.</summary>
     public static void Announce(FactionID faction, string id) => Instance?.Give(faction, id, null);
 
+    /// <summary>Whether the catalogue has an announcement with this id — for optional ones that may not be written yet.</summary>
+    public static bool Has(string id) =>
+        Instance != null && !string.IsNullOrEmpty(id) && Instance._byId.ContainsKey(id);
+
+    /// <summary>Announces only if the announcement exists — no warning if it hasn't been written yet.</summary>
+    public static void AnnounceIfWritten(FactionID faction, string id)
+    {
+        if (Has(id)) Announce(faction, id);
+    }
+
     /// <summary>As Announce, for something happening at a place (an attack, a full room).</summary>
     public static void Announce(FactionID faction, string id, Vector3 where) => Instance?.Give(faction, id, where);
 

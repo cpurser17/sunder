@@ -20,8 +20,8 @@ public class CaveInEffect : SpellEffect
     public override bool Cast(in SpellTarget target)
     {
         var   grid   = GameManager2D.Instance.Grid;
-        float radius = target.Spell.RadiusAt(target.Level) * grid.CellSize;
-        float power  = target.Spell.PowerAt(target.Level);
+        float radius = target.Radius * grid.CellSize;
+        float power  = target.Power;
 
         // A copy: a kill removes the minion from All.
         foreach (var m in new System.Collections.Generic.List<MinionController>(MinionController.All))
