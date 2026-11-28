@@ -68,13 +68,21 @@ public static class GameSettings
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Startup()
     {
+        // Play mode doesn't reload scripts in this project, so anything kept
+        // from the last session is reset here.
         Load();
-        GameControls.EnsureBuilt();
+        _focused = true;
+        GameControls.Rebuild();
+        ThirdPersonOrbitCamera.ZoomSuspended  = false;
+        ThirdPersonOrbitCamera.OrbitSuspended = false;
         var runtime = new GameObject("GameSettings").AddComponent<SettingsRuntime>();
         UnityEngine.Object.DontDestroyOnLoad(runtime.gameObject);
-        SceneManager.sceneLoaded += (_, _) => ApplyUiScale();
+        SceneManager.sceneLoaded -= OnSceneLoaded;   // once, however many sessions
+        SceneManager.sceneLoaded += OnSceneLoaded;
         Apply();
     }
+
+    private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => ApplyUiScale();
 
     public static void Load()
     {

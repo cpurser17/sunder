@@ -84,6 +84,28 @@ public static class GameControls
     /// <summary>Forces the controls to be set up (they are on first use anyway).</summary>
     public static void EnsureBuilt() { }
 
+    /// <summary>
+    /// Builds the controls afresh, with the player's saved keys, and forgets
+    /// any menu or rebind state. Run at the start of every play session
+    /// (GameSettings): the project enters Play mode without reloading
+    /// scripts, so this class's state would otherwise carry over — and the
+    /// Input System switches every action off when Play mode ends.
+    /// </summary>
+    public static void Rebuild()
+    {
+        if (Asset != null)
+        {
+            Asset.Disable();
+            Object.Destroy(Asset);
+        }
+        _labels.Clear();
+        _rebindable.Clear();
+        _modals = 0;
+        _backTakenFrame = _rebindEndedFrame = -1;
+        Rebinding = false;
+        Build();
+    }
+
     private static void Build()
     {
         Asset = ScriptableObject.CreateInstance<InputActionAsset>();
