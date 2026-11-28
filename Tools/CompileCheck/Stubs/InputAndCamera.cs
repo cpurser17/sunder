@@ -61,6 +61,7 @@ namespace UnityEngine.InputSystem
         public InputActionMap(string name = null) { }
         public string name => null;
         public System.Collections.Generic.IReadOnlyList<InputAction> actions => null;
+        public bool enabled => false;
         public InputAction FindAction(string nameOrId, bool throwIfNotFound = false) => null;
         public void Enable() { }
         public void Disable() { }

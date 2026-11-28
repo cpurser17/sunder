@@ -273,6 +273,25 @@ public static class GameControls
         if (--_modals == 0) SetGameplayEnabled(true);
     }
 
+    /// <summary>
+    /// Switches the controls back on if something has switched them off —
+    /// the Input System does when Play mode ends or input is reset. Menus'
+    /// own switching off (ModalOpen) and rebinding are left alone.
+    /// </summary>
+    public static void KeepEnabled()
+    {
+        if (Asset == null || Rebinding) return;
+        var general = Asset.FindActionMap("General");
+        if (general != null && !general.enabled)
+        {
+            general.Enable();
+            if (ModalOpen) SetGameplayEnabled(false);   // Enable() turned those back on too
+        }
+        if (ModalOpen) return;
+        foreach (var map in Asset.actionMaps)
+            if (!map.enabled) map.Enable();
+    }
+
     private static void SetGameplayEnabled(bool on)
     {
         foreach (var name in new[] { "Camera", "Gameplay", "HUD", "LevelEditor" })

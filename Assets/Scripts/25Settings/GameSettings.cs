@@ -318,4 +318,6 @@ public static class GameSettings
 public class SettingsRuntime : MonoBehaviour
 {
     private void OnApplicationFocus(bool focus) => GameSettings.SetFocused(focus);
+
+    private void Update() => GameControls.KeepEnabled();
 }
