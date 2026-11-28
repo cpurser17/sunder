@@ -59,7 +59,7 @@ public class CampaignScreen : MonoBehaviour
     /// <summary>Escape: skips the narration if a line is playing, else back to the main menu.</summary>
     private void Update()
     {
-        if (!Input.GetKeyDown(KeyCode.Escape)) return;
+        if (!GameControls.General.Back.WasPressedThisFrame()) return;
         var narrator = CampaignNarrator.Instance;
         if (CampaignNarrator.SkippedFrame == Time.frameCount) return;        // that press skipped a line
         if (narrator != null && narrator.IsPlaying) { narrator.Stop(); return; }

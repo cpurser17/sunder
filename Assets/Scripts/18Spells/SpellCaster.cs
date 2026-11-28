@@ -108,37 +108,37 @@ public class SpellCaster : MonoBehaviour
         if (PauseController.IsPaused || mainCamera == null)
         {
             // Let go while paused: that cast is off.
-            if (_charging && !Input.GetMouseButton(0)) _charging = false;
+            if (_charging && !MouseButtons.PrimaryHeld) _charging = false;
             ShowLabel(false);
             ShowRing(false);
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape)) { PutAway(); return; }
+        if (GameControls.General.Back.WasPressedThisFrame()) { PutAway(); return; }
 
         var spells = SpellSystem.Instance;
         if (spells == null) return;
 
         if (_charging)
         {
-            if (Input.GetMouseButtonDown(1)) { _charging = false; }
+            if (MouseButtons.SecondaryDown) { _charging = false; }
             else
             {
                 Charge(spells);
-                if (Input.GetMouseButtonUp(0) || !Input.GetMouseButton(0))
+                if (MouseButtons.PrimaryUp || !MouseButtons.PrimaryHeld)
                 {
                     _charging = false;
                     spells.TryCast(TargetUnderCursor(_level));
                 }
             }
         }
-        else if (Input.GetMouseButtonDown(1))
+        else if (MouseButtons.SecondaryDown)
         {
             var effect = SpellSystem.EffectFor(_armed);
             var aimed  = TargetUnderCursor(1);
             if (effect == null || aimed.Cell == null || !effect.OnRightClick(localPlayer, aimed.Point)) { PutAway(); return; }
         }
-        else if (Input.GetMouseButtonDown(0) && !PointerOverUI())
+        else if (MouseButtons.PrimaryDown && !PointerOverUI())
         {
             StartCharge(spells);
         }

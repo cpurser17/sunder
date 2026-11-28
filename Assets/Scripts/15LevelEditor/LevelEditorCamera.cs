@@ -74,10 +74,10 @@ public class LevelEditorCamera : MonoBehaviour
         if (keyboardFree) KeyboardPan();
 
         // Drags continue over the UI once started, so a pan isn't cut short.
-        bool dragButton = Input.GetMouseButton(1) || Input.GetMouseButton(2);
+        bool dragButton = MouseButtons.SecondaryHeld || MouseButtons.MiddleHeld;
         if (!dragButton) _dragging = false;
         else if (!_dragging && pointerFree &&
-                 (Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2)) &&
+                 (MouseButtons.SecondaryDown || MouseButtons.MiddleDown) &&
                  TryGetGroundPoint(Input.mousePosition, out _dragGroundPoint))
             _dragging = true;
 
@@ -90,18 +90,14 @@ public class LevelEditorCamera : MonoBehaviour
 
     private void KeyboardPan()
     {
-        float x = 0f, z = 0f;
-        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  x -= 1f;
-        if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) x += 1f;
-        if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))  z -= 1f;
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))    z += 1f;
-        if (x == 0f && z == 0f) return;
+        Vector2 pan = GameControls.LevelEditor.Pan.ReadValue<Vector2>();
+        if (pan.sqrMagnitude < 0.0001f) return;
 
         // Ctrl+S saves; don't also drift the camera down.
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) return;
+        if (GameControls.LevelEditor.ShortcutModifier.IsPressed()) return;
 
         float speed = _cam.orthographicSize * 2f * keyPanSpeed * Time.unscaledDeltaTime;
-        transform.position += new Vector3(x, 0f, z).normalized * speed;
+        transform.position += new Vector3(pan.x, 0f, pan.y).normalized * speed;
     }
 
     private void Zoom(float scroll)

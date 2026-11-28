@@ -164,11 +164,11 @@ public class KeeperHand : MonoBehaviour
 
         if (_standDown) return;
 
-        if (Input.GetMouseButtonDown(0) && _claimsLmb)
+        if (MouseButtons.PrimaryDown && _claimsLmb)
         {
             PickUp(_hovered);
         }
-        else if (Input.GetMouseButtonDown(1) && _claimsRmb)
+        else if (MouseButtons.SecondaryDown && _claimsRmb)
         {
             if (_held.Count == 0)            Slap(_hovered);
             else if (ShiftHeld)              DropAll();
@@ -179,7 +179,7 @@ public class KeeperHand : MonoBehaviour
     private void LateUpdate() => PositionHeldMinions();
 
     private static bool ShiftHeld =>
-        Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        GameControls.Gameplay.DropAllModifier.IsPressed();
 
     // ── Frame state ────────────────────────────────────────────────────
 

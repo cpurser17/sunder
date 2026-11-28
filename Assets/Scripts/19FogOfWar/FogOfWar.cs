@@ -37,7 +37,7 @@ using UnityEngine;
 /// everything: IsVisible is true and KnownLook is the truth. Track a faction
 /// and the same checks give an AI its fair view.
 ///
-/// Debug: revealKey (F9, editor and development builds) shows the whole map.
+/// Debug: GameControls.General.RevealFog (F9, editor and development builds) shows the whole map.
 ///
 /// Scene setup: none — GameManager2D adds one. The level editor has none.
 /// </summary>
@@ -50,8 +50,6 @@ public class FogOfWar : MonoBehaviour, ICellAppearance
     [SerializeField, Min(0.05f)] private float updateInterval = 0.2f;
     [Tooltip("Brightness of tiles out of sight (1 = no darkening).")]
     [SerializeField, Range(0f, 1f)] private float exploredBrightness = 0.5f;
-    [Tooltip("Shows the whole map while on. Editor and development builds only.")]
-    [SerializeField] private KeyCode revealKey = KeyCode.F9;
 
     /// <summary>Fired when a cell's remembered look changes, or it comes into or goes out of sight, for any group.</summary>
     public event Action<FactionID, GridCell> OnKnowledgeChanged;
@@ -211,7 +209,7 @@ public class FogOfWar : MonoBehaviour, ICellAppearance
 
     private void Update()
     {
-        if ((Application.isEditor || Debug.isDebugBuild) && Input.GetKeyDown(revealKey))
+        if ((Application.isEditor || Debug.isDebugBuild) && GameControls.General.RevealFog.WasPressedThisFrame())
         {
             _revealAll = !_revealAll;
             Debug.Log($"[FogOfWar] Reveal all {(_revealAll ? "on" : "off")}.");

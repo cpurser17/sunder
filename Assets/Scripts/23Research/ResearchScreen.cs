@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// <summary>
 /// The research screen: the local player's research web on a polar layout,
 /// plus a small widget (top right) showing what's being researched — click
-/// it, or press the toggle key (R), to open the screen. Built in code with
+/// it, or press GameControls.General.Research (R), to open the screen. Built in code with
 /// UiKit, so it works before it has art.
 ///
 ///   • Nodes sit at Angle/Radius (rings × ringSpacing). The web is zoomed to
@@ -25,7 +25,6 @@ using UnityEngine.UI;
 public class ResearchScreen : MonoBehaviour
 {
     [SerializeField] private FactionID localPlayer = FactionID.Player;
-    [SerializeField] private KeyCode   toggleKey   = KeyCode.R;
     [Tooltip("Content units between rings — the web's scale before zooming.")]
     [SerializeField] private float ringSpacing = 150f;
     [SerializeField] private float nodeSize    = 84f;
@@ -79,8 +78,8 @@ public class ResearchScreen : MonoBehaviour
         var research = GameManager2D.Instance != null ? GameManager2D.Instance.GetResearch(localPlayer) : null;
         if (research != _research) Watch(research);
 
-        if (!IsTyping() && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey)) Toggle();
-        if (IsOpen && Input.GetKeyDown(KeyCode.Escape)) Close();
+        if (!IsTyping() && GameControls.General.Research.WasPressedThisFrame()) Toggle();
+        if (IsOpen && GameControls.General.Back.WasPressedThisFrame()) Close();
 
         UpdateWidget();
         if (!IsOpen) return;
@@ -158,7 +157,7 @@ public class ResearchScreen : MonoBehaviour
         tr.anchorMin = new Vector2(0f, 1f); tr.anchorMax = new Vector2(1f, 1f); tr.pivot = new Vector2(0.5f, 1f);
         tr.offsetMin = new Vector2(24f, -60f); tr.offsetMax = new Vector2(-24f, -10f);
 
-        var close = UiKit.Button("Close", _window, "Close  (R)", Close, 20f);
+        var close = UiKit.Button("Close", _window, $"Close  ({GameControls.KeysOf(GameControls.General.Research)})", Close, 20f);
         var cr = (RectTransform)close.transform;
         cr.anchorMin = cr.anchorMax = cr.pivot = new Vector2(1f, 1f);
         cr.sizeDelta = new Vector2(150f, 44f);
@@ -461,8 +460,7 @@ public class ResearchScreen : MonoBehaviour
         if (button == PointerEventData.InputButton.Right) { r.Dequeue(view.Node.Id); return; }
         if (button != PointerEventData.InputButton.Left) return;
 
-        bool next = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ||
-                    Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+        bool next = GameControls.Gameplay.ResearchNextModifier.IsPressed();
         if (next) r.EnqueueFirst(view.Node.Id);
         else      r.Enqueue(view.Node.Id);
     }

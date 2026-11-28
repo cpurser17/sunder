@@ -132,12 +132,12 @@ public class CampaignNarrator : MonoBehaviour
         if (!_playing) return;
 
         // Escape, or a click that isn't on the UI (browsing the mission list doesn't cut a line off).
-        bool clickOffUi = Input.GetMouseButtonDown(0) &&
+        bool clickOffUi = MouseButtons.PrimaryDown &&
                           (UnityEngine.EventSystems.EventSystem.current == null ||
                            !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject());
-        if (skipOnClick && (clickOffUi || Input.GetKeyDown(KeyCode.Escape)))
+        if (skipOnClick && (clickOffUi || GameControls.General.Back.WasPressedThisFrame()))
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) SkippedFrame = Time.frameCount;
+            if (GameControls.General.Back.WasPressedThisFrame()) SkippedFrame = Time.frameCount;
             Stop();
             return;
         }

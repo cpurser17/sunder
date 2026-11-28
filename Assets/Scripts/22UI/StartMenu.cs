@@ -70,7 +70,7 @@ public class StartMenu : MonoBehaviour
     private void Update()
     {
         // Escape closes the open panel (New Game, Load Game) — back to the menu.
-        if (Input.GetKeyDown(KeyCode.Escape) && _overlay != null && _overlay.Find("Panel") != null) ClosePanel();
+        if (GameControls.General.Back.WasPressedThisFrame() && _overlay != null && _overlay.Find("Panel") != null) ClosePanel();
 
         if (_status != null && _status.text.Length > 0 && Time.unscaledTime > _statusUntil) _status.text = "";
     }

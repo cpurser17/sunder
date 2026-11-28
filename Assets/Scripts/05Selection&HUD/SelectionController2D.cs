@@ -72,7 +72,7 @@ public class SelectionController2D : MonoBehaviour
 
     private bool AltSellMode =>
         ActiveMode == InteractionMode.Buy &&
-        (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt));
+        GameControls.Gameplay.SellModifier.IsPressed();
 
     private List<GridCell> _currentSelection = new();
 
@@ -117,7 +117,7 @@ public class SelectionController2D : MonoBehaviour
 
     private void HandleRightClick()
     {
-        if (!Input.GetMouseButtonDown(1)) return;
+        if (!MouseButtons.SecondaryDown) return;
         // Dropping or slapping a minion — the hand's click, not a deselect.
         if (KeeperHand.OwnsMouseButton(1)) return;
         // An armed spell handles its own right-click (cancel the charge, or put it away).
@@ -128,7 +128,7 @@ public class SelectionController2D : MonoBehaviour
 
     private void HandleLeftMouseInput()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (MouseButtons.PrimaryDown)
         {
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                 return;
@@ -138,11 +138,11 @@ public class SelectionController2D : MonoBehaviour
             _currentX = x; _currentY = y;
         }
 
-        if (Input.GetMouseButton(0) && _dragging)
+        if (MouseButtons.PrimaryHeld && _dragging)
             if (TryGetCell(out int x, out int y))
             { _currentX = x; _currentY = y; }
 
-        if (Input.GetMouseButtonUp(0) && _dragging)
+        if (MouseButtons.PrimaryUp && _dragging)
         {
             CommitTransaction();
             CancelDrag();

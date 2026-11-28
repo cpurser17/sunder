@@ -36,7 +36,7 @@ public class HudFooter : MonoBehaviour
 
     [Header("Minimise")]
     [SerializeField] private Button  minimiseButton;
-    [Tooltip("Optional key that toggles minimised. None = button only.")]
+    [Tooltip("Older setups only — the minimise key now lives in GameControls (Hud.Minimise).")]
     [SerializeField] private KeyCode minimiseKey = KeyCode.None;
     [SerializeField] private bool    startMinimised;
 
@@ -106,11 +106,12 @@ public class HudFooter : MonoBehaviour
     {
         if (IsTyping()) return;
 
-        if (minimiseKey != KeyCode.None && Input.GetKeyDown(minimiseKey)) ToggleMinimised();
+        if (GameControls.Hud.Minimise.WasPressedThisFrame() ||
+            (minimiseKey != KeyCode.None && Input.GetKeyDown(minimiseKey))) ToggleMinimised();   // scene key: older setups
 
         foreach (var tab in tabs)
         {
-            if (tab == null || tab.Hotkey == KeyCode.None || !Input.GetKeyDown(tab.Hotkey)) continue;
+            if (tab == null || !TabPressed(tab)) continue;
             if (_seqTab == tab) CancelSequence();
             else BeginSequence(tab);
             return;
@@ -118,7 +119,7 @@ public class HudFooter : MonoBehaviour
 
         if (_seqTab == null) return;
 
-        if (Input.GetKeyDown(KeyCode.Escape)) { CancelSequence(); return; }
+        if (GameControls.General.Back.WasPressedThisFrame()) { CancelSequence(); return; }
         if (Time.unscaledTime > _deadline)    { CancelSequence(); return; }
 
         int digit = DigitDown();
@@ -217,13 +218,19 @@ public class HudFooter : MonoBehaviour
         if (popup != null) popup.Show(message, sequenceTimeout);
     }
 
-    /// <summary>1-9 from the number row or keypad this frame, else 0.</summary>
-    private static int DigitDown()
+    /// <summary>1-9 from the slot keys (number row or keypad) this frame, else 0.</summary>
+    private static int DigitDown() => GameControls.SlotPressed();
+
+    /// <summary>
+    /// The tab's hotkey from GameControls (Rooms, Spells, Traps &amp; Doors,
+    /// Minions). A tab GameControls doesn't know falls back to the hotkey set
+    /// on it in the scene.
+    /// </summary>
+    private static bool TabPressed(FooterTab tab)
     {
-        for (int d = 1; d <= 9; d++)
-            if (Input.GetKeyDown(KeyCode.Alpha0 + d) || Input.GetKeyDown(KeyCode.Keypad0 + d))
-                return d;
-        return 0;
+        var action = GameControls.TabAction(tab.TabName);
+        if (action != null) return action.WasPressedThisFrame();
+        return tab.Hotkey != KeyCode.None && Input.GetKeyDown(tab.Hotkey);
     }
 
     /// <summary>True while a text field has focus, so typing isn't read as hotkeys.</summary>

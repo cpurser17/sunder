@@ -69,12 +69,12 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
 
     private void Update()
     {
-        if (orbitalFollow == null || Mouse.current == null || Keyboard.current == null)
+        if (orbitalFollow == null || Mouse.current == null)
             return;
 
-        bool middleMouse = Mouse.current.middleButton.isPressed;
-        bool rightMouse = Mouse.current.rightButton.isPressed;
-        bool ctrlHeld = Keyboard.current.ctrlKey.isPressed;
+        bool middleMouse = MouseButtons.MiddleHeld;
+        bool rightMouse  = MouseButtons.SecondaryHeld;
+        bool ctrlHeld    = GameControls.Camera.OrbitModifier.IsPressed();
 
         // Suspend orbit when the fullscreen map is open — middle mouse
         // is used for map panning instead.
@@ -115,14 +115,14 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
         if (rotating)
             return;
 
-        if (Keyboard.current.qKey.wasPressedThisFrame)
+        if (GameControls.Camera.RotateLeft.WasPressedThisFrame())
         {
             float currentYaw = orbitalFollow.HorizontalAxis.Value;
             targetYaw = GetNextSnapAngle(currentYaw, 1);
             isSnapping = true;
         }
 
-        if (Keyboard.current.eKey.wasPressedThisFrame)
+        if (GameControls.Camera.RotateRight.WasPressedThisFrame())
         {
             float currentYaw = orbitalFollow.HorizontalAxis.Value;
             targetYaw = GetNextSnapAngle(currentYaw, -1);

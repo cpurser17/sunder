@@ -25,7 +25,6 @@ public class PauseController : MonoBehaviour
     /// <summary>Raised when the game pauses (true) or resumes (false).</summary>
     public static event System.Action<bool> OnPauseChanged;
 
-    [SerializeField] private KeyCode pauseKey   = KeyCode.P;
     [SerializeField] private string  pausedText = "PAUSED";
 
     private GameObject _banner;
@@ -55,7 +54,7 @@ public class PauseController : MonoBehaviour
 
     private void Update()
     {
-        if (IsTyping() || !Input.GetKeyDown(pauseKey)) return;
+        if (IsTyping() || !GameControls.General.Pause.WasPressedThisFrame()) return;
         SetPaused(!IsPaused);
     }
 

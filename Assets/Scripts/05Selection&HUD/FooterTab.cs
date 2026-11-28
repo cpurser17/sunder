@@ -28,7 +28,7 @@ public class FooterTab : MonoBehaviour
     }
 
     [SerializeField] private string  tabName = "Rooms";
-    [Tooltip("Starts the hotkey sequence for this tab. None = click only.")]
+    [Tooltip("Only for tabs GameControls doesn't know (Rooms, Spells, Traps & Doors and Minions have their keys there). None = click only.")]
     [SerializeField] private KeyCode hotkey  = KeyCode.None;
     [Tooltip("The button in the footer's tab bar that shows this tab.")]
     [SerializeField] private Button  tabButton;

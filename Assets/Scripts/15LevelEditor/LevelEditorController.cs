@@ -207,7 +207,7 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) { Back(); return; }
+        if (GameControls.General.Back.WasPressedThisFrame()) { Back(); return; }
 
         if (!_editing || _modal != Modal.None)
         {
@@ -424,19 +424,19 @@ public partial class LevelEditorController : MonoBehaviour
     {
         if (_stroking)
         {
-            if (Input.GetMouseButton(0)) ContinueStroke();
+            if (MouseButtons.PrimaryHeld) ContinueStroke();
             else EndStroke();
             return;
         }
 
         if (_dragGate != null)
         {
-            if (Input.GetMouseButton(0)) ContinueGateDrag();
+            if (MouseButtons.PrimaryHeld) ContinueGateDrag();
             else EndGateDrag();
             return;
         }
 
-        if (!pointerFree || !_hasHover || !Input.GetMouseButtonDown(0)) return;
+        if (!pointerFree || !_hasHover || !MouseButtons.PrimaryDown) return;
 
         switch (_tool)
         {
@@ -1207,28 +1207,20 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void HandleShortcuts()
     {
-        bool ctrl  = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
-                     Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
-        bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        var keys = GameControls.LevelEditor.Tools;
+        // Ctrl+Shift+Z also counts as Ctrl+Z, so redo is checked first.
+        if (GameControls.LevelEditor.Redo.WasPressedThisFrame()) Redo();
+        else if (GameControls.LevelEditor.Undo.WasPressedThisFrame()) Undo();
+        if (GameControls.LevelEditor.Save.WasPressedThisFrame()) Save(toBuiltIn: false);
+        if (GameControls.LevelEditor.ShortcutModifier.IsPressed()) return;   // Ctrl+key isn't the plain key too
 
-        if (ctrl)
-        {
-            if (Input.GetKeyDown(KeyCode.Z)) { if (shift) Redo(); else Undo(); }
-            if (Input.GetKeyDown(KeyCode.Y)) Redo();
-            if (Input.GetKeyDown(KeyCode.S)) Save(toBuiltIn: false);
-            return;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha1)) _tool = Tool.Tiles;
-        if (Input.GetKeyDown(KeyCode.Alpha2)) _tool = Tool.Heart;
-        if (Input.GetKeyDown(KeyCode.Alpha3)) _tool = Tool.Minions;
-        if (Input.GetKeyDown(KeyCode.Alpha4)) _tool = Tool.TrapsDoors;
-        if (Input.GetKeyDown(KeyCode.Alpha5)) _tool = Tool.Ownership;
-        if (Input.GetKeyDown(KeyCode.Alpha6)) _tool = Tool.Gates;
-        if (Input.GetKeyDown(KeyCode.R))      _removeMode = !_removeMode;
-        if (Input.GetKeyDown(KeyCode.LeftBracket))  _brushSize = Mathf.Max(1, _brushSize - 2);
-        if (Input.GetKeyDown(KeyCode.RightBracket)) _brushSize = Mathf.Min(MaxBrush, _brushSize + 2);
-        if (Input.GetKeyDown(KeyCode.F) && _editing) editorCamera.Frame(gridManager);
+        Tool[] order = { Tool.Tiles, Tool.Heart, Tool.Minions, Tool.TrapsDoors, Tool.Ownership, Tool.Gates };
+        for (int i = 0; i < keys.Length && i < order.Length; i++)
+            if (keys[i].WasPressedThisFrame()) _tool = order[i];
+        if (GameControls.LevelEditor.ToggleRemove.WasPressedThisFrame()) _removeMode = !_removeMode;
+        if (GameControls.LevelEditor.BrushSmaller.WasPressedThisFrame()) _brushSize = Mathf.Max(1, _brushSize - 2);
+        if (GameControls.LevelEditor.BrushLarger.WasPressedThisFrame())  _brushSize = Mathf.Min(MaxBrush, _brushSize + 2);
+        if (GameControls.LevelEditor.FrameLevel.WasPressedThisFrame() && _editing) editorCamera.Frame(gridManager);
     }
 
     private const int MaxBrush = 15;

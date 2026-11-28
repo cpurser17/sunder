@@ -133,7 +133,7 @@ public class MinimapFullscreen : MonoBehaviour
 
     private void HandleToggle()
     {
-        if (Input.GetKeyDown(KeyCode.CapsLock))
+        if (GameControls.General.Minimap.WasPressedThisFrame())
             SetOpen(!_open);
     }
 
@@ -175,14 +175,14 @@ public class MinimapFullscreen : MonoBehaviour
 
     private void HandlePan()
     {
-        if (Input.GetMouseButtonDown(2))
+        if (MouseButtons.MiddleDown)
         {
             _panning          = true;
             _panStartMousePos = Input.mousePosition;
             _panStartOffset   = _uvOffset;
         }
 
-        if (Input.GetMouseButtonUp(2))
+        if (MouseButtons.MiddleUp)
             _panning = false;
 
         if (!_panning) return;
@@ -207,7 +207,7 @@ public class MinimapFullscreen : MonoBehaviour
         // map IS a UI element — that check would always block.
         if (!IsPointerOverMapImage()) return;
 
-        if (Input.GetMouseButtonDown(0))
+        if (MouseButtons.PrimaryDown)
         {
             Vector2 uv       = MouseToUV();
             Vector3 worldPos = MinimapRenderer.UVToWorld(uv);
@@ -215,7 +215,7 @@ public class MinimapFullscreen : MonoBehaviour
             SetOpen(false);
         }
 
-        if (Input.GetMouseButtonDown(1))
+        if (MouseButtons.SecondaryDown)
         {
             Vector2 uv       = MouseToUV();
             Vector3 worldPos = MinimapRenderer.UVToWorld(uv);

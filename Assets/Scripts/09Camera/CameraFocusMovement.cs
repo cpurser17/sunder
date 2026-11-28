@@ -35,7 +35,7 @@ public class CameraFocusMovement : MonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current == null || orbitCamera == null) return;
+        if (orbitCamera == null) return;
 
         // If we're jumping to a target, interpolate toward it and suppress WASD.
         if (_movingToTarget)
@@ -52,15 +52,10 @@ public class CameraFocusMovement : MonoBehaviour
         }
 
         // Normal WASD movement.
-        Vector2 input = Vector2.zero;
-        if (Keyboard.current.wKey.isPressed) input.y += 1f;
-        if (Keyboard.current.sKey.isPressed) input.y -= 1f;
-        if (Keyboard.current.aKey.isPressed) input.x -= 1f;
-        if (Keyboard.current.dKey.isPressed) input.x += 1f;
-        input = Vector2.ClampMagnitude(input, 1f);
+        Vector2 input = Vector2.ClampMagnitude(GameControls.Camera.Move.ReadValue<Vector2>(), 1f);
 
         float speed = moveSpeed;
-        if (Keyboard.current.leftShiftKey.isPressed) speed *= sprintMultiplier;
+        if (GameControls.Camera.Faster.IsPressed()) speed *= sprintMultiplier;
 
         float     yaw         = orbitCamera.CurrentYaw;
         Quaternion yawRotation = Quaternion.Euler(0f, yaw, 0f);

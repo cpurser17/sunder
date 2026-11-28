@@ -137,7 +137,7 @@ public class DigSelectionController : MonoBehaviour
 
     private void HandleLMB()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (MouseButtons.PrimaryDown)
         {
             if (IsPointerOverUI()) return;
             if (KeeperHand.OwnsMouseButton(0)) return;
@@ -149,13 +149,13 @@ public class DigSelectionController : MonoBehaviour
             _startY = _currentY = y;
         }
 
-        if (_lmbDragging && Input.GetMouseButton(0))
+        if (_lmbDragging && MouseButtons.PrimaryHeld)
         {
             if (TryGetCellCoords(out int x, out int y))
             { _currentX = x; _currentY = y; }
         }
 
-        if (Input.GetMouseButtonUp(0) && _lmbDragging)
+        if (MouseButtons.PrimaryUp && _lmbDragging)
         {
             var region = _gridManager.GetCellsInRegion(
                 _startX, _startY, _currentX, _currentY);
@@ -171,7 +171,7 @@ public class DigSelectionController : MonoBehaviour
 
     private void HandleRMB()
     {
-        if (Input.GetMouseButtonDown(1))
+        if (MouseButtons.SecondaryDown)
         {
             if (IsPointerOverUI()) return;
             if (KeeperHand.OwnsMouseButton(1)) return;
@@ -183,13 +183,13 @@ public class DigSelectionController : MonoBehaviour
             _startY = _currentY = y;
         }
 
-        if (_rmbDragging && Input.GetMouseButton(1))
+        if (_rmbDragging && MouseButtons.SecondaryHeld)
         {
             if (TryGetCellCoords(out int x, out int y))
             { _currentX = x; _currentY = y; }
         }
 
-        if (Input.GetMouseButtonUp(1) && _rmbDragging)
+        if (MouseButtons.SecondaryUp && _rmbDragging)
         {
             var region = _gridManager.GetCellsInRegion(
                 _startX, _startY, _currentX, _currentY);
