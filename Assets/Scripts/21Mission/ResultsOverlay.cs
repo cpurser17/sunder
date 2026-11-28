@@ -40,7 +40,7 @@ public class ResultsOverlay : MonoBehaviour
     /// <summary>Escape minimises the results (back to the dungeon); the button brings them back.</summary>
     private void Update()
     {
-        if (_window != null && _window.gameObject.activeSelf && GameControls.General.Back.WasPressedThisFrame()) Minimise();
+        if (_window != null && _window.gameObject.activeSelf && !GameControls.ModalOpen && GameControls.TakeBack()) Minimise();
     }
 
     // ── Open / minimise ────────────────────────────────────────────────

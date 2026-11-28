@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -33,6 +34,7 @@ public static class UiKit
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.matchWidthOrHeight  = 0.5f;
         go.AddComponent<GraphicRaycaster>();
+        GameSettings.ApplyUiScale(scaler);   // the player's UI scale (Settings)
         EnsureEventSystem();
         return (RectTransform)go.transform;
     }
@@ -175,6 +177,85 @@ public static class UiKit
         scroll.viewport = view;
         scroll.content  = content;
         return content;
+    }
+
+    /// <summary>A horizontal slider (min–max), calling onChange as it moves.</summary>
+    public static Slider Slider(string name, Transform parent, float min, float max, float value,
+                                Action<float> onChange, bool wholeNumbers = false)
+    {
+        var root = Rect(name, parent);
+        var slider = root.gameObject.AddComponent<UnityEngine.UI.Slider>();
+
+        var track = Box("Track", root, PanelLight);
+        Anchor(track.rectTransform, 0f, 0.38f, 1f, 0.62f);
+
+        var fillArea = Rect("FillArea", root);
+        Anchor(fillArea, 0f, 0.38f, 1f, 0.62f);
+        var fill = Box("Fill", fillArea, ButtonOn);
+        fill.raycastTarget = false;
+        Fill(fill.rectTransform);
+
+        var handleArea = Rect("HandleArea", root);
+        Fill(handleArea, 10f, 0f, 10f, 0f);
+        var handle = Box("Handle", handleArea, Text);
+        handle.rectTransform.sizeDelta = new Vector2(20f, 0f);
+        handle.rectTransform.anchorMin = new Vector2(0f, 0f);
+        handle.rectTransform.anchorMax = new Vector2(0f, 1f);
+
+        slider.fillRect      = fill.rectTransform;
+        slider.handleRect    = handle.rectTransform;
+        slider.targetGraphic = handle;
+        slider.direction     = UnityEngine.UI.Slider.Direction.LeftToRight;
+        slider.minValue      = min;
+        slider.maxValue      = max;
+        slider.wholeNumbers  = wholeNumbers;
+        slider.SetValueWithoutNotify(value);
+        if (onChange != null) slider.onValueChanged.AddListener(v => onChange(v));
+        return slider;
+    }
+
+    /// <summary>
+    /// "‹  value  ›": steps through a list of choices. Returns the value label;
+    /// onChange gets the new index. A list of one has its arrows disabled.
+    /// </summary>
+    public static TextMeshProUGUI Choice(string name, RectTransform parent, IReadOnlyList<string> options, int index,
+                                         Action<int> onChange)
+    {
+        var root = Rect(name, parent);
+        var row = Row(root, 6f);
+        row.childForceExpandWidth = false;
+        int current = Mathf.Clamp(index, 0, Mathf.Max(0, options.Count - 1));
+
+        TextMeshProUGUI label = null;
+        void Step(int by)
+        {
+            if (options.Count == 0) return;
+            current = (current + by + options.Count) % options.Count;
+            label.text = options[current];
+            onChange?.Invoke(current);
+        }
+        var left = Width(Button("Previous", root, "<", () => Step(-1), 22f), 44f);
+        label = Label("Value", root, options.Count > 0 ? options[current] : "—", 22f, TextAlignmentOptions.Center);
+        label.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+        var right = Width(Button("Next", root, ">", () => Step(1), 22f), 44f);
+        left.interactable = right.interactable = options.Count > 1;
+        return label;
+    }
+
+    /// <summary>An On/Off button. Returns it; onChange gets the new value.</summary>
+    public static Button OnOff(string name, Transform parent, bool value, Action<bool> onChange)
+    {
+        bool on = value;
+        Button button = null;
+        button = Button(name, parent, on ? "On" : "Off", () =>
+        {
+            on = !on;
+            LabelOf(button).text = on ? "On" : "Off";
+            Style(button, on);
+            onChange?.Invoke(on);
+        }, 22f);
+        Style(button, on);
+        return button;
     }
 
     public static void Clear(Transform parent)

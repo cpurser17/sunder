@@ -10,8 +10,8 @@ using UnityEngine.InputSystem;
 /// Actions are grouped by where they apply (General, Camera, Gameplay, HUD,
 /// LevelEditor), each with a readable label for the future Settings screen,
 /// which can rebind any of them: the Input System's interactive rebinding
-/// changes an action's binding, and Save() keeps the player's changes
-/// (PlayerPrefs for now; the settings file once there is one). Two actions in
+/// changes an action's binding, and Save() keeps the player's changes in
+/// the settings file (GameSettings). Two actions in
 /// the same group shouldn't share a key — Clashes() lists any that do.
 ///
 /// Mouse buttons aren't rebindable — they're read through MouseButtons,
@@ -23,8 +23,6 @@ using UnityEngine.InputSystem;
 /// </summary>
 public static class GameControls
 {
-    private const string PrefsKey = "Sunder.ControlBindings";
-
     public static InputActionAsset Asset { get; private set; }
 
     private static readonly Dictionary<InputAction, string> _labels = new();
@@ -149,7 +147,7 @@ public static class GameControls
         LevelEditor.ShortcutModifier.AddBinding("<Keyboard>/leftMeta");
         LevelEditor.ShortcutModifier.AddBinding("<Keyboard>/rightMeta");
 
-        string saved = PlayerPrefs.GetString(PrefsKey, "");
+        string saved = GameSettings.Current.bindings;
         if (!string.IsNullOrEmpty(saved))
         {
             try { Asset.LoadBindingOverridesFromJson(saved); }
@@ -196,18 +194,73 @@ public static class GameControls
     /// <summary>The control's keys as shown to the player, e.g. "Ctrl+Z" or "W/A/S/D".</summary>
     public static string KeysOf(InputAction action) => action?.GetBindingDisplayString() ?? "";
 
-    /// <summary>Keeps the player's changed keys.</summary>
+    /// <summary>Keeps the player's changed keys (in the settings file).</summary>
     public static void Save()
     {
-        PlayerPrefs.SetString(PrefsKey, Asset.SaveBindingOverridesAsJson());
-        PlayerPrefs.Save();
+        GameSettings.Current.bindings = Asset.SaveBindingOverridesAsJson();
+        GameSettings.Save();
     }
 
     /// <summary>Back to every default key.</summary>
     public static void ResetToDefaults()
     {
         Asset.RemoveAllBindingOverrides();
-        PlayerPrefs.DeleteKey(PrefsKey);
+        GameSettings.Current.bindings = null;
+    }
+
+    /// <summary>True while the Settings screen is waiting for a key to bind — nothing else should react to it.</summary>
+    public static bool Rebinding { get; set; }
+
+    // ── Back (Escape) and menus ────────────────────────────────────────
+    // Several things answer Escape — putting a spell away, closing the
+    // research screen, the in-game menu. Whatever answers first in a frame
+    // takes it with TakeBack(), so one press does one thing. The in-game
+    // menu asks last (LateUpdate), so it opens only when nothing else used it.
+
+    private static int _backTakenFrame = -1;
+    private static int _modals;
+    private static int _rebindEndedFrame = -1;
+
+    /// <summary>True (once per press) if Back was pressed this frame and nothing has taken it yet.</summary>
+    public static bool TakeBack()
+    {
+        if (!General.Back.WasPressedThisFrame() || Rebinding) return false;
+        if (_backTakenFrame == Time.frameCount || _rebindEndedFrame == Time.frameCount) return false;
+        _backTakenFrame = Time.frameCount;
+        return true;
+    }
+
+    /// <summary>Call when a rebind finishes or is cancelled — the Escape that cancelled it isn't a Back.</summary>
+    public static void EndRebinding()
+    {
+        Rebinding = false;
+        _rebindEndedFrame = Time.frameCount;
+    }
+
+    /// <summary>A full-screen menu (the in-game menu, Settings) is open: the game's own controls stand down.</summary>
+    public static bool ModalOpen => _modals > 0;
+
+    public static void PushModal()
+    {
+        if (_modals++ == 0) SetGameplayEnabled(false);
+    }
+
+    public static void PopModal()
+    {
+        if (_modals == 0) return;
+        if (--_modals == 0) SetGameplayEnabled(true);
+    }
+
+    private static void SetGameplayEnabled(bool on)
+    {
+        foreach (var name in new[] { "Camera", "Gameplay", "HUD", "LevelEditor" })
+        {
+            var map = Asset.FindActionMap(name);
+            if (map == null) continue;
+            if (on) map.Enable(); else map.Disable();
+        }
+        foreach (var a in new[] { General.Pause, General.Research, General.Minimap, General.RevealFog })
+            if (on) a.Enable(); else a.Disable();
     }
 
     /// <summary>Pairs of controls in the same group that share a key (by path).</summary>

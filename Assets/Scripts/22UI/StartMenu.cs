@@ -70,7 +70,7 @@ public class StartMenu : MonoBehaviour
     private void Update()
     {
         // Escape closes the open panel (New Game, Load Game) — back to the menu.
-        if (GameControls.General.Back.WasPressedThisFrame() && _overlay != null && _overlay.Find("Panel") != null) ClosePanel();
+        if (!GameControls.ModalOpen && _overlay != null && _overlay.Find("Panel") != null && GameControls.TakeBack()) ClosePanel();
 
         if (_status != null && _status.text.Length > 0 && Time.unscaledTime > _statusUntil) _status.text = "";
     }
@@ -152,7 +152,7 @@ public class StartMenu : MonoBehaviour
             case Item.LoadGame:    OpenLoadGame(); break;
             case Item.Skirmish:    Load(SceneNames.Skirmish, "Skirmish isn't built yet."); break;
             case Item.LevelEditor: Load(SceneNames.LevelEditor, "The LevelEditor scene isn't in Build Settings."); break;
-            case Item.Settings:    Say("Settings aren't built yet."); break;
+            case Item.Settings:    SettingsScreen.Open(); break;
             case Item.Credits:     Say("Credits aren't built yet."); break;
             case Item.Exit:
 #if UNITY_EDITOR

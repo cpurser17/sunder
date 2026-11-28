@@ -102,6 +102,18 @@ namespace UnityEngine.InputSystem
         public static void RemoveAllBindingOverrides(this InputActionAsset actions) { }
         public static string GetBindingDisplayString(this InputAction action, int bindingIndex, InputBinding.DisplayStringOptions options = default) => null;
         public static string GetBindingDisplayString(this InputAction action, InputBinding.DisplayStringOptions options = default, string group = null) => null;
+        public static RebindingOperation PerformInteractiveRebinding(this InputAction action, int bindingIndex = -1) => null;
+        public sealed class RebindingOperation : System.IDisposable
+        {
+            public RebindingOperation WithControlsExcluding(string path) => this;
+            public RebindingOperation WithCancelingThrough(string binding) => this;
+            public RebindingOperation OnMatchWaitForAnother(float seconds) => this;
+            public RebindingOperation OnComplete(System.Action<RebindingOperation> callback) => this;
+            public RebindingOperation OnCancel(System.Action<RebindingOperation> callback) => this;
+            public RebindingOperation Start() => this;
+            public void Cancel() { }
+            public void Dispose() { }
+        }
     }
 
     public class Mouse

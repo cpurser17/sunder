@@ -100,6 +100,13 @@ public class GameManager2D : MonoBehaviour
     public string                ActiveBranchId => _activeBranchId;
     public int                   ActiveSaveIndex => _activeSaveIndex;
     public List<FactionSetup>    ActiveFactions  => _activeFactions;
+    public string                ActiveLevelId   => _activeLevelId;
+    /// <summary>Where the mission was started from, and which campaign mission it is (for loading a save of it).</summary>
+    public MissionOrigin         Origin          => _origin;
+    public string                CampaignId      => _campaignId;
+    public string                MissionId       => _missionId;
+    public string                PlayerFactionId => _playerFactionId;
+    public bool                  LevelFromFile   => _levelFromFile;
 
     /// <summary>
     /// Returns the wallet for the specified faction, or null if not active.
@@ -203,6 +210,8 @@ public class GameManager2D : MonoBehaviour
             gameObject.AddComponent<GateSystem>();
         if (FindAnyObjectByType<ResearchScreen>() == null)
             gameObject.AddComponent<ResearchScreen>();
+        if (FindAnyObjectByType<GameMenu>() == null)
+            gameObject.AddComponent<GameMenu>();
 
         // Fog of war (the level editor has no GameManager2D, so no fog).
         if (FindAnyObjectByType<FogOfWar>() == null)

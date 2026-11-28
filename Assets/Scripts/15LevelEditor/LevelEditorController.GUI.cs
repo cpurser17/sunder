@@ -61,7 +61,7 @@ public partial class LevelEditorController
     private void OnGUI()
     {
         EnsureStyles();
-        _uiScale   = Mathf.Clamp(Screen.height / 1080f, 1f, 2.5f);
+        _uiScale   = Mathf.Clamp(Screen.height / 1080f, 1f, 2.5f) * Mathf.Clamp(GameSettings.Current.uiScale, 0.5f, 2f);
         GUI.matrix = Matrix4x4.Scale(new Vector3(_uiScale, _uiScale, 1f));
         float w = Screen.width / _uiScale, h = Screen.height / _uiScale;
 

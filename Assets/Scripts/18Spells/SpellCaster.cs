@@ -114,7 +114,7 @@ public class SpellCaster : MonoBehaviour
             return;
         }
 
-        if (GameControls.General.Back.WasPressedThisFrame()) { PutAway(); return; }
+        if (GameControls.TakeBack()) { PutAway(); return; }
 
         var spells = SpellSystem.Instance;
         if (spells == null) return;

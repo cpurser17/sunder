@@ -119,7 +119,7 @@ public class HudFooter : MonoBehaviour
 
         if (_seqTab == null) return;
 
-        if (GameControls.General.Back.WasPressedThisFrame()) { CancelSequence(); return; }
+        if (GameControls.TakeBack()) { CancelSequence(); return; }
         if (Time.unscaledTime > _deadline)    { CancelSequence(); return; }
 
         int digit = DigitDown();

@@ -96,7 +96,7 @@ public class LevelEditorCamera : MonoBehaviour
         // Ctrl+S saves; don't also drift the camera down.
         if (GameControls.LevelEditor.ShortcutModifier.IsPressed()) return;
 
-        float speed = _cam.orthographicSize * 2f * keyPanSpeed * Time.unscaledDeltaTime;
+        float speed = _cam.orthographicSize * 2f * keyPanSpeed * GameSettings.Current.cameraMoveSpeed * Time.unscaledDeltaTime;
         transform.position += new Vector3(pan.x, 0f, pan.y).normalized * speed;
     }
 

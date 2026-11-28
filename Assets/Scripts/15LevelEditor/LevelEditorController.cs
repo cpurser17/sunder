@@ -207,7 +207,7 @@ public partial class LevelEditorController : MonoBehaviour
 
     private void Update()
     {
-        if (GameControls.General.Back.WasPressedThisFrame()) { Back(); return; }
+        if (!GameControls.ModalOpen && GameControls.TakeBack()) { Back(); return; }
 
         if (!_editing || _modal != Modal.None)
         {

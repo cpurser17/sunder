@@ -99,11 +99,11 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
             isSnapping = false;
 
         InputAxis horizontal = orbitalFollow.HorizontalAxis;
-        horizontal.Value += mouseDelta.x * yawSpeed * Time.unscaledDeltaTime;
+        horizontal.Value += mouseDelta.x * yawSpeed * GameSettings.Current.cameraTurnSpeed * Time.unscaledDeltaTime;
         orbitalFollow.HorizontalAxis = horizontal;
 
         InputAxis vertical = orbitalFollow.VerticalAxis;
-        vertical.Value -= mouseDelta.y * pitchSpeed * Time.unscaledDeltaTime;
+        vertical.Value -= mouseDelta.y * pitchSpeed * GameSettings.Current.cameraTurnSpeed * Time.unscaledDeltaTime;
         vertical.Value = Mathf.Clamp(vertical.Value, minPitch, maxPitch);
         orbitalFollow.VerticalAxis = vertical;
 
@@ -177,7 +177,7 @@ public class ThirdPersonOrbitCamera : MonoBehaviour
         if (Mathf.Abs(scroll) > 0.01f)
         {
             float notches = scroll / scrollUnitsPerNotch;
-            targetDistance -= notches * zoomSpeed;
+            targetDistance -= notches * zoomSpeed * GameSettings.Current.cameraZoomSpeed;
             targetDistance = Mathf.Clamp(targetDistance, minDistance, maxDistance);
         }
 

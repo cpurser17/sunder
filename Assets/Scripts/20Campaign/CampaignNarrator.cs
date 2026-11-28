@@ -22,8 +22,6 @@ public class CampaignNarrator : MonoBehaviour
 {
     public static CampaignNarrator Instance { get; private set; }
 
-    [Tooltip("Language code for text and audio, matching the workbook's _<code> columns (e.g. en).")]
-    [SerializeField] private string language = "en";
     [Tooltip("Empty = the catalogue built by Sunder > Import Campaigns.")]
     [SerializeField] private CampaignCatalogue catalogue;
     [SerializeField, Range(0f, 1f)] private float volume = 1f;
@@ -44,7 +42,6 @@ public class CampaignNarrator : MonoBehaviour
 
     /// <summary>The frame Escape last skipped a line — so the same press doesn't also leave the screen.</summary>
     public static int SkippedFrame { get; private set; } = -1;
-    public string Language { get => language; set => language = value; }
 
     private AudioSource     _voice;
     private RectTransform   _box;
@@ -77,15 +74,17 @@ public class CampaignNarrator : MonoBehaviour
             return false;
         }
 
+        // Text and voice follow Settings (they can be different languages).
         string fallback = cat.defaultLanguage;
-        string dialogue = line.DialogueFor(language, fallback);
-        var    clip     = line.ClipFor(language, fallback);
+        string text     = GameSettings.TextLanguage;
+        string dialogue = line.DialogueFor(text, fallback);
+        var    clip     = line.ClipFor(GameSettings.VoiceLanguage, fallback);
         if (string.IsNullOrWhiteSpace(dialogue) && clip == null) return false;
         Debug.Log($"[CampaignNarrator] Playing {campaignId} {missionId} {moment}" +
                   (clip != null ? $" ({clip.name})." : " (no recording — subtitles only)."));
 
         float clipSeconds = clip != null ? clip.length : 0f;
-        _cues = Subtitles.Time(dialogue, clipSeconds, line.CuesFor(language, fallback));
+        _cues = Subtitles.Time(dialogue, clipSeconds, line.CuesFor(text, fallback));
 
         _campaign = campaignId; _mission = missionId; _moment = moment;
         _startedAt = Time.unscaledTime;
@@ -94,7 +93,7 @@ public class CampaignNarrator : MonoBehaviour
         _shown    = -1;
         _playing  = true;
 
-        if (clip != null) { _voice.clip = clip; _voice.volume = volume; _voice.Play(); }
+        if (clip != null) { _voice.clip = clip; _voice.volume = volume * GameSettings.Volume(AudioCategory.Voice); _voice.Play(); }
         return true;
     }
 
@@ -120,11 +119,20 @@ public class CampaignNarrator : MonoBehaviour
         _voice.spatialBlend = 0f;
         _voice.ignoreListenerPause = true;
         BuildSubtitles();
+        GameSettings.OnChanged += FollowSettings;
     }
 
     private void OnDestroy()
     {
+        GameSettings.OnChanged -= FollowSettings;
         if (Instance == this) Instance = null;
+    }
+
+    /// <summary>A volume or subtitle change in Settings applies to the line already playing.</summary>
+    private void FollowSettings()
+    {
+        if (_voice != null) _voice.volume = volume * GameSettings.Volume(AudioCategory.Voice);
+        if (_playing && _box != null && !GameSettings.Current.subtitles) _box.gameObject.SetActive(false);
     }
 
     private void Update()
@@ -135,9 +143,10 @@ public class CampaignNarrator : MonoBehaviour
         bool clickOffUi = MouseButtons.PrimaryDown &&
                           (UnityEngine.EventSystems.EventSystem.current == null ||
                            !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject());
-        if (skipOnClick && (clickOffUi || GameControls.General.Back.WasPressedThisFrame()))
+        bool back = !GameControls.ModalOpen && GameControls.TakeBack();
+        if (skipOnClick && (clickOffUi || back))
         {
-            if (GameControls.General.Back.WasPressedThisFrame()) SkippedFrame = Time.frameCount;
+            if (back) SkippedFrame = Time.frameCount;
             Stop();
             return;
         }
@@ -198,9 +207,10 @@ public class CampaignNarrator : MonoBehaviour
     private void Show(string subtitle)
     {
         if (_box == null) return;
-        bool on = !string.IsNullOrEmpty(subtitle);
+        bool on = !string.IsNullOrEmpty(subtitle) && GameSettings.Current.subtitles;
         if (on)
         {
+            _text.fontSize = fontSize * Mathf.Clamp(GameSettings.Current.subtitleScale, 0.5f, 2f);
             _text.text = subtitle;
             // As wide as the sentence needs, wrapping at maxWidth.
             _textSize.preferredWidth = Mathf.Min(maxWidth, _text.GetPreferredValues(subtitle).x + 1f);

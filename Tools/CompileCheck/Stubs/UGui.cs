@@ -118,6 +118,12 @@ namespace UnityEngine.UI
         public float value { get; set; }
         public float minValue { get; set; }
         public float maxValue { get; set; }
+        public bool wholeNumbers { get; set; }
+        public RectTransform fillRect { get; set; }
+        public RectTransform handleRect { get; set; }
+        public enum Direction { LeftToRight, RightToLeft, BottomToTop, TopToBottom }
+        public Direction direction { get; set; }
+        public void SetValueWithoutNotify(float input) { }
         public SliderEvent onValueChanged { get; set; } = new SliderEvent();
     }
     public class ScrollRect : UIBehaviour

@@ -54,7 +54,7 @@ public class CameraFocusMovement : MonoBehaviour
         // Normal WASD movement.
         Vector2 input = Vector2.ClampMagnitude(GameControls.Camera.Move.ReadValue<Vector2>(), 1f);
 
-        float speed = moveSpeed;
+        float speed = moveSpeed * GameSettings.Current.cameraMoveSpeed;
         if (GameControls.Camera.Faster.IsPressed()) speed *= sprintMultiplier;
 
         float     yaw         = orbitCamera.CurrentYaw;

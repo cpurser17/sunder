@@ -79,7 +79,7 @@ public class ResearchScreen : MonoBehaviour
         if (research != _research) Watch(research);
 
         if (!IsTyping() && GameControls.General.Research.WasPressedThisFrame()) Toggle();
-        if (IsOpen && GameControls.General.Back.WasPressedThisFrame()) Close();
+        if (IsOpen && !GameControls.ModalOpen && GameControls.TakeBack()) Close();
 
         UpdateWidget();
         if (!IsOpen) return;
@@ -376,9 +376,32 @@ public class ResearchScreen : MonoBehaviour
         return -1;
     }
 
+    private bool _docked;
+
+    /// <summary>With a Menu button on the HUD header, the widget moves onto the header beside it.</summary>
+    private void DockWidget()
+    {
+        if (_docked) return;
+        var menu = GameMenu.Instance != null ? GameMenu.Instance.HeaderButton : null;
+        if (menu == null) return;
+        _docked = true;
+        var widget = (RectTransform)_widgetLabel.transform.parent;
+        widget.SetParent(menu.parent, false);
+        widget.anchorMin = menu.anchorMin;
+        widget.anchorMax = menu.anchorMax;
+        widget.pivot     = new Vector2(0.5f, 0.5f);
+        widget.sizeDelta = new Vector2(340f, menu.sizeDelta.y > 0f ? menu.sizeDelta.y : 54f);
+        // Just inside the Menu button, towards the middle of the header.
+        float menuCentre = menu.anchoredPosition.x + (0.5f - menu.pivot.x) * menu.sizeDelta.x;
+        float side = menuCentre >= 0f ? -1f : 1f;
+        widget.anchoredPosition = new Vector2(menuCentre + side * (menu.sizeDelta.x * 0.5f + 16f + widget.sizeDelta.x * 0.5f),
+                                              menu.anchoredPosition.y + (0.5f - menu.pivot.y) * menu.sizeDelta.y);
+    }
+
     private void UpdateWidget()
     {
         if (_widgetLabel == null) return;
+        DockWidget();
         var r = _research;
         var web = r?.Web;
         bool any = web != null && web.Nodes.Count > 0;

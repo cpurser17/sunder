@@ -11,8 +11,8 @@ public static class CampaignSession
 {
     public const int SlotCount = 10;
 
-    /// <summary>Language for campaign text and narration (until there's a settings screen).</summary>
-    public static string Language = "en";
+    /// <summary>The language text is shown in — from Settings (GameSettings.TextLanguage).</summary>
+    public static string Language => GameSettings.TextLanguage;
 
     public static int              Slot     { get; private set; } = -1;
     public static CampaignProgress Progress { get; private set; }
